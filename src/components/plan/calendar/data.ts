@@ -42,11 +42,14 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
   const shiftM = (ym: string, n: number) => {
     const [y, m] = ym.split('-').map(Number);
     const t = y * 12 + (m - 1) + n;
-    return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+    return `${String(Math.floor(t / 12)).padStart(4, '0')}-${String((t % 12) + 1).padStart(2, '0')}`;
   };
+  // Never look back more than a year: a mistyped date (e.g. year 0007 from a half-typed date field) must not
+  // crash or hang the calendar.
+  const earliest = addDays(start, -365);
   let histStart = start;
-  for (const t of state.ledger) if (t.date < histStart) histStart = t.date;
-  for (const i of state.incomes) if (i.confirmed && i.date < histStart) histStart = i.date;
+  for (const t of state.ledger) if (t.date < histStart && t.date >= earliest) histStart = t.date;
+  for (const i of state.incomes) if (i.confirmed && i.date < histStart && i.date >= earliest) histStart = i.date;
   // Render from a month before the earliest history/plan so past bills and actuals are visible.
   const rangeStart = addDays(`${shiftM(histStart.slice(0, 7), -1)}-01`, -7);
   const rangeEnd = addDays(endOfMonth(end), 7);
