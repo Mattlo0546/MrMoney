@@ -42,7 +42,7 @@ export function summaryOf(state: EngineState | null): ChatSummary | undefined {
 
 function readCity(): string | undefined {
   try {
-    const raw = window.localStorage.getItem('studentplan.onboardingExtras');
+    const raw = window.localStorage.getItem('mrmoney.onboardingExtras');
     const city = raw ? (JSON.parse(raw) as { city?: unknown }).city : undefined;
     return typeof city === 'string' && city.trim() ? city.trim().slice(0, 60) : undefined;
   } catch {
@@ -231,7 +231,7 @@ function setupPlan(call: Extract<ClientToolCall, { name: 'setup_plan' }>): Exec 
     return fail(call, `The plan could not be built: ${Object.entries(res.errors).map(([k, v]) => `${k}: ${v}`).join('; ')}`);
   }
   try {
-    window.localStorage.setItem('studentplan.onboardingExtras', JSON.stringify(payload.extras));
+    window.localStorage.setItem('mrmoney.onboardingExtras', JSON.stringify(payload.extras));
   } catch {
     /* storage may be blocked */
   }

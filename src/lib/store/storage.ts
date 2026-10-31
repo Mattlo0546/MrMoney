@@ -1,7 +1,7 @@
 /** Storage adapters and the versioned persisted schema. Every access is guarded: blocked storage must never crash the app. */
 import type { EngineState, ISODate } from '@/lib/engine';
 
-export const STORAGE_KEY = 'studentplan:v1';
+export const STORAGE_KEY = 'mrmoney:v1';
 export const SCHEMA_VERSION = 1;
 
 export interface StorageAdapter {

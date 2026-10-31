@@ -166,7 +166,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
 
       <form
         className={`mt-3 flex flex-col gap-2 ${welcome ? 'sticky bottom-0 bg-(--c-bg) pb-4 pt-2' : ''}`}
-        aria-label="Message StudentPlan"
+        aria-label="Message MrMoney"
         onSubmit={(e) => {
           e.preventDefault();
           send(text);

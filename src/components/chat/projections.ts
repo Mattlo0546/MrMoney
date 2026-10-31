@@ -1,9 +1,9 @@
 'use client';
 /**
  * The store has no projection-assumptions slot, so the Projections page keeps its inputs under
- * `studentplan.projections.v1` (strings, pounds/percent). The chat writes the confirmed base rate there.
+ * `mrmoney.projections.v1` (strings, pounds/percent). The chat writes the confirmed base rate there.
  */
-const KEY = 'studentplan.projections.v1';
+const KEY = 'mrmoney.projections.v1';
 
 type Inputs = Record<string, unknown>;
 

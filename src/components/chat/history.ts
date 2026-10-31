@@ -2,7 +2,7 @@
 /** Chat history persistence: the last 50 messages in localStorage. Never throws. */
 import type { UiMessage } from './model';
 
-const KEY = 'studentplan.chat.v1';
+const KEY = 'mrmoney.chat.v1';
 export const HISTORY_LIMIT = 50;
 
 /** Strip heavy, non-JSON-stable data before saving (previews carry whole engine states). */

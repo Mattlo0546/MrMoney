@@ -1,6 +1,6 @@
-# StudentPlan
+# MrMoney
 
-StudentPlan helps UK international students whose money has to last until a set date, either a lump sum or a monthly allowance. It turns that sum into a day-by-day plan (rent and bills first, then a flexible daily allowance) and lets you change the plan with one sentence, such as "I spent £35 on a shower filter today" or "Can I spend £20 on dinner tomorrow?". Every amount is computed by a deterministic engine; AI only reads your sentence. Every change shows a plain-language explanation and an Undo. Your data stays on your device.
+MrMoney helps UK international students whose money has to last until a set date, either a lump sum or a monthly allowance. It turns that sum into a day-by-day plan (rent and bills first, then a flexible daily allowance) and lets you change the plan with one sentence, such as "I spent £35 on a shower filter today" or "Can I spend £20 on dinner tomorrow?". Every amount is computed by a deterministic engine; AI only reads your sentence. Every change shows a plain-language explanation and an Undo. Your data stays on your device.
 
 > Note: the app is moving to a chat-first flow (decision D20). Sections marked "chat" may change.
 

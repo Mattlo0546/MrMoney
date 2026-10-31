@@ -27,7 +27,7 @@ let processSecret: string | undefined;
 
 export function stateSecret(env: Record<string, string | undefined> = process.env): string {
   const s = env.AGENT_STATE_SECRET?.trim() || env.GEMINI_API_KEY?.trim();
-  if (s) return `studentplan-agent-state:${s}`;
+  if (s) return `mrmoney-agent-state:${s}`;
   processSecret ??= randomBytes(32).toString('hex');
   return processSecret;
 }

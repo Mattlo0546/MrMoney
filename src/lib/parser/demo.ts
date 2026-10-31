@@ -189,7 +189,7 @@ export function parseDemo(text: string, ctx: ParseContext): ParseResult {
 
   const amt = scanAmount(t);
   if (amt === 'foreign') {
-    return clarify('StudentPlan works in pounds (GBP) and never converts currency. How much is that in £?', ['currency']);
+    return clarify('MrMoney works in pounds (GBP) and never converts currency. How much is that in £?', ['currency']);
   }
 
   // ---- classify

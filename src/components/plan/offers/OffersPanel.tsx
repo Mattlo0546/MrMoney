@@ -12,7 +12,7 @@ import { IconBadge, WithIcon } from '@/components/ui/Value';
 function readContext(demo: boolean): OfferContext {
   let ex: { city?: unknown; memberships?: unknown; diet?: unknown } = {};
   try {
-    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('studentplan.onboardingExtras') : null;
+    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('mrmoney.onboardingExtras') : null;
     if (raw) ex = JSON.parse(raw) ?? {};
   } catch {
     ex = {};

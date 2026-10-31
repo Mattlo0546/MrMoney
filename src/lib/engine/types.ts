@@ -1,5 +1,5 @@
 /**
- * StudentPlan engine types. Pure data, JSON-safe (structuredClone-able).
+ * MrMoney engine types. Pure data, JSON-safe (structuredClone-able).
  * Money is always integer pence with an explicit currency.
  * Dates are ISO calendar days (YYYY-MM-DD, Europe/London), never times.
  */

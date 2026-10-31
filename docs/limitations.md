@@ -1,6 +1,6 @@
 # Limitations
 
-An honest list of what StudentPlan is not, and what is still open.
+An honest list of what MrMoney is not, and what is still open.
 
 ## Scope
 - **No bank connection.** All figures come from what you enter. Nothing is verified against a real account.
@@ -16,7 +16,7 @@ An honest list of what StudentPlan is not, and what is still open.
 - The app is moving to a chat-first agent (D20); this document may need updating.
 
 ## Product gaps
-- **Onboarding extras partially used (QA G1).** Current savings, investments, city, diet and memberships are stored in `localStorage['studentplan.onboardingExtras']`; not all of them feed projections and offers yet.
+- **Onboarding extras partially used (QA G1).** Current savings, investments, city, diet and memberships are stored in `localStorage['mrmoney.onboardingExtras']`; not all of them feed projections and offers yet.
 - Funds and funds type, and a bill's due day, were not editable in Settings in the first build (QA G2).
 - Job income counts only when marked confirmed; otherwise it is projections-only.
 - Rounding pence go to the latest days of the plan.

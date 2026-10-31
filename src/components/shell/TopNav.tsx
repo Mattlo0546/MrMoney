@@ -32,7 +32,7 @@ export function TopNav() {
           <span aria-hidden="true" className="grid size-8 place-items-center rounded-[10px] bg-grad-primary shadow-glow">
             <CalendarDays size={18} />
           </span>
-          <span>Student<span className="text-grad-primary">Plan</span></span>
+          <span>Mr<span className="text-grad-primary">Money</span></span>
         </Link>
         {hasPlan && (
           <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">

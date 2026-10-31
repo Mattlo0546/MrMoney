@@ -4,7 +4,7 @@
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const hardReset = () => {
     try {
-      for (const k of Object.keys(localStorage)) if (k.startsWith('studentplan')) localStorage.removeItem(k);
+      for (const k of Object.keys(localStorage)) if (k.startsWith('mrmoney') || k.startsWith('studentplan')) localStorage.removeItem(k);
     } catch {
       /* storage unavailable */
     }
@@ -16,7 +16,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <p className="text-sm text-muted">{error.message}</p>
       <div className="flex gap-3">
         <button type="button" onClick={reset} className="rounded-full border px-5 py-2.5 font-semibold">Try again</button>
-        <button type="button" onClick={hardReset} className="rounded-full bg-accent px-5 py-2.5 font-semibold text-white">Reset StudentPlan</button>
+        <button type="button" onClick={hardReset} className="rounded-full bg-accent px-5 py-2.5 font-semibold text-white">Reset MrMoney</button>
       </div>
     </main>
   );

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * StudentPlan tokens (v3, "clean white + vivid gradients").
+ * MrMoney tokens (v3, "clean white + vivid gradients").
  * Light is the default. Every colour in a component should come from here.
  *
  * Semantic roles
@@ -124,7 +124,7 @@
   --shadow-soft: var(--shadow-sm);
   --shadow-card: var(--shadow-md);
   --shadow-glow: var(--shadow-glow);
-  /* ReUI / shadcn aliases, mapped to StudentPlan tokens */
+  /* ReUI / shadcn aliases, mapped to MrMoney tokens */
   --color-popover: var(--surface);
   --color-popover-foreground: var(--text);
   --color-border: var(--line);
