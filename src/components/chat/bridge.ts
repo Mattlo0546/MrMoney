@@ -4,7 +4,7 @@
  * Every number here comes from the engine via the store; this module only maps tool args to intents,
  * validates them (zod, the shared schemas) and summarises engine output for the model.
  */
-import { applyIntent, explain, formatMoney, gbp, previewIntent } from '@/lib/engine';
+import { addDays, applyIntent, explain, formatMoney, formatShortDate, gbp, isItemised, previewIntent } from '@/lib/engine';
 import type { ChangeSet, EngineState, Intent, ISODate, Summary } from '@/lib/engine';
 import { getAppStore, londonToday } from '@/lib/store';
 import type { AppSnapshot } from '@/lib/store';
@@ -13,9 +13,10 @@ import {
 } from '@/lib/agent/types';
 import { buildSetupPayload } from '@/lib/agent/setup';
 import { buildLifestylePlan } from '@/lib/lifestyle/setup';
+import { DEFAULT_GOAL_DAYS, planGoalPurchase } from '@/lib/lifestyle/goal';
 import { buildPlanData } from '@/components/plan/calendar/data';
 import type { PreviewData } from '@/components/plan/change/changeState';
-import { newId, type UiCard } from './model';
+import { newId, type GoalPreview, type UiCard } from './model';
 import { readProjectionRates, seedProjectionsFromState, writeProjectionRate } from './projections';
 
 // ------------------------------------------------------------------ context
@@ -173,7 +174,7 @@ function commitNow(call: ClientToolCall, intent: Intent): Exec {
   };
 }
 
-function previewCard(call: ClientToolCall, intent: Intent, title: string, replaceFirst?: Intent, previewState?: EngineState): Exec {
+function previewCard(call: ClientToolCall, intent: Intent, title: string, replaceFirst?: Intent, previewState?: EngineState, goal?: GoalPreview): Exec {
   const store = getAppStore();
   let pv: PreviewData | null;
   if (previewState) {
@@ -188,8 +189,11 @@ function previewCard(call: ClientToolCall, intent: Intent, title: string, replac
     const msg = pv.needsClarification?.question ?? pv.error?.message ?? 'That change cannot be previewed.';
     return fail(call, msg);
   }
-  const card: UiCard = { type: 'preview', id: newId('p'), tool: call.name, title, intent, pv, chosenOptionId: null, state: 'open', ...(replaceFirst ? { replaceFirst } : {}) };
-  const explanation = aff ? (aff.fits ? aff.preview.explanation.sentence : aff.message ?? '') : pv.ok ? explain(pv.diff).sentence : '';
+  const card: UiCard = {
+    type: 'preview', id: newId('p'), tool: call.name, title, intent, pv, chosenOptionId: null, state: 'open',
+    ...(replaceFirst ? { replaceFirst } : {}), ...(goal ? { goal } : {}),
+  };
+  const explanation = goal ? goal.sentence : aff ? (aff.fits ? aff.preview.explanation.sentence : aff.message ?? '') : pv.ok ? explain(pv.diff).sentence : '';
   return {
     result: {
       id: call.id, name: call.name, ok: true,
@@ -377,6 +381,29 @@ export function executeCall(raw: ClientToolCall): Exec {
       const intent: Intent = { kind: 'goal', idempotencyKey: key(call.name), amount: gbp(a.extraSavingsPence), ...(a.byDate ? { byDate: a.byDate } : {}) };
       return previewCard(call, intent, `Save ${formatMoney(a.extraSavingsPence)} more`);
     }
+    case 'plan_goal': {
+      const a = call.args;
+      const date = a.byDate ?? addDays(snap.today, DEFAULT_GOAL_DAYS);
+      const category = planCategoryId(state, 'shopping');
+      if (!isItemised(state)) {
+        // Even-split plans: the engine re-balances the days around a planned purchase itself.
+        const intent: Intent = { kind: 'hypothetical', idempotencyKey: key(call.name), amount: gbp(a.amountPence), date, category, label: a.label };
+        return previewCard(call, intent, `🎯 ${a.label} on ${formatShortDate(date)}`);
+      }
+      const g = planGoalPurchase(state.plannedPurchases, { label: a.label, amountPence: a.amountPence, category, byDate: date }, snap.today, state.profile.horizonEnd);
+      if ('error' in g) return fail(call, g.error);
+      const cutDays = g.changes.filter((c) => c.what.startsWith('treats')).length;
+      const how = [
+        g.cutPence > 0 ? `swap treats for cheaper meals on ${cutDays} day${cutDays === 1 ? '' : 's'} (${formatMoney(g.cutPence)} freed)` : '',
+        g.setAsidePence > 0 ? `set aside about ${formatMoney(g.perDaySetAsidePence)} a day (${formatMoney(g.setAsidePence)} in all)` : '',
+      ].filter(Boolean).join(' and ');
+      const goal: GoalPreview = {
+        label: a.label, amountPence: a.amountPence, date: g.date, changes: g.changes,
+        sentence: `To get your ${a.label} (${formatMoney(a.amountPence)}) on ${formatShortDate(g.date)}, I'd ${how}. ${g.changes.length} days on your calendar change.`,
+      };
+      const intent: Intent = { kind: 'itinerary', idempotencyKey: key(call.name), purchases: g.purchases, mode: 'itemised' };
+      return previewCard(call, intent, `🎯 ${a.label} by ${formatShortDate(g.date)}`, undefined, undefined, goal);
+    }
     case 'apply_deal': {
       const a = call.args;
       const label = a.plannedPurchaseLabel?.trim().toLowerCase();
@@ -436,7 +463,10 @@ export function applyPreview(card: Extract<UiCard, { type: 'preview' }>): Action
     return { ok: false, message: out.needsClarification?.question ?? out.error?.message ?? 'The plan could not take that change.' };
   }
   const applied = appliedCard(intent, out.diff ?? null, out.changeId, out.noop || !out.diff);
-  return { ok: true, card: { ...card, state: 'applied', pv: null }, followUp: applied, text: 'Done. Here is what changed.' };
+  if (card.goal && applied.type === 'change_applied' && out.diff) {
+    applied.explanation = { ...applied.explanation, sentence: `${card.goal.label} is on ${formatShortDate(card.goal.date)}. ${card.goal.changes.length} days re-planned around it.` };
+  }
+  return { ok: true, card: { ...card, state: 'applied', pv: null }, followUp: applied, text: card.goal ? `Locked in 🎯 Watch your calendar.` : 'Done. Here is what changed.' };
 }
 
 export function confirmRate(card: Extract<UiCard, { type: 'confirm' }>): ActionOutcome {

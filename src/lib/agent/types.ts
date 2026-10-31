@@ -115,6 +115,14 @@ export const SetGoalArgsSchema = z.object({
   byDate: isoDateSchema.optional(),
 });
 
+/** "I want to buy X": re-plan the calendar around it (treats cut, a little set aside each day, X on the goal day). */
+export const PlanGoalArgsSchema = z.object({
+  label: shortText(40),
+  amountPence: pencePositive,
+  /** The day to buy it; default two weeks from today. */
+  byDate: isoDateSchema.optional(),
+});
+
 export const KeepAvailableArgsSchema = z.object({
   amountPence: pencePositive,
   date: isoDateSchema,
@@ -161,6 +169,7 @@ export const CLIENT_TOOL_SCHEMAS = {
   check_purchase: CheckPurchaseArgsSchema,
   change_commitment: ChangeCommitmentArgsSchema,
   set_goal: SetGoalArgsSchema,
+  plan_goal: PlanGoalArgsSchema,
   keep_available: KeepAvailableArgsSchema,
   apply_deal: ApplyDealArgsSchema,
   use_rate_in_projections: UseRateInProjectionsArgsSchema,
@@ -179,12 +188,13 @@ export type RecordIncomeArgs = ClientToolArgs['record_income'];
 export type CheckPurchaseArgs = ClientToolArgs['check_purchase'];
 export type ChangeCommitmentArgs = ClientToolArgs['change_commitment'];
 export type SetGoalArgs = ClientToolArgs['set_goal'];
+export type PlanGoalArgs = ClientToolArgs['plan_goal'];
 export type KeepAvailableArgs = ClientToolArgs['keep_available'];
 export type ApplyDealArgs = ClientToolArgs['apply_deal'];
 export type UseRateInProjectionsArgs = ClientToolArgs['use_rate_in_projections'];
 
 /** Tools that must go through a confirm card (preview -> Apply/Discard) before committing. */
-export const CONFIRM_TOOLS: readonly ClientToolName[] = ['check_purchase', 'change_commitment', 'set_goal', 'apply_deal', 'use_rate_in_projections'];
+export const CONFIRM_TOOLS: readonly ClientToolName[] = ['check_purchase', 'change_commitment', 'set_goal', 'plan_goal', 'apply_deal', 'use_rate_in_projections'];
 
 /** A client tool call. Args are already zod-validated by the server; the client re-validates with CLIENT_TOOL_SCHEMAS. */
 export type ClientToolCall = { [K in ClientToolName]: { id: string; name: K; args: ClientToolArgs[K] } }[ClientToolName];

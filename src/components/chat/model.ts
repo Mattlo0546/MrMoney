@@ -6,6 +6,14 @@
 import type { ChangeSet, Explanation, Intent, Summary } from '@/lib/engine';
 import type { PreviewData } from '@/components/plan/change/changeState';
 
+export interface GoalPreview {
+  label: string;
+  amountPence: number;
+  date: string;
+  sentence: string;
+  changes: { date: string; savedPence: number; what: string }[];
+}
+
 export type CardState = 'open' | 'applied' | 'discarded' | 'expired' | 'failed';
 
 export interface ResearchItemUi {
@@ -30,6 +38,8 @@ export type UiCard =
       chosenOptionId: string | null; state: CardState; result?: string;
       /** apply_deal: a planned purchase is replaced (remove + re-plan at the new amount). */
       replaceFirst?: Intent;
+      /** plan_goal: what the re-plan does to each day (drives the calendar preview chips and the card text). */
+      goal?: GoalPreview;
     }
   | {
       type: 'confirm'; id: string; tool: 'use_rate_in_projections'; title: string; lines: string[];
