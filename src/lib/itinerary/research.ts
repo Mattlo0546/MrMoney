@@ -11,6 +11,7 @@
  * that the cited chunk supports. Anything else gets the retailer's search URL for that exact product and
  * confidence 'low'. Cached in memory for 6h per prefs. Never throws: any failure returns the fallback catalogue.
  */
+import { persistentCache } from '@/lib/cache/db';
 import { z } from 'zod';
 import { generateContent, visibleText, type GroundingMetadata } from '@/lib/agent/gemini';
 import { annotateCitations, EXTRACT_MODEL, RESEARCH_FALLBACK_MODEL, RESEARCH_MODEL, THINKING } from '@/lib/agent/research';
@@ -45,7 +46,7 @@ type Part = 'recipesA' | 'recipesB' | 'fares' | 'wants';
 
 // ------------------------------------------------------------------ cache
 
-const cache = new Map<string, { at: number; catalog: Catalog }>();
+const cache = persistentCache<{ at: number; catalog: Catalog }>('itinerary-catalog');
 const inflight = new Map<string, Promise<Catalog>>();
 export function clearCatalogCache() {
   cache.clear();

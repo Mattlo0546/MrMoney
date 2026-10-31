@@ -4,6 +4,7 @@
  * Cached in memory for 6h per (topic, city) (topic 'other' also keys on the query). Falls back to the curated
  * sample catalogue (`sample: true`) on any failure.
  */
+import { persistentCache } from '@/lib/cache/db';
 import { z } from 'zod';
 import { CuratedOfferSource, type Offer, type OfferCategory } from '@/lib/offers';
 import { generateContent, visibleText, type GroundingMetadata } from './gemini';
@@ -69,7 +70,7 @@ export interface ResearchDeps {
 
 // ------------------------------------------------------------------ cache
 
-const cache = new Map<string, { at: number; result: ResearchResult }>();
+const cache = persistentCache<{ at: number; result: ResearchResult }>('research');
 export function clearResearchCache() {
   cache.clear();
 }

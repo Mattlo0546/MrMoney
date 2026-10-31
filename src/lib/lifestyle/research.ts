@@ -3,6 +3,7 @@
  * account (the shared research tool), in parallel under one deadline. Never throws: anything missing falls back to
  * the curated prices; the savings account is simply left out when live search finds none.
  */
+import { persistentCache } from '@/lib/cache/db';
 import { z } from 'zod';
 import { generateContent, visibleText } from '@/lib/agent/gemini';
 import { annotateCitations, EXTRACT_MODEL, RESEARCH_MODEL, runResearch, THINKING, type ResearchDeps } from '@/lib/agent/research';
@@ -28,7 +29,7 @@ export interface MenuDeps extends ResearchDeps {
   research?: typeof runResearch;
 }
 
-const cache = new Map<string, { at: number; menu: LifestyleMenu }>();
+const cache = persistentCache<{ at: number; menu: LifestyleMenu }>('lifestyle-menu');
 export function clearMenuCache() { cache.clear(); }
 
 const ExtractSchema = {
