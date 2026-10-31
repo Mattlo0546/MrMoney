@@ -15,10 +15,10 @@ _Updated by the orchestrator at every step. Newest entry first._
 | Agent | Role | Task | State |
 |---|---|---|---|
 | shell-ui (Sonnet) | Execution | Tokens, fonts, nav, UI primitives, illustrations, ReUI dropdowns | ✅ done: typecheck, lint and build pass; ReUI -1/-5/-8 installed; -8 used for the app menu |
-| onboarding-ui (Sonnet) | Execution | 10-step onboarding with illustrations + demo shortcut | 🔄 running |
+| onboarding-ui (Sonnet) | Execution | 10-step onboarding with illustrations + demo shortcut | ✅ done: full run on 390 and 1440 → /plan |
 | calendar-ui (Sonnet) | Execution | /plan: summary, calendar/agenda, day detail, bubble, panels | ✅ code done (not browser-verified; it tested the wrong port) → QA |
-| composer-ui (Sonnet) | Execution | Composer, Change panel (preview/apply/trade-off/undo), Offers panel | 🔄 running |
-| pages-ui (Sonnet) | Execution | /projections and /settings | 🔄 running |
+| composer-ui (Sonnet) | Execution | Composer, Change panel (preview/apply/trade-off/undo), Offers panel | ✅ done: demo journey ran end to end; Undo after income not confirmed |
+| pages-ui (Sonnet) | Execution | /projections and /settings | ✅ done. Gaps: funds not editable, bill due day not editable, growth computed in UI |
 | engine-fix (Opus) | Execution | D16 (groceries floor, borrow from the week) and the review fixes (explanations, earmarks, trade-offs, idempotency) | 🔄 running |
 | engine-reviewer (Opus) | Review | Independent engine review | ✅ done: core safe; 15 findings → engine-fix |
 | designer-v2 (Opus) | Design | Mockups v2, Cleo-inspired, all 7 screens + states | ✅ done: 62 images; design check passed; approval recorded (D18) |
@@ -36,6 +36,9 @@ _Updated by the orchestrator at every step. Newest entry first._
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: All 5 UI agents done; repo typecheck and lint clean. UI committed (engine excluded while engine-fix runs). QA agent started.
+- 2026-10-31: Projections and settings done. Playwright now targets localhost:3210 (127.0.0.1 doesn't hydrate under Next dev's origin check).
+- 2026-10-31: Composer done. Engine oddities (today's allowance after £35, concert figures, Undo after income) sent to engine-fix.
 - 2026-10-31: Gemini latency ~3.5s → ~0.85s (gemini-3.5-flash-lite, D19).
 - 2026-10-31: All 5 routes return 200 on :3210; repo typecheck has 0 errors. Calendar done; browser QA pending.
 - 2026-10-31: Moved StudentPlan to port 3210; port 3000 is the user's northstar app. Fixed the /api/parse 500 by removing `runtime` (incompatible with cacheComponents). Gemini latency is ~7s; to optimise. Shell UI done.

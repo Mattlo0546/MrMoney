@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   reporter: "list",
-  use: { baseURL: "http://localhost:3000", trace: "on-first-retry" },
+  use: { baseURL: "http://localhost:3210", trace: "on-first-retry" },
   projects: [
     {
       name: "desktop-chromium",
@@ -17,7 +17,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "pnpm dev",
-    url: "http://localhost:3000",
+    url: "http://localhost:3210",
     reuseExistingServer: true,
     timeout: 120_000,
   },

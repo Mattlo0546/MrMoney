@@ -3,8 +3,6 @@ import { z } from 'zod';
 import { createParser } from '@/lib/parser';
 import { isValidISO } from '@/lib/parser/dates';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 const BodySchema = z.object({
   text: z.string().trim().min(1).max(500),

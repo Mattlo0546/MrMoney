@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0b0c1f;
+  --surface: #16183a;
+  --surface-2: #20235a;
+  --line: #2c3070;
+  --text: #f5f5fa;
+  --muted: #a3a6d1;
+  --accent: #3d5afe;
+  --accent-ink: #ffffff;
+  --lime: #c8f53c;
+  --lime-fill: #c8f53c;
+  --coral: #ff5a5f;
+  --navy: #1b1f5e;
+  --radius-card: 24px;
+  --radius-input: 16px;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f5f5fa;
+  --surface: #ffffff;
+  --surface-2: #ecedf7;
+  --line: #d9dbee;
+  --text: #0f1024;
+  --muted: #55587f;
+  --lime: #5e7a00;
+  --lime-fill: #c8f53c;
+  --coral: #d93a40;
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-lime: var(--lime);
+  --color-lime-fill: var(--lime-fill);
+  --color-coral: var(--coral);
+  --color-navy: var(--navy);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --radius-card: 24px;
+  --radius-input: 16px;
+  /* ReUI / shadcn aliases, mapped to StudentPlan tokens */
+  --color-popover: var(--surface-2);
+  --color-popover-foreground: var(--text);
+  --color-border: var(--line);
+  --color-accent-foreground: var(--accent-ink);
+  --color-destructive: var(--coral);
+  --color-muted-foreground: var(--muted);
+  --color-ring: var(--accent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.font-display { font-family: var(--font-display); }
+
+.money, .tabular { font-variant-numeric: tabular-nums; }
+.money { font-family: var(--font-display); font-weight: 700; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+[data-theme="dark"] :focus-visible, :root:not([data-theme="light"]) :focus-visible {
+  outline-color: var(--lime);
+}
+
+/* Bubble: used via playBubble() (Web Animations API) or by adding .bubble */
+@keyframes bubble-pop {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(200 245 60 / 0); }
+  30%  { transform: scale(1.06); box-shadow: 0 0 0 6px rgb(200 245 60 / 0.35); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(200 245 60 / 0); }
+}
+@keyframes bubble-ring {
+  0%, 80% { opacity: 1; }
+  100%    { opacity: 0; }
+}
+.bubble {
+  animation: bubble-pop 760ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: bubble-ring 1200ms linear both;
+    box-shadow: 0 0 0 3px var(--lime-fill);
+  }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+  }
 }

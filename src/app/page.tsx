@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { HomeRedirect } from "@/components/shell/HomeRedirect";
 
 export default function Home() {
-  redirect("/onboarding");
+  return <HomeRedirect />;
 }
