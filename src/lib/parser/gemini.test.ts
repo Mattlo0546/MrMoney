@@ -15,7 +15,7 @@ describe('GeminiParser (mocked fetch)', () => {
     const r = await new GeminiParser({ apiKey: 'SECRET', fetchImpl: f as unknown as typeof fetch }).parse('Can I spend £20 on dinner tomorrow?', ctx);
     expect(r).toMatchObject({ kind: 'intent', source: 'gemini', intent: { kind: 'hypothetical', amount: { pence: 2000, currency: 'GBP' }, date: '2026-11-11' } });
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toContain('gemini-3.8-flash:generateContent');
+    expect(url).toContain('gemini-3.5-flash-lite:generateContent');
     expect(url).not.toContain('SECRET');
     expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe('SECRET');
     const body = JSON.parse(init.body as string);

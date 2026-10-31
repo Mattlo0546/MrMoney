@@ -4,9 +4,19 @@ import { isValidISO } from './dates';
 import { DemoParser } from './demo';
 import type { ClarifyField, IntentParser, ParseContext, ParseResult } from './types';
 
-export const GEMINI_MODEL = 'gemini-3.8-flash';
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const TIMEOUT_MS = 8000;
+/** gemini-3.8-flash has a ~2.7s server-side floor even with thinking off; 3.5-flash-lite is ~0.9s with identical accuracy on the demo set. */
+export const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+/** 3.5-flash-lite accepts 'minimal'; 3.8-flash rejects it (400) and has no cheap thinking-off other than thinkingBudget:0. */
+export const DEFAULT_THINKING_CONFIG = { thinkingLevel: 'minimal' } as const;
+const DEFAULT_MAX_OUTPUT_TOKENS = 400;
+const endpointFor = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+export const DEFAULT_TIMEOUT_MS = 4000;
+
+/** Timeout from GEMINI_TIMEOUT_MS if set to a positive number, else the default. */
+export function timeoutFromEnv(env: Record<string, string | undefined> = process.env): number {
+  const n = Number(env.GEMINI_TIMEOUT_MS);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_TIMEOUT_MS;
+}
 
 const isoDate = z.string().refine(isValidISO, 'bad date');
 
@@ -123,6 +133,10 @@ export interface GeminiParserOptions {
   apiKey: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  model?: string;
+  /** Raw generationConfig.thinkingConfig; pass null to omit. */
+  thinkingConfig?: Record<string, unknown> | null;
+  maxOutputTokens?: number;
   /** On failure fall back to the deterministic parser (default true). */
   fallback?: boolean;
 }
@@ -133,7 +147,7 @@ export class GeminiParser implements IntentParser {
   private readonly fallback: boolean;
   constructor(private readonly opts: GeminiParserOptions) {
     this.fetchImpl = opts.fetchImpl ?? ((...a) => fetch(...a));
-    this.timeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
+    this.timeoutMs = opts.timeoutMs ?? timeoutFromEnv();
     this.fallback = opts.fallback ?? true;
   }
 
@@ -148,16 +162,21 @@ export class GeminiParser implements IntentParser {
   }
 
   private async call(text: string, ctx: ParseContext): Promise<GeminiOutput> {
+    const thinking = this.opts.thinkingConfig === undefined ? DEFAULT_THINKING_CONFIG : this.opts.thinkingConfig;
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), this.timeoutMs);
     try {
-      const res = await this.fetchImpl(ENDPOINT, {
+      const res = await this.fetchImpl(endpointFor(this.opts.model ?? GEMINI_MODEL), {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': this.opts.apiKey },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemPrompt(ctx) }] },
           contents: [{ role: 'user', parts: [{ text }] }],
-          generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema },
+          generationConfig: {
+            temperature: 0, responseMimeType: 'application/json', responseSchema,
+            maxOutputTokens: this.opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+            ...(thinking ? { thinkingConfig: thinking } : {}),
+          },
         }),
         signal: ctl.signal,
       });
