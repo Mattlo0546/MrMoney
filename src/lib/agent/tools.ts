@@ -1,8 +1,10 @@
 /** Function declarations for gemini-4-argon, generated from the zod arg schemas so both sides agree. */
 import { z } from 'zod';
-import { AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, ResearchArgsSchema, type ClientToolName } from './types';
+import { AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, QuickPlanArgsSchema, ResearchArgsSchema, type ClientToolName } from './types';
 
 const DESCRIPTIONS: Record<ClientToolName, string> = {
+  quick_plan:
+    'Build the whole 12-month plan once you know monthly income, monthly rent and lifestyle (brokie | balanced | comfy | baller). Integer pence (£1,200 = 120000). The app finds live food deals and the best savings account, puts every meal on the calendar and returns all the figures. Also use it to redo the plan with a new lifestyle.',
   setup_plan:
     'Create the plan as soon as you know funds and the end date. Integer pence (£3,900 = 390000). Defaults: minimumReserve 20000, savingsGoal 0, foodWeeklyPence 3500, transportWeeklyPence 1200, priorities [], commitments [] unless given, incomes [] (job pay counts only if amount AND date are confirmed). Rent = monthly commitment with dayOfMonth.',
   record_expense: 'Record committed spending: already spent, or "I need to / have to spend|pay ... today". Applies now, with Undo. category = a category id from context, or a short lowercase label.',
@@ -24,8 +26,12 @@ export function toGeminiSchema(schema: z.ZodType): Record<string, unknown> {
   return js;
 }
 
-/** Without a plan only setup tools make sense; with one, setup_plan is left out (smaller request = faster turn). */
-const NO_PLAN_TOOLS: ClientToolName[] = ['setup_plan', 'start_demo'];
+/** Without a plan only setup tools make sense; with one, setup_plan is left out (smaller request = faster turn).
+ * quick_plan replaces setup_plan in the chat; setup_plan stays declared only when hasPlan is unknown (tests). */
+const NO_PLAN_TOOLS: ClientToolName[] = ['quick_plan', 'start_demo'];
+
+/** The model never sends the menu: the server attaches it. */
+const MODEL_SCHEMAS: Partial<Record<ClientToolName, z.ZodType>> = { quick_plan: QuickPlanArgsSchema };
 
 export function functionDeclarations(hasPlan?: boolean) {
   const names = (Object.keys(CLIENT_TOOL_SCHEMAS) as ClientToolName[]).filter((n) =>
@@ -33,7 +39,7 @@ export function functionDeclarations(hasPlan?: boolean) {
   const client = names.map((name) => ({
     name,
     description: DESCRIPTIONS[name],
-    parametersJsonSchema: toGeminiSchema(CLIENT_TOOL_SCHEMAS[name]),
+    parametersJsonSchema: toGeminiSchema(MODEL_SCHEMAS[name] ?? CLIENT_TOOL_SCHEMAS[name]),
   }));
   return [
     ...client,

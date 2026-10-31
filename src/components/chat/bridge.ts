@@ -12,6 +12,7 @@ import {
   CLIENT_TOOL_SCHEMAS, type ChatContext, type ChatSummary, type ClientToolCall, type PlanDigest, type ToolResult,
 } from '@/lib/agent/types';
 import { buildSetupPayload } from '@/lib/agent/setup';
+import { buildLifestylePlan } from '@/lib/lifestyle/setup';
 import { buildPlanData } from '@/components/plan/calendar/data';
 import type { PreviewData } from '@/components/plan/change/changeState';
 import { newId, type UiCard } from './model';
@@ -239,6 +240,34 @@ function setupPlan(call: Extract<ClientToolCall, { name: 'setup_plan' }>): Exec 
   return { result: planResult(call, snap), cards: [planCard(snap)] };
 }
 
+// ------------------------------------------------------------------ quick_plan
+
+/** Income + rent + lifestyle -> a 12-month plan with every day's meals on the calendar; all figures from code. */
+function quickPlan(call: Extract<ClientToolCall, { name: 'quick_plan' }>): Exec {
+  const today = londonToday();
+  const plan = buildLifestylePlan(call.args, today);
+  const store = getAppStore();
+  const res = store.completeOnboarding(plan.profile, { commitments: plan.commitments, incomes: [] });
+  if (!res.ok) {
+    return fail(call, `The plan could not be built: ${Object.entries(res.errors).map(([k, v]) => `${k}: ${v}`).join('; ')}`);
+  }
+  const out = store.applyItinerary(plan.purchases, 'itemised');
+  const snap = store.getSnapshot();
+  return {
+    result: {
+      id: call.id, name: call.name, ok: true,
+      result: {
+        created: true,
+        mealsOnCalendar: out.ok,
+        numbers: plan.numbers,
+        horizonEnd: plan.profile.horizonEnd,
+        deficits: snap.state?.plan?.deficits.map((d) => d.reason).slice(0, 3) ?? [],
+      },
+    },
+    cards: [planCard(snap)],
+  };
+}
+
 function planResult(call: ClientToolCall, snap: AppSnapshot): ToolResult {
   return {
     id: call.id, name: call.name, ok: true,
@@ -283,6 +312,7 @@ export function executeCall(raw: ClientToolCall): Exec {
   const snap = store.getSnapshot();
 
   if (call.name === 'setup_plan') return setupPlan(call);
+  if (call.name === 'quick_plan') return quickPlan(call);
   if (call.name === 'start_demo') {
     store.startDemo();
     const s = store.getSnapshot();

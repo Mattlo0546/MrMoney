@@ -29,7 +29,7 @@ export function Agenda({ data, today, selected, onSelect, preview, previewDays }
           <ul className="flex flex-col gap-2">
             {w.days.map((d) => {
               const info = data.days.get(d)!;
-              const chips = chipsFor(info, preview.get(d));
+              const chips = chipsFor(info, preview.get(d), { itinerary: true });
               const dt = d === today;
               return (
                 <li key={d}>

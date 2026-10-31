@@ -13,3 +13,5 @@ export { project } from './projections';
 export type { ProjectionAssumptions, ProjectionPoint, ProjectionResult, Scenario } from './projections';
 export { checkInvariants } from './invariants';
 export { demoFixture, demoBaseState, DEMO_TODAY } from './fixture';
+export { itineraryBudget, validateItineraryPurchases, withItineraryCategories, isItemised } from './itinerary';
+export type { ItineraryBudget } from './itinerary';

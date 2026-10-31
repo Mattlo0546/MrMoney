@@ -14,6 +14,7 @@
  * All money is integer pence (GBP). Dates are ISO YYYY-MM-DD (Europe/London).
  */
 import { z } from 'zod';
+import { LIFESTYLES, LifestyleMenuSchema } from '@/lib/lifestyle/types';
 
 // ---------------------------------------------------------------- primitives
 
@@ -142,7 +143,18 @@ export const UseRateInProjectionsArgsSchema = z.object({
 
 export const EmptyArgsSchema = z.object({}).strict();
 
+/** The three things the chat asks before planning everything itself. */
+export const QuickPlanArgsSchema = z.object({
+  monthlyIncomePence: pencePositive,
+  /** 0 = no rent. */
+  monthlyRentPence: penceNonNeg,
+  lifestyle: z.enum(LIFESTYLES),
+});
+/** What the client receives: the model's args plus the food prices and savings account the server researched. */
+export const QuickPlanCallSchema = QuickPlanArgsSchema.extend({ menu: LifestyleMenuSchema });
+
 export const CLIENT_TOOL_SCHEMAS = {
+  quick_plan: QuickPlanCallSchema,
   setup_plan: SetupPlanArgsSchema,
   record_expense: RecordExpenseArgsSchema,
   record_income: RecordIncomeArgsSchema,
@@ -161,6 +173,7 @@ export const CLIENT_TOOL_NAMES = Object.keys(CLIENT_TOOL_SCHEMAS) as ClientToolN
 export type ClientToolArgs = { [K in ClientToolName]: z.infer<(typeof CLIENT_TOOL_SCHEMAS)[K]> };
 
 export type SetupPlanArgs = ClientToolArgs['setup_plan'];
+export type QuickPlanArgs = ClientToolArgs['quick_plan'];
 export type RecordExpenseArgs = ClientToolArgs['record_expense'];
 export type RecordIncomeArgs = ClientToolArgs['record_income'];
 export type CheckPurchaseArgs = ClientToolArgs['check_purchase'];

@@ -4,7 +4,11 @@ import { IconBadge, Stat, WithIcon } from '@/components/ui/Value';
 
 const DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
-export function SummaryStrip({ s, today, nextIncome }: { s: Summary; today: ISODate; nextIncome: { date: ISODate; pence: number } | null }) {
+export function SummaryStrip({ s, today, nextIncome, todayPlanned = 0 }: {
+  s: Summary; today: ISODate; nextIncome: { date: ISODate; pence: number } | null;
+  /** Money set aside for today's spending-plan items (so "Left today £0" reads as "all planned", not "broke"). */
+  todayPlanned?: number;
+}) {
   const spent = s.todaySpent.pence;
   return (
     <section aria-label="Summary" className="grid gap-3 lg:grid-cols-[minmax(300px,380px)_1fr]">
@@ -15,7 +19,9 @@ export function SummaryStrip({ s, today, nextIncome }: { s: Summary; today: ISOD
           <p className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 tabular-nums">
             {spent > 0
               ? <WithIcon icon="spent" tone="onGradient" size={13}>{formatMoney(spent)} spent</WithIcon>
-              : <WithIcon icon="date" tone="onGradient" size={13}>{DAY.format(new Date(`${today}T00:00:00Z`))}</WithIcon>}
+              : todayPlanned > 0 && s.todayRemaining.pence === 0
+                ? <WithIcon icon="planned" tone="onGradient" size={13}>{formatMoney(todayPlanned)} planned today</WithIcon>
+                : <WithIcon icon="date" tone="onGradient" size={13}>{DAY.format(new Date(`${today}T00:00:00Z`))}</WithIcon>}
           </p>
         </div>
         <p className="relative font-display text-[56px] font-extrabold leading-none tracking-tight tabular-nums lg:text-[72px]" data-testid="allowance">

@@ -130,6 +130,9 @@ export function replyFromToolResults(results: ToolResult[], ctx: ChatContext, co
           : 'How much do you have saved now? Tell me and I\'ll project it.';
         break;
       }
+      case 'quick_plan':
+        // The model writes this one (in character); quickPlanReply is the fallback if it is slow.
+        return null;
       case 'undo_last':
         parts.push('Undone. Your plan is back to how it was.');
         break;
@@ -150,4 +153,31 @@ export function replyFromResearch(r: ResearchResult): string {
   const rateTopic = r.topic === 'savings_rates' || r.topic === 'cash_isa_rates';
   const next = rateTopic ? 'Tap "Use this rate in projections" to plan with one.' : 'Tap "Apply to a planned purchase" to use one.';
   return `Top live result: ${what}, ${top.headline} (${top.sourceTitle}). ${next} Check with the provider before acting.`;
+}
+
+/** Fallback reply for quick_plan when the model is too slow: same figures, same tone. Every £ is from the tool result. */
+export function quickPlanReply(result: unknown): string {
+  const n = obj(obj(result).numbers);
+  const save = int(n.savingsPerMonthPence);
+  const year = int(n.savingsPerYearPence);
+  const food = int(n.foodPerMonthPence);
+  const md = obj(n.cheapestMealDeal);
+  const mdPrice = int(md.pricePence);
+  const acct = obj(n.savingsAccount);
+  if (save === undefined || year === undefined || food === undefined) return 'Your plan is ready and every meal is on the calendar.';
+  if (save <= 0) {
+    return [
+      `Bad news, chef: this lifestyle costs more than you earn.`,
+      `• Food: ${formatMoney(food)} a month`,
+      `• You'd be short ${formatMoney(-save)} every month`,
+      `• Try "brokie mode" and let the meal deals save you`,
+    ].join('\n');
+  }
+  const lead = n.lifestyle === 'brokie' && mdPrice !== undefined
+    ? `Congrats, you're officially a meal deal connoisseur! Two ${str(md.merchant, 40)} meal deals a day (${formatMoney(mdPrice)} each) and you save ${formatMoney(save)} a month.`
+    : `Plan locked in! Every meal is on your calendar and you save ${formatMoney(save)} a month.`;
+  const lines = [lead, `• Food: ${formatMoney(food)} a month`, `• Saved after a year: ${formatMoney(year)}`];
+  const bal = int(acct.yearEndBalancePence);
+  if (bal !== undefined) lines.push(`• In ${str(acct.provider, 60)} at ${acct.ratePercent}% AER: ${formatMoney(bal)} after a year`);
+  return lines.join('\n');
 }

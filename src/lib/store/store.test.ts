@@ -122,6 +122,34 @@ describe('store', () => {
     expect(store.getSnapshot().state?.plan).not.toBeNull();
   });
 
+  it('applyItinerary applies itemised purchases, persists, highlights, and undoes', () => {
+    const { storage, store } = mk();
+    store.startDemo();
+    const original = structuredClone(store.getSnapshot().state);
+    const purchases = [
+      { id: 'omelette', date: DEMO_TODAY, category: 'groceries', amount: gbp(450), label: 'Omelette', reason: 'cheap dinner',
+        lines: [{ name: 'Eggs x6', pence: 450, ref: { id: 'r1', origin: 'research' as const, merchant: 'Tesco', item: 'Eggs', sourceUrl: 'https://tesco.com', checked: DEMO_TODAY } }] },
+      { id: 'trainers', date: '2026-11-14', category: 'trainers', amount: gbp(4999), label: 'Trainers' },
+    ];
+    const r = store.applyItinerary(purchases);
+    expect(r.ok && !r.noop).toBe(true);
+    const s = store.getSnapshot().state!;
+    expect(s.profile.allocationMode).toBe('itemised');
+    expect(s.plannedPurchases.map((x) => x.source)).toEqual(['itinerary', 'itinerary']);
+    expect(s.plannedPurchases[0].lines?.[0].name).toBe('Eggs x6');
+    expect(store.getSnapshot().changedDays).toContain('2026-11-14');
+    expect(createAppStore({ storage }).getSnapshot().state).toEqual(s);
+    // A fresh key each time: applying again is not a no-op.
+    const again = store.applyItinerary(purchases);
+    expect(again.ok && !again.noop).toBe(true);
+    expect(store.getSnapshot().state!.plannedPurchases.length).toBe(2);
+    expect(store.undo()).toBe(true);
+    expect(store.undo()).toBe(true);
+    expect(store.getSnapshot().state).toEqual(original);
+    const bad = store.applyItinerary([{ ...purchases[1], amount: gbp(10), lines: [{ ...purchases[0].lines![0], pence: 9 }] }]);
+    expect(bad.ok).toBe(false);
+  });
+
   it('does not crash when storage throws', () => {
     const storage = new MemoryStorage();
     storage.failWith = new Error('SecurityError');
