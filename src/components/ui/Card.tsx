@@ -13,8 +13,8 @@ export function Card({ tone = 'surface', planned, className, ...rest }: CardProp
     <div
       className={cx(
         'rounded-[24px] p-5',
-        tone === 'surface' ? 'bg-surface' : 'bg-surface-2',
-        planned ? 'border border-dashed border-line' : 'border border-transparent',
+        tone === 'surface' ? 'bg-surface shadow-soft' : 'bg-surface-2',
+        planned ? 'border border-dashed border-line-strong' : 'border border-line',
         className,
       )}
       {...rest}

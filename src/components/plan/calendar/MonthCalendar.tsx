@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, dayOfWeek, daysInMonth } from '@/lib/engine';
 import type { ISODate } from '@/lib/engine';
 import type { PlanData } from './data';
-import { Chip, PinIcon, chipsFor, money } from './shared';
+import { ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Layers, TriangleAlert, Wallet } from 'lucide-react';
+import { CHIP_ICON, CHIP_STYLE, Chip, chipsFor, money } from './shared';
+import type { ChipKind } from './shared';
 import type { PreviewChips } from './shared';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -17,13 +19,17 @@ const shiftMonth = (ym: string, n: number) => {
 const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5)) - 1]} ${ym.slice(0, 4)}`;
 const mondayOf = (d: ISODate) => addDays(d, -((dayOfWeek(d) + 6) % 7));
 
+const LEGEND: { kind: ChipKind; label: string }[] = [
+  { kind: 'fixed', label: 'Bill' }, { kind: 'actual', label: 'Spent' }, { kind: 'income', label: 'Income' }, { kind: 'preview', label: 'Preview' },
+];
+
 function Legend() {
   return (
     <ul aria-label="Legend" className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
-      <li className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--navy)] px-2 py-0.5 text-white"><PinIcon className="h-2.5 w-2.5" />Bill</li>
-      <li className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[var(--accent-ink)]">Spent</li>
-      <li className="rounded-full bg-[var(--lime)] px-2 py-0.5 text-[#0B0C1F]">Income</li>
-      <li className="rounded-full border border-dashed border-[var(--lime)] px-2 py-0.5 text-[var(--lime)]">Preview</li>
+      {LEGEND.map(({ kind, label }) => {
+        const Icon = CHIP_ICON[kind];
+        return <li key={kind} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${CHIP_STYLE[kind]}`}><Icon aria-hidden="true" className="size-2.5" strokeWidth={2.5} />{label}</li>;
+      })}
     </ul>
   );
 }
@@ -92,34 +98,35 @@ export function MonthCalendar({
   };
 
   return (
-    <section aria-label="Month calendar" className="flex min-w-0 flex-1 flex-col rounded-3xl bg-[var(--surface)] p-5">
+    <section aria-label="Month calendar" className="flex min-w-0 flex-1 flex-col rounded-3xl border border-line bg-surface p-5 shadow-soft">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <label className="relative mr-2 inline-flex items-center">
+        <label className="relative mr-2 inline-flex items-center gap-2">
+          <span aria-hidden="true" className="grid size-9 place-items-center rounded-[12px] bg-grad-primary shadow-glow"><CalendarDays size={18} strokeWidth={2.2} /></span>
           <span className="sr-only">Month</span>
           {/* TODO(reui): replace the native select with the ReUI dropdown composition. */}
           <select
             value={month}
             onChange={(e) => onMonth(e.target.value)}
-            className="font-display min-h-11 cursor-pointer appearance-none rounded-full bg-transparent py-0 pr-8 text-2xl font-extrabold text-[var(--text)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+            className="font-display min-h-11 cursor-pointer appearance-none rounded-full bg-transparent py-0 pr-8 text-2xl font-extrabold text-text focus-visible:outline-2 focus-visible:outline-accent"
           >
             {months.map((ym) => <option key={ym} value={ym}>{monthLabel(ym)}</option>)}
           </select>
-          <span aria-hidden="true" className="pointer-events-none absolute right-2 text-[var(--muted)]">⌄</span>
+          <ChevronDown aria-hidden="true" size={18} className="pointer-events-none absolute right-2 text-muted" />
         </label>
-        <button type="button" aria-label="Previous month" disabled={!canPrev} onClick={() => onMonth(shiftMonth(month, -1))} className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface-2)] disabled:opacity-40">‹</button>
-        <button type="button" aria-label="Next month" disabled={!canNext} onClick={() => onMonth(shiftMonth(month, 1))} className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface-2)] disabled:opacity-40">›</button>
-        <button type="button" className="min-h-11 rounded-full bg-[var(--surface-2)] px-4 text-sm font-bold" onClick={() => { onMonth(ymOf(today)); onSelect(today); setCursor(today); }}>Today</button>
+        <button type="button" aria-label="Previous month" disabled={!canPrev} onClick={() => onMonth(shiftMonth(month, -1))} className="grid h-11 w-11 place-items-center rounded-full border border-line bg-surface text-text shadow-soft hover:bg-surface-2 disabled:opacity-40"><ChevronLeft aria-hidden="true" size={18} /></button>
+        <button type="button" aria-label="Next month" disabled={!canNext} onClick={() => onMonth(shiftMonth(month, 1))} className="grid h-11 w-11 place-items-center rounded-full border border-line bg-surface text-text shadow-soft hover:bg-surface-2 disabled:opacity-40"><ChevronRight aria-hidden="true" size={18} /></button>
+        <button type="button" className="min-h-11 rounded-full border border-line bg-surface px-4 text-sm font-bold shadow-soft hover:bg-surface-2" onClick={() => { onMonth(ymOf(today)); onSelect(today); setCursor(today); }}>Today</button>
         <div className="ml-auto"><Legend /></div>
       </div>
       <div ref={gridRef} role="grid" aria-label={monthLabel(month)} className="flex flex-col gap-1.5">
-        <div role="row" className="grid grid-cols-7 gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+        <div role="row" className="grid grid-cols-7 gap-1.5 text-xs font-bold uppercase tracking-wide text-muted">
           {WEEKDAYS.map((w) => <div key={w} role="columnheader" className="px-2">{w}</div>)}
         </div>
         {weeks.map((week) => (
           <div key={week[0]} role="row" className="grid grid-cols-7 gap-1.5">
             {week.map((d) => {
               const info = data.days.get(d);
-              if (!info) return <div key={d} role="gridcell" aria-hidden className="min-h-[92px] rounded-2xl border border-[var(--line)] opacity-30" />;
+              if (!info) return <div key={d} role="gridcell" aria-hidden className="min-h-[92px] rounded-2xl border border-line opacity-40" />;
               const chips = chipsFor(info, preview.get(d));
               const shown = chips.slice(0, 2);
               const isToday = d === today;
@@ -139,19 +146,19 @@ export function MonthCalendar({
                     aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
                     onClick={() => { setCursor(d); onSelect(d); }}
                     onKeyDown={(e) => onKey(e, d)}
-                    className={`relative flex min-h-[92px] w-full flex-col gap-1 rounded-2xl border p-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-                      pv ? 'border-dashed border-[var(--lime)] bg-[var(--surface-2)]' : sel ? 'border-[var(--accent)] bg-[var(--surface-2)]' : 'border-[var(--line)] bg-[var(--bg)] hover:bg-[var(--surface-2)]'
-                    } ${pv ? 'border-2' : ''} ${past ? 'opacity-60' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
+                    className={`relative flex min-h-[92px] w-full flex-col gap-1 rounded-2xl border p-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                      pv ? 'border-dashed border-accent-2 bg-accent-soft' : sel ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong hover:bg-surface-2'
+                    } ${pv ? 'border-2' : ''} ${past ? 'opacity-55' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
                   >
                     <span className="flex items-start justify-between">
-                      <span className={`text-sm font-bold ${isToday ? 'rounded-full bg-[var(--accent)] px-2 text-[var(--accent-ink)]' : outside || past ? 'text-[var(--muted)]' : 'text-[var(--text)]'}`}>{Number(d.slice(8))}</span>
-                      {deficit && <span aria-label="Shortfall" className="h-2.5 w-2.5 rounded-full bg-[var(--coral)]" />}
+                      <span className={`text-sm font-bold ${isToday ? 'rounded-full bg-grad-primary px-2 shadow-glow' : outside || past ? 'text-muted' : 'text-text'}`}>{Number(d.slice(8))}</span>
+                      {deficit && <span role="img" aria-label="Shortfall" className="grid size-4 place-items-center rounded-full bg-grad-negative"><TriangleAlert aria-hidden="true" size={9} strokeWidth={2.8} /></span>}
                     </span>
                     <span className="flex min-w-0 flex-col gap-0.5">
                       {shown.map((c) => <Chip key={c.key} chip={c} compact />)}
-                      {chips.length > shown.length && <span className="text-[11px] font-semibold text-[var(--muted)]">+{chips.length - shown.length} more</span>}
+                      {chips.length > shown.length && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted"><Layers aria-hidden="true" size={10} strokeWidth={2.5} />+{chips.length - shown.length} more</span>}
                     </span>
-                    {showTotal && <span className="mt-auto text-base font-bold tabular-nums leading-none">{money(info.total)}</span>}
+                    {showTotal && <span className="mt-auto inline-flex items-center gap-1 text-base font-bold tabular-nums leading-none"><Wallet aria-hidden="true" size={13} strokeWidth={2.4} className="shrink-0 text-accent" />{money(info.total)}</span>}
                   </button>
                 </div>
               );

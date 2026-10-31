@@ -22,11 +22,11 @@ export function Field({ label, children, error, hint, className }: FieldProps) {
       {isValidElement(children) &&
         cloneElement(children, { id, 'aria-describedby': describedBy, 'aria-invalid': error ? true : undefined })}
       {hint && <p id={hintId} className="text-sm text-muted">{hint}</p>}
-      {error && <p id={errId} role="alert" className="text-sm font-semibold text-coral">{error}</p>}
+      {error && <p id={errId} role="alert" className="text-sm font-semibold text-neg">{error}</p>}
     </div>
   );
 }
 
 /** Shared input styling for text/number/select controls. */
 export const inputClass =
-  'min-h-11 w-full rounded-[16px] border border-line bg-surface-2 px-4 text-[16px] text-text placeholder:text-muted aria-[invalid=true]:border-coral';
+  'min-h-11 w-full rounded-[16px] border border-line bg-surface px-4 text-[16px] text-text shadow-soft placeholder:text-muted focus:border-accent aria-[invalid=true]:border-neg';

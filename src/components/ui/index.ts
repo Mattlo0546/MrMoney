@@ -7,3 +7,4 @@ export { Sheet, type SheetProps } from './Sheet';
 export { Spinner } from './Spinner';
 export { Field, inputClass, type FieldProps } from './Field';
 export { playBubble, bubbleDelay, type BubbleOptions } from './bubble';
+export * from './Value';

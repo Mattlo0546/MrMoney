@@ -1,36 +1,97 @@
 @import "tailwindcss";
 
+/*
+ * StudentPlan tokens (v3, "clean white + vivid gradients").
+ * Light is the default. Every colour in a component should come from here.
+ *
+ * Semantic roles
+ *   accent   indigo → violet   primary actions, spending, active tabs, user bubbles
+ *   pos      emerald → teal    income, "fits", good news, applied
+ *   warn     amber → orange    fixed bills, previews that need a decision
+ *   neg      rose → red        shortfalls, over budget, destructive
+ *
+ * Every gradient's lightest stop keeps white text at ≥ 4.5:1 (WCAG AA body text).
+ * The legacy names (--lime, --lime-fill, --coral, --navy) are aliases kept for older call sites.
+ */
 :root {
-  --bg: #0b0c1f;
-  --surface: #16183a;
-  --surface-2: #20235a;
-  --line: #2c3070;
-  --text: #f5f5fa;
-  --muted: #a3a6d1;
-  --accent: #3d5afe;
+  /* Surfaces */
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-2: #f2f3f8;
+  --line: #e5e7ef;
+  --line-strong: #d3d7e3;
+  --text: #0f172a;
+  --muted: #5b6478;          /* 5.9:1 on white */
+
+  /* Solid accents (text on white: all ≥ 4.5:1) */
+  --accent: #4f46e5;         /* indigo-600, 6.3:1 */
+  --accent-2: #7c3aed;       /* violet-600, 5.7:1 */
   --accent-ink: #ffffff;
-  --lime: #c8f53c;
-  --lime-fill: #c8f53c;
-  --coral: #ff5a5f;
-  --navy: #1b1f5e;
+  --accent-soft: #eef0ff;
+  --pos: #047857;            /* emerald-700, 5.5:1 */
+  --pos-soft: #e8f8f1;
+  --warn: #b45309;           /* amber-700, 5.0:1 */
+  --warn-soft: #fff6e6;
+  --neg: #be123c;            /* rose-700, 6.1:1 */
+  --neg-soft: #fff0f2;
+
+  /* Gradients (white text on every stop ≥ 4.5:1) */
+  --grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --grad-hero: linear-gradient(135deg, #4338ca 0%, #6d28d9 55%, #a21caf 100%);
+  --grad-positive: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+  --grad-warning: linear-gradient(135deg, #b45309 0%, #c2410c 100%);
+  --grad-negative: linear-gradient(135deg, #e11d48 0%, #b91c1c 100%);
+  /* Soft tints for icon badges and quiet highlights */
+  --grad-primary-soft: linear-gradient(135deg, #eef0ff 0%, #f4edff 100%);
+  --grad-positive-soft: linear-gradient(135deg, #e6f8f0 0%, #e3f6f4 100%);
+  --grad-warning-soft: linear-gradient(135deg, #fff5e0 0%, #fff0e6 100%);
+  --grad-negative-soft: linear-gradient(135deg, #fff0f3 0%, #fdeeee 100%);
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 1px rgb(15 23 42 / 0.03);
+  --shadow-md: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.12);
+  --shadow-glow: 0 10px 30px -12px rgb(79 70 229 / 0.55);
+  --shadow-glow-pos: 0 10px 30px -14px rgb(4 120 87 / 0.5);
+  --overlay: rgb(15 23 42 / 0.45);
+
+  /* Legacy aliases */
+  --lime: var(--pos);
+  --lime-fill: var(--pos);
+  --coral: var(--neg);
+  --navy: var(--warn);
+
   --radius-card: 24px;
   --radius-input: 16px;
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-[data-theme="light"] {
-  --bg: #f5f5fa;
-  --surface: #ffffff;
-  --surface-2: #ecedf7;
-  --line: #d9dbee;
-  --text: #0f1024;
-  --muted: #55587f;
-  --lime: #5e7a00;
-  --lime-fill: #c8f53c;
-  --coral: #d93a40;
-  color-scheme: light;
+[data-theme="dark"] {
+  --bg: #0b0d17;
+  --surface: #131624;
+  --surface-2: #1b1f31;
+  --line: #262b40;
+  --line-strong: #343a55;
+  --text: #f3f4f9;
+  --muted: #a1a7bf;
+  --accent: #a5b4fc;
+  --accent-2: #c4b5fd;
+  --accent-soft: #1e2140;
+  --pos: #6ee7b7;
+  --pos-soft: #10261f;
+  --warn: #fcd34d;
+  --warn-soft: #2a2010;
+  --neg: #fda4af;
+  --neg-soft: #2c1219;
+  --grad-primary-soft: linear-gradient(135deg, #1e2140 0%, #241c40 100%);
+  --grad-positive-soft: linear-gradient(135deg, #10261f 0%, #0f2526 100%);
+  --grad-warning-soft: linear-gradient(135deg, #2a2010 0%, #2a1a10 100%);
+  --grad-negative-soft: linear-gradient(135deg, #2c1219 0%, #2a1313 100%);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --overlay: rgb(0 0 0 / 0.6);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -38,10 +99,20 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-overlay: var(--overlay);
   --color-lime: var(--lime);
   --color-lime-fill: var(--lime-fill);
   --color-coral: var(--coral);
@@ -50,14 +121,41 @@
   --font-display: var(--font-display);
   --radius-card: 24px;
   --radius-input: 16px;
+  --shadow-soft: var(--shadow-sm);
+  --shadow-card: var(--shadow-md);
+  --shadow-glow: var(--shadow-glow);
   /* ReUI / shadcn aliases, mapped to StudentPlan tokens */
-  --color-popover: var(--surface-2);
+  --color-popover: var(--surface);
   --color-popover-foreground: var(--text);
   --color-border: var(--line);
-  --color-accent-foreground: var(--accent-ink);
-  --color-destructive: var(--coral);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--neg);
   --color-muted-foreground: var(--muted);
   --color-ring: var(--accent);
+}
+
+/* Gradient fills: pair with text-white (all stops pass AA for white text). */
+@utility bg-grad-primary { background-image: var(--grad-primary); color: #fff; }
+@utility bg-grad-hero { background-image: var(--grad-hero); color: #fff; }
+@utility bg-grad-positive { background-image: var(--grad-positive); color: #fff; }
+@utility bg-grad-warning { background-image: var(--grad-warning); color: #fff; }
+@utility bg-grad-negative { background-image: var(--grad-negative); color: #fff; }
+@utility bg-grad-primary-soft { background-image: var(--grad-primary-soft); }
+@utility bg-grad-positive-soft { background-image: var(--grad-positive-soft); }
+@utility bg-grad-warning-soft { background-image: var(--grad-warning-soft); }
+@utility bg-grad-negative-soft { background-image: var(--grad-negative-soft); }
+/* Gradient text for hero numbers (both stops ≥ 4.5:1 on white). */
+@utility text-grad-primary {
+  background-image: var(--grad-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility text-grad-positive {
+  background-image: var(--grad-positive);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 html {
@@ -86,15 +184,12 @@ h1, h2, h3 {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-[data-theme="dark"] :focus-visible, :root:not([data-theme="light"]) :focus-visible {
-  outline-color: var(--lime);
-}
 
 /* Bubble: used via playBubble() (Web Animations API) or by adding .bubble */
 @keyframes bubble-pop {
-  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(200 245 60 / 0); }
-  30%  { transform: scale(1.06); box-shadow: 0 0 0 6px rgb(200 245 60 / 0.35); }
-  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(200 245 60 / 0); }
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(124 58 237 / 0); }
+  30%  { transform: scale(1.06); box-shadow: 0 0 0 6px rgb(124 58 237 / 0.28); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(124 58 237 / 0); }
 }
 @keyframes bubble-ring {
   0%, 80% { opacity: 1; }
@@ -107,7 +202,7 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   .bubble {
     animation: bubble-ring 1200ms linear both;
-    box-shadow: 0 0 0 3px var(--lime-fill);
+    box-shadow: 0 0 0 3px var(--accent-2);
   }
   *, *::before, *::after {
     scroll-behavior: auto !important;

@@ -307,9 +307,12 @@ export function previewIntent(state: EngineState, intent: Intent, today: ISODate
 function expense(w: Work, date: ISODate, cat: CategoryId, amount: number, intent: Intent, link?: PlannedPurchase): Outcome {
   const key = intent.idempotencyKey;
   const note = intent.kind === 'expense' ? intent.note : undefined;
+  // An expense completing a planned purchase inherits that purchase's item reference unless it names its own.
+  const ref = (intent.kind === 'expense' ? intent.ref : undefined) ?? link?.ref;
   w.s.ledger.push({
     id: `tx-${key}`, idempotencyKey: key, date, amount: gbp(amount), kind: 'expense', category: cat, note,
     ...(link ? { plannedPurchaseId: link.id } : {}),
+    ...(ref ? { ref } : {}),
   });
   refresh(w);
   // A completed planned purchase in another cell releases its earmark: use that money first.
@@ -421,7 +424,7 @@ export type Affordability =
       dayAvailable?: number; dayRemainingTotal?: number; borrowable?: number; borrowing?: Borrowing; message?: string;
     };
 
-interface RequestLike { amount: HypotheticalIntent['amount']; date: ISODate; category: CategoryId; label?: string; idempotencyKey?: string }
+interface RequestLike { amount: HypotheticalIntent['amount']; date: ISODate; category: CategoryId; label?: string; idempotencyKey?: string; ref?: HypotheticalIntent['ref'] }
 
 function validateRequest(base: EngineState, r: RequestLike, today: ISODate): Fail | null {
   const bad = checkAmount(r.amount) ?? checkDate(r.date);
@@ -607,7 +610,7 @@ function placeRequest(base: EngineState, r: RequestLike, today: ISODate, key: st
       setP(w, d, c, getP(w, d, c) + moved);
       tradeoff = { optionId: strat.id, title: strat.title, amount: gbp(moved), sources: toSources(w, movesBetween(w, snap, d)) };
     }
-    w.s.plannedPurchases.push({ id: `pp-${key}`, date: d, category: c, amount: r.amount, label: r.label ?? categoryName(w.s, c) });
+    w.s.plannedPurchases.push({ id: `pp-${key}`, date: d, category: c, amount: r.amount, label: r.label ?? categoryName(w.s, c), ...(r.ref ? { ref: r.ref } : {}) });
     refresh(w);
     const use = w.uses.get(cellKey(d, c)) ?? 0;
     const cur = getP(w, d, c);

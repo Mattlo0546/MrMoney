@@ -50,14 +50,14 @@ export function Sheet({ open, onClose, title, children, className }: SheetProps)
   if (!open || typeof document === 'undefined') return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-overlay backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={cx('relative flex max-h-[88dvh] w-full max-w-2xl flex-col rounded-t-[24px] bg-surface p-5 pb-8 shadow-2xl outline-none', className)}
+        className={cx('relative flex max-h-[88dvh] w-full max-w-2xl flex-col rounded-t-[24px] border border-line bg-surface p-5 pb-8 shadow-2xl outline-none', className)}
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line" aria-hidden="true" />
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -66,7 +66,7 @@ export function Sheet({ open, onClose, title, children, className }: SheetProps)
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-11 place-items-center rounded-full bg-surface-2 text-text"
+            className="grid size-11 place-items-center rounded-full border border-line bg-surface text-text hover:bg-surface-2"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
           </button>

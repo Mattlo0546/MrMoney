@@ -76,6 +76,28 @@ export interface Income {
   note?: string;
 }
 
+/**
+ * The real-world thing a spend decision is tied to: one merchant, one exact item, its price and where that price
+ * came from. Display and traceability only; the engine stores it and never uses it in arithmetic.
+ */
+export interface ItemRef {
+  /** Catalogue item id (e.g. "itsu-chicken-gyoza-box") or a research ref (e.g. "r-k3j9x2-0"). */
+  id: string;
+  origin: 'catalogue' | 'research';
+  merchant: string;
+  /** Merchant's own domain, e.g. "itsu.com"; used to find the bundled logo. */
+  domain?: string;
+  item: string;
+  detail?: string;
+  /** The item's listed price (may differ from the amount spent or set aside). */
+  pricePence?: number;
+  sourceUrl: string;
+  sourceTitle?: string;
+  /** ISO date the price was checked against the source. */
+  checked: string;
+  confidence?: 'low' | 'medium';
+}
+
 export interface Transaction {
   id: string;
   idempotencyKey: string;
@@ -87,6 +109,8 @@ export interface Transaction {
   note?: string;
   /** Expense: the planned purchase this actual completes (its earmark is released). */
   plannedPurchaseId?: string;
+  /** Expense: the exact item and merchant it was spent on. */
+  ref?: ItemRef;
 }
 
 /** "Keep £X available for <date>": that day's unspent allowance stays >= amount. */
@@ -105,6 +129,8 @@ export interface PlannedPurchase {
   category: CategoryId;
   amount: Money;
   label: string;
+  /** The exact item and merchant the money is set aside for. */
+  ref?: ItemRef;
 }
 
 export interface Allocation {
@@ -187,6 +213,7 @@ export interface ExpenseIntent extends IntentBase {
    * purchase on the same day with the same category (or a label equal to the category
    * or note) is matched automatically. */
   plannedPurchaseId?: string;
+  ref?: ItemRef;
 }
 export interface HypotheticalIntent extends IntentBase {
   kind: 'hypothetical';
@@ -196,6 +223,7 @@ export interface HypotheticalIntent extends IntentBase {
   label?: string;
   /** Chosen trade-off option id when the request does not fit. */
   tradeoffOptionId?: string;
+  ref?: ItemRef;
 }
 export interface IncomeIntent extends IntentBase {
   kind: 'income';

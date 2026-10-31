@@ -2,14 +2,16 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { formatMoney, gbp, project } from '@/lib/engine';
 import type { ProjectionAssumptions, ProjectionPoint, Scenario } from '@/lib/engine';
-import { Card, Field, PageFrame, parsePounds } from '@/components/settings/kit';
+import { ChartLine, Info, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { Card, Choice, Field, PageFrame, parsePounds } from '@/components/settings/kit';
+import { IconBadge, WithIcon, type ValueKind } from '@/components/ui/Value';
 
 const PERIODS = [3, 6, 12, 24] as const;
-const SCEN: { key: Scenario; label: string }[] = [
-  { key: 'low', label: 'Low' },
-  { key: 'base', label: 'Base' },
-  { key: 'high', label: 'High' },
-];
+const SCEN = [
+  { key: 'low', label: 'Low', icon: TrendingDown },
+  { key: 'base', label: 'Base', icon: Minus },
+  { key: 'high', label: 'High', icon: TrendingUp },
+] as const satisfies readonly { key: Scenario; label: string; icon: unknown }[];
 const KEY = 'studentplan.projections.v1';
 
 interface Inputs {
@@ -56,7 +58,7 @@ function prefill(): Partial<Inputs> {
 
 export function ProjectionsView() {
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
-  return mounted ? <Projections /> : <PageFrame title="Projections"><span /></PageFrame>;
+  return mounted ? <Projections /> : <PageFrame title="Projections" icon={ChartLine}><span /></PageFrame>;
 }
 
 function Projections() {
@@ -102,75 +104,70 @@ function Projections() {
   const showTable = result?.status === 'ok';
   const money = (m?: { pence: number }) => (m ? formatMoney(m.pence) : '—');
 
-  const rows: { label: string; get: (p: ProjectionPoint) => { pence: number } | undefined; strong?: boolean }[] = [
-    { label: 'Savings', get: (p) => p.savings },
-    { label: 'Investments', get: (p) => p.investments },
-    { label: 'Total', get: (p) => p.total, strong: true },
-    { label: 'You put in', get: (p) => p.contributed },
-    { label: 'Growth', get: (p) => p.growth },
-    { label: 'Income received', get: (p) => p.cumulativeIncome },
+  const rows: { label: string; icon: ValueKind; get: (p: ProjectionPoint) => { pence: number } | undefined; strong?: boolean }[] = [
+    { label: 'Savings', icon: 'savings', get: (p) => p.savings },
+    { label: 'Investments', icon: 'investments', get: (p) => p.investments },
+    { label: 'Total', icon: 'total', get: (p) => p.total, strong: true },
+    { label: 'You put in', icon: 'contributed', get: (p) => p.contributed },
+    { label: 'Growth', icon: 'growth', get: (p) => p.growth },
+    { label: 'Income received', icon: 'income', get: (p) => p.cumulativeIncome },
   ];
 
   return (
-    <PageFrame title="Projections">
-      <p className="-mt-3 mb-1 inline-flex w-fit rounded-full bg-[var(--p-surface2)] px-3 py-1 text-sm font-semibold text-[var(--p-muted)]">
+    <PageFrame title="Projections" icon={ChartLine}>
+      <p className="-mt-3 mb-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-sm font-semibold text-muted shadow-soft">
+        <Info aria-hidden="true" size={14} className="shrink-0 text-accent" />
         Projection, not advice or a guarantee
       </p>
 
-      <Card title="How far ahead?">
-        <div role="radiogroup" aria-label="Period" className="grid grid-cols-4 gap-2">
-          {PERIODS.map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={v.months === m}
-              onClick={() => setV((p) => ({ ...p, months: m }))}
-              className={`min-h-12 rounded-full text-base font-bold transition-transform active:scale-95 ${v.months === m ? 'bg-[var(--p-accent)] text-[var(--p-accent-ink)]' : 'border border-[var(--p-line)] bg-[var(--p-surface2)]'}`}
-            >
-              {m} mo
-            </button>
-          ))}
-        </div>
+      <Card title="How far ahead?" icon="days">
+        <Choice label="Period" cols={4} value={String(v.months)} onPick={(m) => setV((p) => ({ ...p, months: Number(m) }))}
+          options={PERIODS.map((m) => ({ id: String(m), label: `${m} mo`, icon: 'days' as const }))} />
       </Card>
 
-      <section aria-live="polite" className="rounded-[24px] border border-[var(--p-line)] bg-[var(--p-surface)] p-5 sm:p-6">
-        {showTable && base ? (
-          <>
-            <p className="text-sm font-semibold text-[var(--p-muted)]">Base total after {v.months} months</p>
-            <p data-testid="hero" className="font-[family-name:var(--font-display,inherit)] text-6xl font-extrabold tabular-nums tracking-tight text-[var(--p-lime)] sm:text-7xl">
-              {formatMoney(base.total.pence)}
+      <section aria-live="polite" className="overflow-hidden rounded-[24px] border border-line bg-surface shadow-soft">
+        <div className="flex items-start gap-4 border-b border-line bg-grad-primary-soft p-5 sm:p-6">
+          <IconBadge icon="total" tone="primary" size="lg" solid />
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+              <WithIcon icon="days" tone="primary" size={14}>Base total after {v.months} months</WithIcon>
             </p>
-          </>
-        ) : showTable ? (
-          <>
-            <p className="text-sm font-semibold text-[var(--p-muted)]">Base total after {v.months} months</p>
-            <p className="text-3xl font-extrabold text-[var(--p-muted)]">Enter a base rate to see this</p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm font-semibold text-[var(--p-muted)]">Base total after {v.months} months</p>
-            <p data-testid="empty" className="text-3xl font-extrabold">Enter rates to see this</p>
-          </>
-        )}
+            {showTable && base ? (
+              <p data-testid="hero" className="font-display text-5xl font-extrabold tabular-nums tracking-tight text-grad-primary sm:text-7xl">
+                {formatMoney(base.total.pence)}
+              </p>
+            ) : showTable ? (
+              <p className="text-2xl font-extrabold text-muted sm:text-3xl">Enter a base rate to see this</p>
+            ) : (
+              <p data-testid="empty" className="text-2xl font-extrabold sm:text-3xl">Enter rates to see this</p>
+            )}
+          </div>
+        </div>
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
         {showTable && (
           <div className="mt-5">
             <table className="w-full table-fixed text-right text-[13px] tabular-nums sm:text-base">
               <caption className="sr-only">Projected values after {v.months} months</caption>
               <thead>
-                <tr className="text-sm text-[var(--p-muted)]">
-                  <th scope="col" className="w-[26%] py-2 text-left font-semibold"><span className="sr-only">Line</span></th>
-                  {SCEN.map((s) => <th key={s.key} scope="col" className="py-2 font-semibold">{s.label}</th>)}
+                <tr className="text-sm text-muted">
+                  <th scope="col" className="w-[30%] py-2 text-left font-semibold"><span className="sr-only">Line</span></th>
+                  {SCEN.map((s) => (
+                    <th key={s.key} scope="col" className="py-2 font-semibold">
+                      <span className="inline-flex items-center justify-end gap-1"><s.icon aria-hidden="true" size={14} className={s.key === 'base' ? 'text-accent' : s.key === 'high' ? 'text-pos' : 'text-warn'} />{s.label}</span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.label} className="border-t border-[var(--p-line)]">
-                    <th scope="row" className={`py-3 pr-1 text-left leading-tight ${r.strong ? 'font-bold' : 'font-semibold text-[var(--p-muted)]'}`}>{r.label}</th>
+                  <tr key={r.label} className={`border-t border-line ${r.strong ? 'bg-accent-soft/60' : ''}`}>
+                    <th scope="row" className={`py-3 pr-1 text-left leading-tight ${r.strong ? 'font-bold' : 'font-semibold text-muted'}`}>
+                      <span className="flex items-center gap-1.5 sm:gap-2"><IconBadge icon={r.icon} tone={r.strong ? 'primary' : r.icon === 'growth' || r.icon === 'income' ? 'positive' : 'neutral'} size="xs" solid={r.strong} />{r.label}</span>
+                    </th>
                     {SCEN.map((s) => {
                       const p = last(s.key);
                       return (
-                        <td key={s.key} className={`py-3 ${r.strong ? 'text-sm font-extrabold sm:text-lg' : 'font-semibold'}`}>
+                        <td key={s.key} className={`py-3 ${r.strong ? 'text-sm font-extrabold text-accent sm:text-lg' : 'font-semibold'}`}>
                           {p ? money(r.get(p)) : '—'}
                         </td>
                       );
@@ -180,19 +177,20 @@ function Projections() {
               </tbody>
             </table>
             {result?.status === 'ok' && result.missing.length > 0 && (
-              <p className="mt-3 text-sm text-[var(--p-muted)]">Columns marked — need a rate for each of the amounts you entered.</p>
+              <p className="mt-3 text-sm text-muted">Columns marked — need a rate for each of the amounts you entered.</p>
             )}
           </div>
         )}
-        {result?.status === 'invalid' && <p role="alert" className="mt-3 text-[var(--p-coral)]">{result.message}</p>}
+        {result?.status === 'invalid' && <p role="alert" className="mt-3 text-neg">{result.message}</p>}
+        </div>
       </section>
 
-      <Card title="Savings" hint="Money kept in a savings account.">
+      <Card title="Savings" icon="savings" hint="Money kept in a savings account.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="savingsNow" label="Savings now" prefix="£" inputMode="decimal" placeholder="0" value={v.savingsNow} onChange={set('savingsNow')} error={errors.savingsNow} />
-          <Field id="savingsAdd" label="Add per month" prefix="£" inputMode="decimal" placeholder="0" value={v.savingsAdd} onChange={set('savingsAdd')} error={errors.savingsAdd} />
+          <Field id="savingsNow" icon="savings" iconTone="positive" label="Savings now" prefix="£" inputMode="decimal" placeholder="0" value={v.savingsNow} onChange={set('savingsNow')} error={errors.savingsNow} />
+          <Field id="savingsAdd" icon="contributed" label="Add per month" prefix="£" inputMode="decimal" placeholder="0" value={v.savingsAdd} onChange={set('savingsAdd')} error={errors.savingsAdd} />
         </div>
-        <p className="mb-2 mt-5 text-sm font-semibold text-[var(--p-muted)]">Savings AER (yearly)</p>
+        <p className="mb-2 mt-5 text-sm font-semibold text-muted">Savings AER (yearly)</p>
         <div className="grid grid-cols-3 gap-3">
           <Field id="sLow" label="Low" suffix="%" inputMode="decimal" value={v.sLow} onChange={set('sLow')} error={errors.sLow} />
           <Field id="sBase" label="Base" suffix="%" inputMode="decimal" value={v.sBase} onChange={set('sBase')} error={errors.sBase} />
@@ -200,12 +198,12 @@ function Projections() {
         </div>
       </Card>
 
-      <Card title="Investments" hint="Returns can fall as well as rise. Use your own range.">
+      <Card title="Investments" icon="investments" hint="Returns can fall as well as rise. Use your own range.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="invNow" label="Investments now" prefix="£" inputMode="decimal" placeholder="0" value={v.invNow} onChange={set('invNow')} error={errors.invNow} />
-          <Field id="invAdd" label="Add per month" prefix="£" inputMode="decimal" placeholder="0" value={v.invAdd} onChange={set('invAdd')} error={errors.invAdd} />
+          <Field id="invNow" icon="investments" label="Investments now" prefix="£" inputMode="decimal" placeholder="0" value={v.invNow} onChange={set('invNow')} error={errors.invNow} />
+          <Field id="invAdd" icon="contributed" label="Add per month" prefix="£" inputMode="decimal" placeholder="0" value={v.invAdd} onChange={set('invAdd')} error={errors.invAdd} />
         </div>
-        <p className="mb-2 mt-5 text-sm font-semibold text-[var(--p-muted)]">Expected annual return</p>
+        <p className="mb-2 mt-5 text-sm font-semibold text-muted">Expected annual return</p>
         <div className="grid grid-cols-3 gap-3">
           <Field id="iLow" label="Low" suffix="%" inputMode="decimal" value={v.iLow} onChange={set('iLow')} error={errors.iLow} />
           <Field id="iBase" label="Base" suffix="%" inputMode="decimal" value={v.iBase} onChange={set('iBase')} error={errors.iBase} />
@@ -213,8 +211,8 @@ function Projections() {
         </div>
       </Card>
 
-      <Card title="Income">
-        <Field id="income" label="Expected monthly income" prefix="£" inputMode="decimal" placeholder="0" value={v.income} onChange={set('income')} error={errors.income} hint="Counted once a month for the period." />
+      <Card title="Income" icon="income">
+        <Field id="income" icon="income" iconTone="positive" label="Expected monthly income" prefix="£" inputMode="decimal" placeholder="0" value={v.income} onChange={set('income')} error={errors.income} hint="Counted once a month for the period." />
       </Card>
     </PageFrame>
   );

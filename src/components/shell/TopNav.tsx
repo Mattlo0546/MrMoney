@@ -1,14 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChartLine, SlidersHorizontal, Wallet } from 'lucide-react';
 import { useAppSnapshot } from '@/lib/store';
 import { AppMenu } from './AppMenu';
 
 const LINKS = [
-  { href: '/plan', label: 'Plan' },
-  { href: '/projections', label: 'Projections' },
-  { href: '/settings', label: 'Settings' },
+  { href: '/plan', label: 'Plan', icon: Wallet },
+  { href: '/projections', label: 'Projections', icon: ChartLine },
+  { href: '/settings', label: 'Settings', icon: SlidersHorizontal },
 ];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -25,13 +25,13 @@ export function TopNav() {
   const hasPlan = hydrated && !!state;
   const labels = demoActive && demoDate ? demoLabels(demoDate) : null;
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-md">
       <div className="mx-auto flex min-h-14 max-w-[1400px] items-center gap-2 px-4 lg:gap-4 lg:px-6">
         <Link href="/" className="inline-flex min-h-11 shrink-0 items-center gap-2 font-display text-lg font-extrabold tracking-tight lg:text-xl">
-          <span aria-hidden="true" className="grid size-8 place-items-center rounded-[10px] bg-lime-fill text-[#0F1024]">
+          <span aria-hidden="true" className="grid size-8 place-items-center rounded-[10px] bg-grad-primary shadow-glow">
             <CalendarDays size={18} />
           </span>
-          <span>Student<span className="text-lime">Plan</span></span>
+          <span>Student<span className="text-grad-primary">Plan</span></span>
         </Link>
         {hasPlan && (
           <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">
@@ -42,10 +42,11 @@ export function TopNav() {
                   key={l.href}
                   href={l.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex min-h-11 items-center rounded-full px-4 text-[15px] font-bold ${
-                    active ? 'bg-surface-2 text-text' : 'text-muted hover:text-text'
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-bold transition-colors ${
+                    active ? 'bg-grad-primary shadow-glow' : 'text-muted hover:bg-surface-2 hover:text-text'
                   }`}
                 >
+                  <l.icon aria-hidden="true" size={16} strokeWidth={2.3} />
                   {l.label}
                 </Link>
               );
@@ -56,9 +57,9 @@ export function TopNav() {
           {hasPlan && labels && (
             <span
               title="Demo mode"
-              className="inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-lime-fill px-3 text-xs font-bold text-lime"
+              className="inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-pos/25 bg-pos-soft px-3 text-xs font-bold text-pos"
             >
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-lime-fill" />
+              <CalendarDays aria-hidden="true" size={14} strokeWidth={2.3} className="shrink-0" />
               <span className="lg:hidden">{labels.short}</span>
               <span className="hidden lg:inline">{labels.full}</span>
             </span>
@@ -68,7 +69,7 @@ export function TopNav() {
       </div>
       {hasPlan && (
         <nav aria-label="Main" className="px-4 pb-3 lg:hidden">
-          <div className="mx-auto grid max-w-[1400px] grid-cols-3 rounded-full border border-line bg-surface p-1">
+          <div className="mx-auto grid max-w-[1400px] grid-cols-3 gap-1 rounded-full border border-line bg-surface-2 p-1">
             {LINKS.map((l) => {
               const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
               return (
@@ -76,10 +77,11 @@ export function TopNav() {
                   key={l.href}
                   href={l.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex min-h-11 items-center justify-center rounded-full text-sm font-bold ${
-                    active ? 'bg-accent text-accent-ink' : 'text-muted'
+                  className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full text-sm font-bold ${
+                    active ? 'bg-grad-primary shadow-glow' : 'text-muted'
                   }`}
                 >
+                  <l.icon aria-hidden="true" size={15} strokeWidth={2.3} />
                   {l.label}
                 </Link>
               );

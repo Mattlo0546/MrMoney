@@ -1,7 +1,8 @@
 /** The chat-contract loop: gemini-4-argon with function calling, server tools run inline, client tools round-trip via modelState. */
 import { z } from 'zod';
-import { CHAT_MODEL, CHAT_TIMEOUT_MS, GeminiError, generateContent, visibleText, type GeminiContent, type GeminiPart } from './gemini';
+import { CHAT_MODEL, CHAT_TIMEOUT_MS, GeminiError, generateContent, hedge, visibleText, type GeminiContent, type GeminiPart } from './gemini';
 import { systemPrompt } from './prompt';
+import { replyFromResearch, replyFromToolResults } from './replies';
 import { researchForModel, runResearch, type ResearchDeps } from './research';
 import { decodeState, encodeState, type ModelState, type PendingCall } from './state';
 import { functionDeclarations } from './tools';
@@ -25,9 +26,22 @@ export interface LoopDeps {
   postResearchTimeoutMs?: number;
   /** Delay before the single retry on 429/5xx (default 600ms). */
   retryDelayMs?: number;
-  /** Optional thinkingConfig for the chat model (default: model default). */
+  /** Optional thinkingConfig for the chat model (default: model default, which benchmarked faster than 'low'). */
   thinkingConfig?: Record<string, unknown>;
+  /** Start a duplicate request when a model call is slower than this (default CHAT_HEDGE_AFTER_MS). */
+  hedgeAfterMs?: number;
+  /** Build replies from tool results without another model call when possible (default true). */
+  directReplies?: boolean;
 }
+
+/**
+ * Probe 2026-10-31 (10 interleaved calls, "I need to spend £35 on a shower filter today"): default thinking 3.5–9.0s,
+ * thinkingLevel 'low' 4.9–29.3s ('minimal' is rejected by gemini-4-argon), so the default is kept. Tails of 20–29s
+ * happen at random, so a slow call is hedged with an identical second request (same model, so thoughtSignatures stay valid).
+ */
+export const CHAT_HEDGE_AFTER_MS = 8_000;
+/** Replies are 1–2 sentences; the cap mainly bounds runaway output (thinking counts toward it). */
+export const CHAT_MAX_OUTPUT_TOKENS = 2048;
 
 /** The summary step after research gets less time so the whole research turn stays near the ~30s budget. */
 export const POST_RESEARCH_TIMEOUT_MS = 12_000;
@@ -103,6 +117,11 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
       return fnResponse(p.name, p.id, r.ok ? { ok: true, result: r.result ?? null } : { ok: false, error: r.error ?? 'Failed', result: r.result ?? null });
     });
     contents.push({ role: 'user', parts });
+    // Client tools succeeded: the engine's own explanation answers the user, so skip the summary model call.
+    if (deps.directReplies !== false && st.pending.every((p) => p.client)) {
+      const direct = replyFromToolResults(req.toolResults, req.context, st.contents);
+      if (direct) return { kind: 'reply', text: direct.text, cards: direct.cards, phase: 'done' };
+    }
   } else {
     contents = contentsFromMessages(req.messages);
     if (!contents.length || contents[contents.length - 1].role !== 'user') return errorReply('Send me a message to get started.', false);
@@ -111,7 +130,7 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
 
   const continuedAfterClientSuccess = !!req.toolResults?.length && req.toolResults.every((r) => r.ok);
   const firstStep = step + 1;
-  const tools = [{ functionDeclarations: functionDeclarations() }];
+  const tools = [{ functionDeclarations: functionDeclarations(req.context.hasPlan) }];
   const sys = systemPrompt(req.context);
 
   while (true) {
@@ -124,15 +143,21 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
     try {
       const baseTimeout = deps.timeoutMs ?? CHAT_TIMEOUT_MS;
       const timeoutMs = cards.some((c) => c.type === 'research_results') ? Math.min(baseTimeout, deps.postResearchTimeoutMs ?? POST_RESEARCH_TIMEOUT_MS) : baseTimeout;
-      const call = () => generateContent({
-        apiKey, model: deps.model ?? CHAT_MODEL, fetchImpl: deps.fetchImpl, timeoutMs,
-        body: {
-          systemInstruction: { parts: [{ text: sys }] },
-          contents,
-          tools,
-          generationConfig: { temperature: 1, ...(deps.thinkingConfig ? { thinkingConfig: deps.thinkingConfig } : {}) },
-        },
-      });
+      const body = {
+        systemInstruction: { parts: [{ text: sys }] },
+        contents,
+        tools,
+        generationConfig: { temperature: 1, maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS, ...(deps.thinkingConfig ? { thinkingConfig: deps.thinkingConfig } : {}) },
+      };
+      const hedgeAfter = deps.hedgeAfterMs ?? CHAT_HEDGE_AFTER_MS;
+      // The hedge gets the time left in the same budget, so a hedged step never runs past timeoutMs.
+      const call = () => {
+        const t0 = Date.now();
+        return hedge((signal, attempt) => generateContent({
+          apiKey, model: deps.model ?? CHAT_MODEL, fetchImpl: deps.fetchImpl, signal, body,
+          timeoutMs: attempt === 0 ? timeoutMs : Math.max(1000, timeoutMs - (Date.now() - t0)),
+        }), hedgeAfter < timeoutMs ? hedgeAfter : timeoutMs + 1);
+      };
       // One retry for transient HTTP errors only (not timeouts: the latency budget is spent).
       const res = await call().catch(async (e: unknown) => {
         if (e instanceof GeminiError && e.status !== undefined && (e.status === 429 || e.status >= 500)) {
@@ -220,6 +245,13 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
         phase: 'awaiting_client',
         step,
       };
+    }
+    // Research answered everything this step asked: reply from the cited items without a summary model call.
+    const researchCards = cards.filter((c) => c.type === 'research_results');
+    const allResearchOk = calls.every((c) => c.name === 'research') && pending.every((p) => p.response?.functionResponse?.response.ok === true);
+    if (deps.directReplies !== false && !clarify && researchCards.length && allResearchOk) {
+      const last = researchCards[researchCards.length - 1];
+      if (last.type === 'research_results') return { kind: 'reply', text: replyFromResearch(last), cards, phase: 'done' };
     }
     if (clarify) {
       const text = draft ? `${draft}\n\n${clarify.question}`.trim() : clarify.question;

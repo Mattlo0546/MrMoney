@@ -28,7 +28,7 @@ describe('runChat: client tool round trip', () => {
       { functionCall: { name: 'setup_plan', args: SETUP_ARGS, id: 'call_1' }, thoughtSignature: 'SIG-abc==' },
     ];
     const f = scriptedFetch([() => geminiResponse(modelParts), () => geminiResponse([{ text: 'Your plan is ready.' }])]);
-    const r1 = asCalls(await runChat(req('I have £3,900 until end of Jan, rent £620 on the 1st'), deps(f.impl)));
+    const r1 = asCalls(await runChat(req('I have £3,900 until end of Jan, rent £620 on the 1st'), deps(f.impl, { directReplies: false })));
     expect(r1.calls).toEqual([{ id: 'call_1', name: 'setup_plan', args: SETUP_ARGS }]);
     expect(r1.assistantDraft).toBe('Setting that up.');
     expect(r1.phase).toBe('awaiting_client');
@@ -43,7 +43,7 @@ describe('runChat: client tool round trip', () => {
         toolResults: [{ id: 'call_1', name: 'setup_plan', ok: true, result: { todayAllowancePence: 1978 } }],
         modelState: r1.modelState,
       }),
-      deps(f.impl),
+      deps(f.impl, { directReplies: false }),
     );
     expect(r2).toMatchObject({ kind: 'reply', text: 'Your plan is ready.', phase: 'done' });
     const sent = contentsOf(f.calls[1].body);
@@ -134,7 +134,7 @@ describe('runChat: server tools', () => {
     ]);
     const statuses: string[] = [];
     const researchFn = vi.fn(async () => research);
-    const r = await runChat(req('best savings rate'), deps(f.impl, { research: researchFn, onStatus: (s) => statuses.push(`${s.phase}:${s.step}`) }));
+    const r = await runChat(req('best savings rate'), deps(f.impl, { research: researchFn, directReplies: false, onStatus: (s) => statuses.push(`${s.phase}:${s.step}`) }));
     expect(researchFn).toHaveBeenCalledWith({ topic: 'savings_rates', query: 'best easy access' }, expect.objectContaining({ today: '2026-10-31' }));
     expect(statuses).toEqual(['thinking:1', 'researching:1', 'thinking:2']);
     expect(r.kind).toBe('reply');
@@ -192,7 +192,7 @@ describe('runChat: limits and errors', () => {
   it('counts steps across client round trips', async () => {
     const f = scriptedFetch([() => geminiResponse([{ functionCall: { name: 'undo_last', args: {}, id: 'u' } }])]);
     const state = encodeState({ v: 1, iat: Date.now(), step: 6, contents: [{ role: 'user', parts: [{ text: 'x' }] }], pending: [{ index: 0, id: 'u', name: 'undo_last', client: 'undo_last' }] }, SECRET);
-    const r = await runChat(req('x', { toolResults: [{ id: 'u', name: 'undo_last', ok: true }], modelState: state }), deps(f.impl));
+    const r = await runChat(req('x', { toolResults: [{ id: 'u', name: 'undo_last', ok: true }], modelState: state }), deps(f.impl, { directReplies: false }));
     expect(f.calls).toHaveLength(0);
     expect(r.phase).toBe('error');
   });
@@ -210,11 +210,11 @@ describe('runChat: limits and errors', () => {
 
   it('a slow summary after successful client tools degrades to a neutral reply (no numbers), not an error', async () => {
     const state = encodeState({ v: 1, iat: Date.now(), step: 1, contents: [{ role: 'user', parts: [{ text: 'x' }] }], pending: [{ index: 0, id: 'a', name: 'setup_plan', client: 'setup_plan' }] }, SECRET);
-    const r = await runChat(req('x', { toolResults: [{ id: 'a', name: 'setup_plan', ok: true }], modelState: state }), deps(hangingFetch, { timeoutMs: 20 }));
+    const r = await runChat(req('x', { toolResults: [{ id: 'a', name: 'setup_plan', ok: true }], modelState: state }), deps(hangingFetch, { timeoutMs: 20, directReplies: false }));
     expect(r).toMatchObject({ kind: 'reply', phase: 'done', text: expect.stringMatching(/^Done/) });
     expect(r.kind === 'reply' && r.text).not.toMatch(/£|\d/);
     const prev = encodeState({ v: 1, iat: Date.now(), step: 1, contents: [{ role: 'user', parts: [{ text: 'x' }] }], pending: [{ index: 0, id: 'a', name: 'check_purchase', client: 'check_purchase' }] }, SECRET);
-    const r2 = await runChat(req('x', { toolResults: [{ id: 'a', name: 'check_purchase', ok: true }], modelState: prev }), deps(hangingFetch, { timeoutMs: 20 }));
+    const r2 = await runChat(req('x', { toolResults: [{ id: 'a', name: 'check_purchase', ok: true }], modelState: prev }), deps(hangingFetch, { timeoutMs: 20, directReplies: false }));
     expect(r2).toMatchObject({ text: expect.stringMatching(/Apply/) });
     // a failed client tool still surfaces the error
     const r3 = await runChat(req('x', { toolResults: [{ id: 'a', name: 'setup_plan', ok: false, error: 'bad' }], modelState: state }), deps(hangingFetch, { timeoutMs: 20 }));
@@ -230,7 +230,7 @@ describe('runChat: limits and errors', () => {
     }) as typeof fetch;
     const research: ResearchResult = { topic: 'savings_rates', query: 'q', retrievedAt: 't', sample: false, label: 'l', items: [] };
     const t = Date.now();
-    const r = await runChat(req('x'), deps(f, { research: async () => research, postResearchTimeoutMs: 30, timeoutMs: 5000 }));
+    const r = await runChat(req('x'), deps(f, { research: async () => research, postResearchTimeoutMs: 30, timeoutMs: 5000, directReplies: false }));
     expect(Date.now() - t).toBeLessThan(2000);
     expect(r).toMatchObject({ phase: 'done', text: expect.stringMatching(/live search results/) });
   });
@@ -248,9 +248,116 @@ describe('runChat: limits and errors', () => {
     await runChat({ messages: [{ role: 'user', text: 'hi' }], context: { today: '2026-11-11', demoMode: true, hasPlan: true, summary: { todayAllowancePence: 2584 } } }, deps(f.impl));
     const sys = JSON.stringify(f.calls[0].body.systemInstruction);
     expect(sys).toContain('2026-11-11');
-    expect(sys).toContain('DEMO MODE');
+    expect(sys).toContain('demo date');
     expect(sys).toContain('£25.84');
     expect(sys).toContain('Has plan: yes');
+  });
+});
+
+describe('runChat: direct replies (no summary model call)', () => {
+  const pendingState = (name: string, contents: GeminiContent[] = [{ role: 'user', parts: [{ text: 'x' }] }]) =>
+    encodeState({ v: 1, iat: Date.now(), step: 1, contents, pending: [{ index: 0, id: 'a', name, client: name as never }] }, SECRET);
+
+  it('after a committed expense, replies with the engine explanation (first sentences) and makes no model call', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'should not be called' }])]);
+    const explanation = 'Added your £35 expense (household, 10 Nov). That day\'s allowance covered £25.84; the other £9.16 comes from later days. Shopping decreased by £9.16 across 11 Nov – 31 Jan. Rent is unchanged.';
+    const r = await runChat(req('I need to spend £35 on a shower filter today', {
+      toolResults: [{ id: 'a', name: 'record_expense', ok: true, result: { applied: true, changeId: '3', explanation } }], modelState: pendingState('record_expense'),
+    }), deps(f.impl));
+    expect(f.calls).toHaveLength(0);
+    expect(r).toMatchObject({ kind: 'reply', phase: 'done' });
+    const text = r.kind === 'reply' ? r.text : '';
+    expect(text).toBe('Added your £35 expense (household, 10 Nov). That day\'s allowance covered £25.84; the other £9.16 comes from later days. Tap Undo if that\'s not right.');
+    expect(text).not.toMatch(/\.00\b/);
+  });
+
+  it('after setup, names at most two defaults, formats money like the engine and offers one optional follow-up chip', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'should not be called' }])]);
+    const contents: GeminiContent[] = [
+      { role: 'user', parts: [{ text: 'x' }] },
+      { role: 'model', parts: [{ functionCall: { name: 'setup_plan', args: SETUP_ARGS, id: 'a' } }] },
+    ];
+    const r = await runChat(req('x', {
+      toolResults: [{ id: 'a', name: 'setup_plan', ok: true, result: { created: true, summary: { todayAllowancePence: 1978, horizonEnd: '2027-01-31' }, deficits: [] } }],
+      modelState: pendingState('setup_plan', contents),
+    }), deps(f.impl));
+    expect(f.calls).toHaveLength(0);
+    if (r.kind !== 'reply') throw new Error('expected reply');
+    expect(r.text).toBe('Your plan is ready: £19.78 to spend today, lasting to 31 Jan. I assumed £35 a week for food and a £200 safety cushion; change anything by telling me.');
+    expect(r.cards).toEqual([expect.objectContaining({ type: 'clarify', chips: ['Add my job income'] })]);
+  });
+
+  it('a hypothetical that does not fit points at the options; a preview says nothing changes until Apply', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'x' }])]);
+    const r = await runChat(req('x', {
+      toolResults: [{ id: 'a', name: 'check_purchase', ok: true, result: { fits: false, message: '£7.62 short — 14 Nov has £11.64 to spare', explanation: '' } }], modelState: pendingState('check_purchase'),
+    }), deps(f.impl));
+    expect(r.kind === 'reply' && r.text).toBe('£7.62 short — 14 Nov has £11.64 to spare. Pick an option on the card, or Discard.');
+    const r2 = await runChat(req('x', {
+      toolResults: [{ id: 'a', name: 'check_purchase', ok: true, result: { fits: true, message: 'Fits — £8.36 comes from shopping over 12–18 Nov', explanation: 'Fits — £8.36 comes from shopping over 12–18 Nov. Set aside £20.' } }], modelState: pendingState('check_purchase'),
+    }), deps(f.impl));
+    expect(r2.kind === 'reply' && r2.text).toBe('Fits — £8.36 comes from shopping over 12–18 Nov. Nothing changes until you tap Apply.');
+    expect(f.calls).toHaveLength(0);
+  });
+
+  it('use_rate_in_projections asks how much they have saved, suggesting the plan\'s planned savings', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'x' }])]);
+    const r = await runChat({
+      messages: [{ role: 'user', text: 'use the first one' }],
+      context: { today: '2026-11-10', demoMode: true, hasPlan: true, summary: { plannedSavingsPence: 15000 } },
+      toolResults: [{ id: 'a', name: 'use_rate_in_projections', ok: true, result: { status: 'preview shown, awaiting user' } }],
+      modelState: pendingState('use_rate_in_projections'),
+    }, deps(f.impl));
+    expect(r.kind === 'reply' && r.text).toMatch(/How much do you have saved now\? If you don't say, I'll start from your planned savings of £150\./);
+  });
+
+  it('a failed client tool goes back to the model', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'Which category?' }])]);
+    const r = await runChat(req('x', { toolResults: [{ id: 'a', name: 'record_expense', ok: false, error: 'bad' }], modelState: pendingState('record_expense') }), deps(f.impl));
+    expect(f.calls).toHaveLength(1);
+    expect(r).toMatchObject({ kind: 'reply', text: 'Which category?' });
+  });
+
+  it('research replies from the top cited item without a summary model call', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ functionCall: { name: 'research', args: { topic: 'savings_rates', query: 'q' } } }])]);
+    const research: ResearchResult = {
+      topic: 'savings_rates', query: 'q', retrievedAt: 't', sample: false, label: 'l',
+      items: [{ ref: 'r-x-0', provider: 'Cahoot', product: 'Sunny Day Saver', headline: '5% AER variable', ratePercent: 5, conditions: [], sourceUrl: 'https://a', sourceTitle: 'savethestudent.org' }],
+    };
+    const r = await runChat(req('find me the best easy-access savings rate'), deps(f.impl, { research: async () => research }));
+    expect(f.calls).toHaveLength(1);
+    expect(r.kind === 'reply' && r.text).toBe('Top live result: Cahoot Sunny Day Saver, 5% AER variable (savethestudent.org). Tap "Use this rate in projections" to plan with one. Check with the provider before acting.');
+    expect(r.cards.map((c) => c.type)).toEqual(['research_results']);
+  });
+});
+
+describe('model request shape', () => {
+  it('sends an output cap, and only the tools that fit hasPlan', async () => {
+    const f = scriptedFetch([() => geminiResponse([{ text: 'ok' }])]);
+    await runChat(req('hi'), deps(f.impl));
+    await runChat({ messages: [{ role: 'user', text: 'hi' }], context: { today: '2026-11-10', demoMode: false, hasPlan: true } }, deps(f.impl));
+    const names = (i: number) => ((f.calls[i].body.tools as { functionDeclarations: { name: string }[] }[])[0].functionDeclarations).map((d) => d.name);
+    expect(names(0)).toEqual(['setup_plan', 'start_demo', 'research', 'ask_user']);
+    expect(names(1)).not.toContain('setup_plan');
+    expect(names(1)).toContain('record_expense');
+    expect(f.calls[0].body.generationConfig).toMatchObject({ maxOutputTokens: 2048 });
+  });
+
+  it('hedges a slow model call with an identical request; the first answer wins and the slow one is cancelled', async () => {
+    let n = 0;
+    let first: AbortSignal | undefined;
+    const f = (async (u: RequestInfo | URL, init?: RequestInit) => {
+      n++;
+      if (n === 1) {
+        first = init?.signal ?? undefined;
+        return hangingFetch(u, init);
+      }
+      return geminiResponse([{ text: 'Hello!' }]);
+    }) as typeof fetch;
+    const r = await runChat(req('hi'), deps(f, { hedgeAfterMs: 10, timeoutMs: 5000 }));
+    expect(r).toMatchObject({ kind: 'reply', text: 'Hello!' });
+    expect(n).toBe(2);
+    expect(first?.aborted).toBe(true);
   });
 });
 

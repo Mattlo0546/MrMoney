@@ -15,9 +15,11 @@ import { playBubbles } from '../calendar/bubble';
 import { DayDetail, longDate } from '../day/DayDetail';
 import type { ChipSpec, PreviewChips } from '../calendar/shared';
 import { SummaryStrip } from './SummaryStrip';
+import { CalendarDays, Eye, MessageCircle, Tag, type LucideIcon } from 'lucide-react';
+import { IconBadge, WithIcon } from '@/components/ui/Value';
 
 type Tab = 'chat' | 'day' | 'deals';
-const TABS: { id: Tab; label: string }[] = [{ id: 'chat', label: 'Chat' }, { id: 'day', label: 'Day' }, { id: 'deals', label: 'Deals' }];
+const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'day', label: 'Day', icon: CalendarDays }, { id: 'deals', label: 'Deals', icon: Tag }];
 
 function useIsDesktop(): boolean {
   return useSyncExternalStore(
@@ -56,8 +58,8 @@ function useFillHeight<T extends HTMLElement>(min = 360) {
 function Skeleton() {
   return (
     <div aria-busy="true" aria-label="Loading your plan" className="mx-auto flex max-w-[1600px] flex-col gap-4 p-4 lg:p-6">
-      <div className="h-40 animate-pulse rounded-3xl bg-[var(--surface)]" />
-      <div className="h-[560px] animate-pulse rounded-3xl bg-[var(--surface)]" />
+      <div className="h-40 animate-pulse rounded-3xl border border-line bg-surface-2" />
+      <div className="h-[560px] animate-pulse rounded-3xl border border-line bg-surface-2" />
     </div>
   );
 }
@@ -72,12 +74,13 @@ function FirstVisit() {
   );
 }
 
-function Segmented<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: { id: T; label: string }[]; label: string }) {
+function Segmented<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: { id: T; label: string; icon?: LucideIcon }[]; label: string }) {
   return (
-    <div role="tablist" aria-label={label} className="flex gap-1 rounded-full bg-[var(--surface-2)] p-1">
+    <div role="tablist" aria-label={label} className="flex gap-1 rounded-full border border-line bg-surface-2 p-1">
       {items.map((t) => (
         <button key={t.id} role="tab" type="button" aria-selected={value === t.id} id={`tab-${label}-${t.id}`} onClick={() => onChange(t.id)}
-          className={`min-h-10 flex-1 rounded-full px-3 text-sm font-bold transition-colors ${value === t.id ? 'bg-[var(--accent)] text-[var(--accent-ink)]' : 'text-[var(--muted)]'}`}>
+          className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold transition-colors ${value === t.id ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
+          {t.icon && <t.icon aria-hidden="true" size={15} strokeWidth={2.3} />}
           {t.label}
         </button>
       ))}
@@ -219,12 +222,15 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   const entering = enterKey > 0;
 
   const banner = deficitBanner && (
-    <div role="alert" className="rounded-3xl border border-[var(--coral)] bg-[var(--surface)] p-4">
-      <p className="font-bold text-[var(--coral)]">
-        {data.fundingGap > 0 ? `Your plan is ${formatMoney(data.fundingGap)} short.` : 'Part of your plan is not fully covered.'}
-      </p>
-      <ul className="mt-1 list-disc pl-5 text-sm">{data.undated.map((d, i) => <li key={i}>{d.reason}</li>)}</ul>
-      <p className="mt-1 text-sm text-[var(--muted)]">Rent and your reserve have not been touched. Tell me what changed and we can find a way through.</p>
+    <div role="alert" className="flex gap-3 rounded-3xl border border-neg/25 bg-grad-negative-soft p-4">
+      <IconBadge icon="shortfall" tone="negative" size="md" solid />
+      <div className="min-w-0">
+        <p className="font-bold text-neg">
+          {data.fundingGap > 0 ? `Your plan is ${formatMoney(data.fundingGap)} short.` : 'Part of your plan is not fully covered.'}
+        </p>
+        <ul className="mt-1 list-disc pl-5 text-sm">{data.undated.map((d, i) => <li key={i}>{d.reason}</li>)}</ul>
+        <p className="mt-1 text-sm text-muted">Rent and your reserve have not been touched. Tell me what changed and we can find a way through.</p>
+      </div>
     </div>
   );
 
@@ -237,7 +243,7 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
           {banner}
           <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
         </div>
-        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[72px] flex max-h-[calc(100dvh-88px)] w-[420px] shrink-0 flex-col rounded-3xl bg-[var(--surface)] p-4 ${entering ? 'sp-panel-in' : ''}`}>
+        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[72px] flex max-h-[calc(100dvh-88px)] w-[420px] shrink-0 flex-col rounded-3xl border border-line bg-surface p-4 shadow-card ${entering ? 'sp-panel-in' : ''}`}>
           <div className="flex min-h-0 flex-1 flex-col" hidden={tab !== 'chat'} style={tab !== 'chat' ? { display: 'none' } : undefined}>
             <ChatPanel variant="panel" autoFocus={entering} header={<Segmented label="panel" value={tab} onChange={setTab} items={TABS} />} />
           </div>
@@ -259,35 +265,37 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
     <div className="flex flex-col px-4 pt-3">
       <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
       {s && (
-        <div ref={stripRef} data-testid="today-strip" className="flex items-center gap-3 rounded-3xl bg-[var(--accent)] px-4 py-3 text-[var(--accent-ink)]">
+        <div ref={stripRef} data-testid="today-strip" className="flex items-center gap-3 rounded-3xl bg-grad-hero px-4 py-3 shadow-glow">
+          <IconBadge icon="allowance" tone="onGradient" size="md" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold opacity-90">Left today</p>
+            <p className="text-xs font-bold">Left today</p>
             <p className="font-display text-3xl font-extrabold leading-none tabular-nums">{formatMoney(s.todayRemaining)}</p>
           </div>
           <div className="text-right text-xs font-bold">
-            <p className="opacity-90">Flexible left</p>
-            <p className="text-base tabular-nums">{formatMoney(s.flexibleRemaining)}</p>
+            <p>Flexible left</p>
+            <p className="text-base tabular-nums"><WithIcon icon="flexible" tone="onGradient" size={14}>{formatMoney(s.flexibleRemaining)}</WithIcon></p>
           </div>
         </div>
       )}
       <div className="mt-3">
-        <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat' }, { id: 'calendar', label: 'Calendar' }]} />
+        <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'calendar', label: 'Calendar', icon: CalendarDays }]} />
       </div>
       {mobileView === 'chat' ? (
         <div ref={mobileFill} className="flex min-h-0 flex-col pb-3 pt-3">
-          <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-[var(--muted)]">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
+          <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
         </div>
       ) : (
         <div ref={rootRef} className={`flex flex-col gap-4 pb-10 pt-3 ${entering ? 'sp-plan-in' : ''}`}>
           {s && <SummaryStrip s={s} today={today} nextIncome={nextIncome} />}
           {banner}
           {openPreview && (
-            <button type="button" onClick={() => setMobileView('chat')} className="rounded-3xl border border-dashed border-[var(--lime)] p-3 text-left text-sm font-bold text-[var(--lime)]">
+            <button type="button" onClick={() => setMobileView('chat')} className="flex items-center gap-2 rounded-3xl border border-dashed border-accent-2 bg-accent-soft p-3 text-left text-sm font-bold text-accent">
+              <Eye aria-hidden="true" size={16} className="shrink-0" />
               A preview is waiting in the chat. Tap to Apply or Discard.
             </button>
           )}
           <Agenda data={data} today={today} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
-          <button type="button" onClick={() => setDealsSheet(true)} className="min-h-11 rounded-full border border-[var(--line)] text-sm font-bold">See deals</button>
+          <button type="button" onClick={() => setDealsSheet(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-surface text-sm font-bold shadow-soft"><Tag aria-hidden="true" size={16} className="text-accent" />See deals</button>
         </div>
       )}
       <Sheet open={daySheet} onClose={() => setDaySheet(false)} title={longDate(sel)}>

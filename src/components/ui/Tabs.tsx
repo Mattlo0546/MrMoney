@@ -36,7 +36,7 @@ export function Tabs({ tabs, value, onChange, className, 'aria-label': ariaLabel
 
   return (
     <div className={className}>
-      <div role="tablist" aria-label={ariaLabel} onKeyDown={onKey} className="flex gap-1 rounded-full bg-surface-2 p-1">
+      <div role="tablist" aria-label={ariaLabel} onKeyDown={onKey} className="flex gap-1 rounded-full border border-line bg-surface-2 p-1">
         {tabs.map((t, i) => {
           const active = i === idx;
           return (
@@ -51,7 +51,7 @@ export function Tabs({ tabs, value, onChange, className, 'aria-label': ariaLabel
               onClick={() => onChange(t.id)}
               className={cx(
                 'min-h-11 flex-1 rounded-full px-4 text-sm font-bold transition-colors',
-                active ? 'bg-accent text-accent-ink' : 'text-muted hover:text-text',
+                active ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text',
               )}
             >
               {t.label}

@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react';
 import { cx } from './cx';
 
-export type PillTone = 'neutral' | 'accent' | 'lime' | 'coral' | 'navy' | 'planned';
+export type PillTone = 'neutral' | 'accent' | 'lime' | 'coral' | 'navy' | 'planned' | 'positive' | 'warning' | 'negative';
 
 export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
   tone?: PillTone;
@@ -9,11 +9,14 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
 
 const tones: Record<PillTone, string> = {
   neutral: 'bg-surface-2 text-text',
-  accent: 'bg-accent text-accent-ink',
-  lime: 'bg-lime-fill text-[#0F1024]',
-  coral: 'bg-coral text-white',
-  navy: 'bg-navy text-white',
-  planned: 'border border-dashed border-line bg-transparent text-muted',
+  accent: 'bg-grad-primary',
+  lime: 'bg-grad-positive',
+  positive: 'bg-grad-positive',
+  coral: 'bg-grad-negative',
+  negative: 'bg-grad-negative',
+  navy: 'bg-grad-warning',
+  warning: 'bg-grad-warning',
+  planned: 'border border-dashed border-line-strong bg-transparent text-muted',
 };
 
 export function Pill({ tone = 'neutral', className, ...rest }: PillProps) {

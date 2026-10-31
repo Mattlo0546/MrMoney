@@ -1,14 +1,12 @@
+import { Pin } from 'lucide-react';
 import { formatMoney } from '@/lib/engine';
+import { VALUE_ICONS } from '@/components/ui/Value';
 import type { DayInfo } from './data';
 
 export const money = (p: number) => formatMoney(p);
 
 export function PinIcon({ className = 'h-3 w-3' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" className={className} fill="currentColor" aria-hidden="true">
-      <path d="M9.5 1.5 14.5 6.5l-1.6.6-2.3 2.3.3 3.2-1 1L6.7 10.6 3 14.3 1.7 13l3.7-3.7L2.6 6.5l1-1 3.2.3 2.3-2.3z" />
-    </svg>
-  );
+  return <Pin aria-hidden="true" strokeWidth={2.4} className={className} />;
 }
 
 export type ChipKind = 'actual' | 'income' | 'fixed' | 'planned' | 'preview';
@@ -39,14 +37,21 @@ export function chipsFor(day: DayInfo, preview?: ChipSpec[]): ChipSpec[] {
 
 const SR = { actual: 'Spent', income: 'Received', fixed: 'Bill', planned: 'Planned', preview: 'Preview' } as const;
 
+/** One icon and one look per chip kind (shared with the legend). */
+export const CHIP_ICON = {
+  actual: VALUE_ICONS.spent, income: VALUE_ICONS.income, fixed: VALUE_ICONS.bills, planned: VALUE_ICONS.planned, preview: VALUE_ICONS.preview,
+} as const;
+export const CHIP_STYLE: Record<ChipKind, string> = {
+  actual: 'bg-grad-primary',
+  income: 'bg-grad-positive',
+  fixed: 'bg-grad-warning',
+  planned: 'border border-dashed border-line-strong bg-surface text-muted',
+  preview: 'border border-dashed border-accent-2 bg-accent-soft text-accent',
+};
+
 export function Chip({ chip, compact }: { chip: ChipSpec; compact?: boolean }) {
-  const style = {
-    actual: 'bg-[var(--accent)] text-[var(--accent-ink)]',
-    income: 'bg-[var(--lime)] text-[#0B0C1F]',
-    fixed: 'bg-[var(--navy)] text-white border border-[var(--accent)]',
-    planned: 'border border-dashed border-[var(--line)] text-[var(--muted)]',
-    preview: 'border border-dashed border-[var(--lime)] text-[var(--lime)]',
-  }[chip.kind];
+  const style = CHIP_STYLE[chip.kind];
+  const Icon = CHIP_ICON[chip.kind];
   const amount = `${chip.kind === 'income' ? '+' : chip.negative ? '−' : ''}${money(chip.pence)}`;
   return (
     <span
@@ -55,7 +60,7 @@ export function Chip({ chip, compact }: { chip: ChipSpec; compact?: boolean }) {
       title={`${SR[chip.kind]}: ${chip.label} ${amount}`}
       className={`flex w-fit min-w-0 max-w-full items-center gap-1 rounded-full px-2 py-0.5 ${compact ? 'text-[11px]' : 'text-xs'} font-semibold leading-4 ${style}`}
     >
-      {chip.kind === 'fixed' && <PinIcon className="h-2.5 w-2.5 shrink-0" />}
+      <Icon aria-hidden="true" strokeWidth={2.5} className={`${compact ? 'size-2.5' : 'size-3'} shrink-0`} />
       <span className="sr-only">{SR[chip.kind]}: </span>
       <span className="min-w-0 truncate" aria-hidden="true">{compact ? shortLabel(chip.label) : chip.label}</span>
       <span className="sr-only">{chip.label}</span>

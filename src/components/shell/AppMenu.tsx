@@ -26,10 +26,10 @@ import { applyTheme, readTheme, type Theme } from './theme';
  */
 export function AppMenu() {
   const router = useRouter();
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
 
   function onTheme(v: string) {
-    const t: Theme = v === 'light' ? 'light' : 'dark';
+    const t: Theme = v === 'dark' ? 'dark' : 'light';
     setTheme(t);
     applyTheme(t);
   }
@@ -46,7 +46,7 @@ export function AppMenu() {
         <button
           type="button"
           aria-label="App menu"
-          className="grid size-11 place-items-center rounded-full bg-surface-2 text-text hover:bg-line"
+          className="grid size-11 place-items-center rounded-full border border-line bg-surface text-text shadow-soft transition-colors hover:bg-surface-2"
         >
           <MoreHorizontal size={20} aria-hidden="true" />
         </button>
@@ -62,8 +62,8 @@ export function AppMenu() {
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={theme} onValueChange={onTheme}>
-                  <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

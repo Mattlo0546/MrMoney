@@ -1,64 +1,80 @@
 'use client';
 import type { ComponentProps, CSSProperties, InputHTMLAttributes, ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { IconBadge, iconFor, type Tone, type ValueKind } from '@/components/ui/Value';
 
-/** Local tokens: read the shell's CSS variables, with the contract's dark values as fallback. */
+/** Local aliases for the global tokens in globals.css (kept so older call sites keep working). */
 export const TOKENS = {
-  '--p-bg': 'var(--bg, #0B0C1F)',
-  '--p-surface': 'var(--surface, #16183A)',
-  '--p-surface2': 'var(--surface-2, #20235A)',
-  '--p-line': 'var(--line, #2C3070)',
-  '--p-text': 'var(--text, #F5F5FA)',
-  '--p-muted': 'var(--muted, #A3A6D1)',
-  '--p-accent': 'var(--accent, #3D5AFE)',
-  '--p-accent-ink': 'var(--accent-ink, #FFFFFF)',
-  '--p-lime': 'var(--lime, #C8F53C)',
-  '--p-coral': 'var(--coral, #FF5A5F)',
+  '--p-bg': 'var(--bg)',
+  '--p-surface': 'var(--surface)',
+  '--p-surface2': 'var(--surface-2)',
+  '--p-line': 'var(--line)',
+  '--p-text': 'var(--text)',
+  '--p-muted': 'var(--muted)',
+  '--p-accent': 'var(--accent)',
+  '--p-accent-ink': 'var(--accent-ink)',
+  '--p-lime': 'var(--pos)',
+  '--p-coral': 'var(--neg)',
 } as CSSProperties;
 
-export function PageFrame({ title, children }: { title: string; children: ReactNode }) {
+export function PageFrame({ title, icon, children }: { title: string; icon?: ValueKind | LucideIcon; children: ReactNode }) {
   return (
-    <div style={TOKENS} className="min-h-dvh bg-[var(--p-bg)] text-[var(--p-text)]">
+    <div style={TOKENS} className="min-h-dvh bg-bg text-text">
       <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
-        <h1 className="mb-6 font-[family-name:var(--font-display,inherit)] text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h1>
+        <h1 className="mb-6 flex items-center gap-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+          {icon && <IconBadge icon={icon} tone="primary" size="lg" solid />}
+          {title}
+        </h1>
         <div className="flex flex-col gap-4">{children}</div>
       </div>
     </div>
   );
 }
 
-export function Card({ title, hint, children, tone }: { title?: string; hint?: string; children: ReactNode; tone?: 'danger' }) {
+export function Card({ title, hint, icon, children, tone }: { title?: string; hint?: string; icon?: ValueKind | LucideIcon; children: ReactNode; tone?: 'danger' }) {
   return (
     <section
-      className={`rounded-[24px] border bg-[var(--p-surface)] p-5 sm:p-6 ${tone === 'danger' ? 'border-[var(--p-coral)]' : 'border-[var(--p-line)]'}`}
+      className={`rounded-[24px] border bg-surface p-5 shadow-soft sm:p-6 ${tone === 'danger' ? 'border-neg/30 bg-grad-negative-soft' : 'border-line'}`}
     >
-      {title && <h2 className="text-lg font-bold">{title}</h2>}
-      {hint && <p className="mt-1 text-sm text-[var(--p-muted)]">{hint}</p>}
+      {title && (
+        <h2 className="flex items-center gap-2.5 text-lg font-bold">
+          {icon && <IconBadge icon={icon} tone={tone === 'danger' ? 'negative' : 'primary'} size="sm" />}
+          {title}
+        </h2>
+      )}
+      {hint && <p className={`mt-1 text-sm text-muted ${icon ? 'sm:pl-[38px]' : ''}`}>{hint}</p>}
       <div className={title ? 'mt-4' : ''}>{children}</div>
     </section>
   );
 }
 
+/**
+ * Labelled input. `icon` shows the value's meaning inside the field (icon-per-value rule);
+ * when omitted, a £ prefix gets a pound icon and a % suffix gets a percent icon.
+ */
 export function Field({
-  label, error, hint, id, prefix, suffix, ...input
-}: { label: string; error?: string; hint?: string; id: string; prefix?: string; suffix?: string } & InputHTMLAttributes<HTMLInputElement>) {
+  label, error, hint, id, prefix, suffix, icon, iconTone = 'primary', ...input
+}: { label: string; error?: string; hint?: string; id: string; prefix?: string; suffix?: string; icon?: ValueKind | LucideIcon; iconTone?: Tone } & InputHTMLAttributes<HTMLInputElement>) {
+  const glyph: ValueKind | LucideIcon | undefined = icon ?? (prefix === '£' ? 'pounds' : suffix === '%' ? 'percent' : input.type === 'date' ? 'date' : undefined);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-semibold text-[var(--p-muted)]">{label}</label>
+      <label htmlFor={id} className="text-sm font-semibold text-muted">{label}</label>
       <div
-        className={`flex min-h-12 items-center gap-1 rounded-[16px] border bg-[var(--p-surface2)] px-4 focus-within:ring-2 focus-within:ring-[var(--p-accent)] ${error ? 'border-[var(--p-coral)]' : 'border-[var(--p-line)]'}`}
+        className={`flex min-h-12 items-center gap-2 rounded-[16px] border bg-surface pl-2 pr-4 shadow-soft transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/10 ${error ? 'border-neg' : 'border-line'}`}
       >
-        {prefix && <span className="text-[var(--p-muted)]">{prefix}</span>}
+        {glyph ? <IconBadge icon={glyph} tone={error ? 'negative' : iconTone} size="sm" /> : <span className="w-2" aria-hidden="true" />}
+        {prefix && <span className="font-semibold text-muted">{prefix}</span>}
         <input
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-err` : undefined}
-          className="min-h-11 w-full min-w-0 bg-transparent text-base tabular-nums outline-none placeholder:text-[var(--p-muted)] disabled:opacity-60"
+          className="min-h-11 w-full min-w-0 bg-transparent text-base font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-muted disabled:opacity-60"
           {...input}
         />
-        {suffix && <span className="text-[var(--p-muted)]">{suffix}</span>}
+        {suffix && <span className="font-semibold text-muted">{suffix}</span>}
       </div>
-      {error && <p id={`${id}-err`} role="alert" className="text-sm font-semibold text-[var(--p-coral)]">{error}</p>}
-      {!error && hint && <p className="text-xs text-[var(--p-muted)]">{hint}</p>}
+      {error && <p id={`${id}-err`} role="alert" className="text-sm font-semibold text-neg">{error}</p>}
+      {!error && hint && <p className="text-xs text-muted">{hint}</p>}
     </div>
   );
 }
@@ -68,16 +84,37 @@ export function Btn({
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const v =
     variant === 'primary'
-      ? 'bg-[var(--p-accent)] text-[var(--p-accent-ink)]'
+      ? 'bg-grad-primary shadow-glow hover:brightness-110'
       : variant === 'danger'
-        ? 'bg-[var(--p-coral)] text-white'
-        : 'border border-[var(--p-line)] bg-transparent text-[var(--p-text)]';
+        ? 'bg-grad-negative hover:brightness-110'
+        : 'border border-line bg-surface text-text shadow-soft hover:bg-surface-2';
   return (
     <button
       type="button"
-      className={`min-h-11 rounded-full px-5 text-base font-bold transition-transform active:scale-95 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--p-accent)] ${v} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-bold transition-[transform,filter] active:scale-95 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${v} ${className}`}
       {...p}
     />
+  );
+}
+
+/** Pill radio group (gradient when checked). */
+export function Choice<T extends string>({ label, value, options, onPick, cols = 2 }: {
+  label: string; value: T; options: { id: T; label: string; icon?: ValueKind | LucideIcon }[]; onPick: (v: T) => void; cols?: number;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="grid gap-1 rounded-full border border-line bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      {options.map((o) => {
+        const on = value === o.id;
+        const Icon = o.icon ? iconFor(o.icon) : null;
+        return (
+          <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => onPick(o.id)}
+            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-bold transition-[transform,color] active:scale-95 sm:text-base ${on ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
+            {Icon && <Icon aria-hidden="true" size={16} strokeWidth={2.3} className="shrink-0" />}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

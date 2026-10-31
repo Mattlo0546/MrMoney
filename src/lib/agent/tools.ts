@@ -4,10 +4,10 @@ import { AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, ResearchArgsSchema, type Client
 
 const DESCRIPTIONS: Record<ClientToolName, string> = {
   setup_plan:
-    'Create the student\'s plan. Call as soon as you know funds and the end date (and rent if they have it); use defaults for the rest and tell the user they can change them. All amounts are integer pence (GBP): £3,900 = 390000. Defaults: minimumReserve 20000, savingsGoal 0, foodWeeklyPence 3500, transportWeeklyPence 1200, priorities [], incomes [] (job pay only counts if amount AND date are confirmed). Rent is a monthly commitment with dayOfMonth.',
-  record_expense: 'Record money already spent (applies immediately, with Undo). category is a plan category id from context.categories, or a short lowercase label.',
+    'Create the plan as soon as you know funds and the end date. Integer pence (£3,900 = 390000). Defaults: minimumReserve 20000, savingsGoal 0, foodWeeklyPence 3500, transportWeeklyPence 1200, priorities [], commitments [] unless given, incomes [] (job pay counts only if amount AND date are confirmed). Rent = monthly commitment with dayOfMonth.',
+  record_expense: 'Record committed spending: already spent, or "I need to / have to spend|pay ... today". Applies now, with Undo. category = a category id from context, or a short lowercase label.',
   record_income: 'Record money received or expected. confirmed=true only when the user says the amount and date are certain.',
-  check_purchase: 'Check whether a possible purchase fits ("can I afford…", "what if I…"). Shows a preview with Apply/Discard; never commits.',
+  check_purchase: 'Only for questions: "can I…", "could I afford…", "is it ok…", "what if…", or ending in "?". Preview with Apply/Discard; never commits.',
   change_commitment: 'Change a bill such as rent. Give deltaPence (signed) OR newAmountPence, and effectiveFrom. Shown as a preview the user confirms.',
   set_goal: 'Save an extra amount, optionally by a date. Shown as a preview the user confirms.',
   keep_available: 'Keep an amount of the daily allowance available on a date (e.g. a planned day out).',
@@ -24,8 +24,13 @@ export function toGeminiSchema(schema: z.ZodType): Record<string, unknown> {
   return js;
 }
 
-export function functionDeclarations() {
-  const client = (Object.keys(CLIENT_TOOL_SCHEMAS) as ClientToolName[]).map((name) => ({
+/** Without a plan only setup tools make sense; with one, setup_plan is left out (smaller request = faster turn). */
+const NO_PLAN_TOOLS: ClientToolName[] = ['setup_plan', 'start_demo'];
+
+export function functionDeclarations(hasPlan?: boolean) {
+  const names = (Object.keys(CLIENT_TOOL_SCHEMAS) as ClientToolName[]).filter((n) =>
+    hasPlan === undefined ? true : hasPlan ? n !== 'setup_plan' : NO_PLAN_TOOLS.includes(n));
+  const client = names.map((name) => ({
     name,
     description: DESCRIPTIONS[name],
     parametersJsonSchema: toGeminiSchema(CLIENT_TOOL_SCHEMAS[name]),
@@ -35,12 +40,12 @@ export function functionDeclarations() {
     {
       name: 'research',
       description:
-        'Live Google search for UK rates and deals (savings_rates, cash_isa_rates, student_bank_accounts, student_deals, cheap_food, transport_savings, other). Takes up to ~30s. Returns cited items with refs. Use for EVERY rate or deal you mention.',
+        'Live web search for UK rates and deals. Returns cited items with refs. Use for EVERY rate or deal.',
       parametersJsonSchema: toGeminiSchema(ResearchArgsSchema),
     },
     {
       name: 'ask_user',
-      description: 'Ask the user ONE question with up to 5 short quick-reply options. Ends your turn. Prefer this during setup.',
+      description: 'Ask ONE short question with up to 5 quick-reply options. Ends your turn.',
       parametersJsonSchema: toGeminiSchema(AskUserArgsSchema),
     },
   ];
