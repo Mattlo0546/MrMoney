@@ -4,7 +4,7 @@ import { addDays, dayOfWeek, daysInMonth } from '@/lib/engine';
 import type { ISODate } from '@/lib/engine';
 import type { PlanData } from './data';
 import { ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Layers, TriangleAlert, Wallet } from 'lucide-react';
-import { CHIP_ICON, CHIP_STYLE, Chip, chipsFor, money } from './shared';
+import { BUCKET_ICON, BUCKET_LABEL, CHIP_ICON, CHIP_STYLE, Chip, chipsFor, dayHint, money, stripPrefix } from './shared';
 import type { ChipKind } from './shared';
 import type { PreviewChips } from './shared';
 
@@ -20,7 +20,7 @@ const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5)) - 1]} ${ym.slic
 const mondayOf = (d: ISODate) => addDays(d, -((dayOfWeek(d) + 6) % 7));
 
 const LEGEND: { kind: ChipKind; label: string }[] = [
-  { kind: 'fixed', label: 'Bill' }, { kind: 'actual', label: 'Spent' }, { kind: 'income', label: 'Income' }, { kind: 'preview', label: 'Preview' },
+  { kind: 'planned', label: 'Planned' }, { kind: 'actual', label: 'Spent' }, { kind: 'income', label: 'Income' }, { kind: 'preview', label: 'Preview' },
 ];
 
 function Legend() {
@@ -128,9 +128,10 @@ export function MonthCalendar({
               const info = data.days.get(d);
               if (!info) return <div key={d} role="gridcell" aria-hidden className="min-h-[92px] rounded-2xl border border-line opacity-40" />;
               const chips = chipsFor(info, preview.get(d));
-              const shown = chips.slice(0, 2);
               const isToday = d === today;
               const past = d < today;
+              const hint = info.inPlan && !past ? dayHint(info) : { buckets: [], headline: null };
+              const shown = chips.slice(0, hint.headline ? 1 : 2);
               const outside = ymOf(d) !== month;
               const deficit = info.deficits.length > 0;
               const sel = d === selected;
@@ -143,7 +144,7 @@ export function MonthCalendar({
                     data-day={d}
                     data-preview={pv || undefined}
                     tabIndex={d === cursor ? 0 : -1}
-                    aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
+                    aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${hint.headline ? `, ${hint.buckets.map((b) => BUCKET_LABEL[b]).join(', ')}: ${hint.headline.label}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
                     onClick={() => { setCursor(d); onSelect(d); }}
                     onKeyDown={(e) => onKey(e, d)}
                     className={`relative flex min-h-[92px] w-full flex-col gap-1 rounded-2xl border p-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
@@ -154,6 +155,14 @@ export function MonthCalendar({
                       <span className={`text-sm font-bold ${isToday ? 'rounded-full bg-grad-primary px-2 shadow-glow' : outside || past ? 'text-muted' : 'text-text'}`}>{Number(d.slice(8))}</span>
                       {deficit && <span role="img" aria-label="Shortfall" className="grid size-4 place-items-center rounded-full bg-grad-negative"><TriangleAlert aria-hidden="true" size={9} strokeWidth={2.8} /></span>}
                     </span>
+                    {hint.headline && (
+                      <span aria-hidden="true" title={hint.headline.label} className="flex min-w-0 items-center gap-1 text-[11px] font-semibold leading-4 text-muted">
+                        <span className="flex shrink-0 items-center gap-0.5 text-accent">
+                          {hint.buckets.slice(0, 3).map((b) => { const I = BUCKET_ICON[b]; return <I key={b} size={11} strokeWidth={2.4} />; })}
+                        </span>
+                        <span className="min-w-0 truncate">{stripPrefix(hint.headline.label)}</span>
+                      </span>
+                    )}
                     <span className="flex min-w-0 flex-col gap-0.5">
                       {shown.map((c) => <Chip key={c.key} chip={c} compact />)}
                       {chips.length > shown.length && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted"><Layers aria-hidden="true" size={10} strokeWidth={2.5} />+{chips.length - shown.length} more</span>}

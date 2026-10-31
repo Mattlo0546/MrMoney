@@ -8,6 +8,8 @@ import { playBubble } from '@/components/ui/bubble';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useOpenPreview } from '@/components/chat/chatStore';
 import { OffersPanel } from '@/components/plan/offers/OffersPanel';
+import { ItineraryPanel } from '@/components/plan/itinerary/ItineraryPanel';
+import { isRecentItineraryApply } from '@/components/plan/itinerary/storage';
 import { buildPlanData } from '../calendar/data';
 import { MonthCalendar } from '../calendar/MonthCalendar';
 import { Agenda } from '../calendar/Agenda';
@@ -15,11 +17,13 @@ import { playBubbles } from '../calendar/bubble';
 import { DayDetail, longDate } from '../day/DayDetail';
 import type { ChipSpec, PreviewChips } from '../calendar/shared';
 import { SummaryStrip } from './SummaryStrip';
-import { CalendarDays, Eye, MessageCircle, Tag, type LucideIcon } from 'lucide-react';
+import { CalendarDays, Eye, MessageCircle, Sparkles, Tag, type LucideIcon } from 'lucide-react';
 import { IconBadge, WithIcon } from '@/components/ui/Value';
 
-type Tab = 'chat' | 'day' | 'deals';
-const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'day', label: 'Day', icon: CalendarDays }, { id: 'deals', label: 'Deals', icon: Tag }];
+type Tab = 'chat' | 'plan' | 'day' | 'deals';
+const TABS: { id: Tab; label: string; icon?: LucideIcon }[] = [
+  { id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'plan', label: 'Spending plan' }, { id: 'day', label: 'Day', icon: CalendarDays }, { id: 'deals', label: 'Deals', icon: Tag },
+];
 
 function useIsDesktop(): boolean {
   return useSyncExternalStore(
@@ -79,7 +83,7 @@ function Segmented<T extends string>({ value, onChange, items, label }: { value:
     <div role="tablist" aria-label={label} className="flex gap-1 rounded-full border border-line bg-surface-2 p-1">
       {items.map((t) => (
         <button key={t.id} role="tab" type="button" aria-selected={value === t.id} id={`tab-${label}-${t.id}`} onClick={() => onChange(t.id)}
-          className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold transition-colors ${value === t.id ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
+          className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-bold transition-colors ${value === t.id ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
           {t.icon && <t.icon aria-hidden="true" size={15} strokeWidth={2.3} />}
           {t.label}
         </button>
@@ -129,8 +133,10 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<ISODate | null>(null);
   const [monthOverride, setMonth] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('chat');
-  const [mobileView, setMobileView] = useState<'chat' | 'calendar'>('chat');
+  // No spending plan yet: open on it, so the student sees the creative plan first.
+  const hasItinerary = !!snap.state?.plannedPurchases.some((p) => p.source === 'itinerary');
+  const [tab, setTab] = useState<Tab>(hasItinerary ? 'chat' : 'plan');
+  const [mobileView, setMobileView] = useState<'chat' | 'calendar' | 'plan'>(hasItinerary ? 'chat' : 'plan');
   const [daySheet, setDaySheet] = useState(false);
   const [dealsSheet, setDealsSheet] = useState(false);
   const [seenChange, setSeenChange] = useState(snap.changeId);
@@ -143,7 +149,9 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   // A new change: show the chat (where its card is) and bring the changed month into view.
   if (seenChange !== changeId) {
     setSeenChange(changeId);
-    if (changedDays.length > 0 || changedItems.length > 0) {
+    // The spending plan panel's own re-plans stay on that panel (the calendar bubbles beside it).
+    const fromItinerary = snap.lastDiff?.intentKind === 'itinerary' || isRecentItineraryApply();
+    if ((changedDays.length > 0 || changedItems.length > 0) && !fromItinerary) {
       setTab('chat');
       const cur = monthOverride ?? (selected ?? today).slice(0, 7);
       if (changedDays.length && !changedDays.some((d) => d.slice(0, 7) === cur)) setMonth(changedDays[0].slice(0, 7));
@@ -213,6 +221,7 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   const summary = state.plan?.summary;
   const upcoming = state.incomes.filter((i) => i.confirmed && i.date > today).sort((a, b) => a.date.localeCompare(b.date))[0];
   const nextIncome = upcoming ? { date: upcoming.date, pence: upcoming.amount.pence } : null;
+  const todayPlanned = data.days.get(today)?.purchases.reduce((a, p) => a + p.pence, 0) ?? 0;
   const select = (d: ISODate) => {
     setSelected(d);
     if (desktop) setTab('day');
@@ -239,7 +248,7 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
       <div className="mx-auto flex max-w-[1600px] items-start gap-4 p-6">
         <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
         <div ref={rootRef} key={`plan-${enterKey}`} className={`flex min-w-0 flex-1 flex-col gap-4 ${entering ? 'sp-plan-in' : ''}`}>
-          {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
+          {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} todayPlanned={todayPlanned} />}
           {banner}
           <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
         </div>
@@ -251,7 +260,7 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="mb-3"><Segmented label="panel" value={tab} onChange={setTab} items={TABS} /></div>
               <div role="tabpanel" aria-labelledby={`tab-panel-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
-                {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : <OffersPanel />}
+                {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : tab === 'plan' ? <ItineraryPanel /> : <OffersPanel />}
               </div>
             </div>
           )}
@@ -278,15 +287,17 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
         </div>
       )}
       <div className="mt-3">
-        <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'calendar', label: 'Calendar', icon: CalendarDays }]} />
+        <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'plan', label: 'Spending plan', icon: Sparkles }, { id: 'calendar', label: 'Calendar', icon: CalendarDays }]} />
       </div>
       {mobileView === 'chat' ? (
         <div ref={mobileFill} className="flex min-h-0 flex-col pb-3 pt-3">
           <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
         </div>
+      ) : mobileView === 'plan' ? (
+        <div className="pb-10 pt-3"><ItineraryPanel onShowCalendar={() => setMobileView('calendar')} /></div>
       ) : (
         <div ref={rootRef} className={`flex flex-col gap-4 pb-10 pt-3 ${entering ? 'sp-plan-in' : ''}`}>
-          {s && <SummaryStrip s={s} today={today} nextIncome={nextIncome} />}
+          {s && <SummaryStrip s={s} today={today} nextIncome={nextIncome} todayPlanned={todayPlanned} />}
           {banner}
           {openPreview && (
             <button type="button" onClick={() => setMobileView('chat')} className="flex items-center gap-2 rounded-3xl border border-dashed border-accent-2 bg-accent-soft p-3 text-left text-sm font-bold text-accent">

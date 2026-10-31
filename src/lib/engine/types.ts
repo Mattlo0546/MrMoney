@@ -398,6 +398,13 @@ export interface ChangeSet {
   protectedUnchanged: boolean;
   /** True when the incremental change fell back to a full re-plan (cash constraint). */
   replanned: boolean;
+  /** True when the plan after the change is in itemised mode (profile.allocationMode === 'itemised'). */
+  itemised?: boolean;
+  /** Money not tied to any day/purchase (plan.unallocated) before / after. Set in itemised mode and for itinerary intents. */
+  bufferBefore?: Money;
+  bufferAfter?: Money;
+  /** itinerary: how many purchases were applied, their total, and how many earlier itinerary purchases were replaced. */
+  itinerary?: { purchases: number; planned: Money; replaced: number; mode: 'itemised' | 'even' };
 }
 
 export interface ExplanationFact {

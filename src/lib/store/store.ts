@@ -3,7 +3,9 @@ import {
   applyIntent, canUndo, commit, computeDiff, createUndoStack, demoFixture, ensurePlan, generatePlan, previewIntent, undo as engineUndo,
   validateState,
 } from '@/lib/engine';
-import type { Affordability, ApplyResult, ChangeSet, Commitment, EngineState, Income, Intent, ISODate, Profile, Transaction } from '@/lib/engine';
+import type {
+  Affordability, ApplyResult, ChangeSet, Commitment, EngineState, Income, Intent, ISODate, PlannedPurchase, Profile, Transaction,
+} from '@/lib/engine';
 type UndoStack = ReturnType<typeof createUndoStack>;
 import {
   clearPersisted, emptyPersisted, loadPersisted, savePersisted, type LoadStatus, type PersistedV1, type StorageAdapter,
@@ -129,6 +131,34 @@ export function createAppStore(opts: AppStoreOptions) {
     return r.error ? { ok: false, error: r.error } : { ok: false, needsClarification: r.needsClarification };
   }
 
+  /** Commit an intent (or a preview of one). Same key twice is a no-op. */
+  function apply(intentOrPreview: Intent | PreviewResult, idempotencyKey?: string): ApplyOutcome {
+    if (!state) return { ok: false, error: { code: 'invalid', message: 'No plan yet.' } };
+    const base: Intent = 'intent' in intentOrPreview ? intentOrPreview.intent : intentOrPreview;
+    const key = idempotencyKey ?? base.idempotencyKey;
+    if (state.processedKeys.includes(key)) return { ok: true, noop: true, diff: null, changeId: meta.changeId };
+    const intent = { ...base, idempotencyKey: key } as Intent;
+    const before = state;
+    const res = applyIntent(before, intent, todayNow());
+    const fail = applyOutcome(res);
+    if (fail) return fail;
+    if (!res.ok) return { ok: false };
+    const c = commit(stack, ensurePlan(before, todayNow()), res.nextState);
+    stack = c.stack;
+    state = c.state;
+    setChange(res.diff);
+    emit(true);
+    return { ok: true, noop: res.diff.noop, diff: res.diff, changeId: meta.changeId };
+  }
+
+  let itinerarySeq = 0;
+  const freshKey = () => {
+    const rnd = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${now().getTime()}-${Math.random().toString(36).slice(2)}`;
+    return `itinerary:${rnd}:${++itinerarySeq}`;
+  };
+
   return {
     subscribe(l: () => void) {
       listeners.add(l);
@@ -176,24 +206,12 @@ export function createAppStore(opts: AppStoreOptions) {
       return { ...previewIntent(state, intent, today), intent, today } as PreviewResult;
     },
 
-    /** Commit an intent (or a preview of one). Same key twice is a no-op. */
-    apply(intentOrPreview: Intent | PreviewResult, idempotencyKey?: string): ApplyOutcome {
-      if (!state) return { ok: false, error: { code: 'invalid', message: 'No plan yet.' } };
-      const base: Intent = 'intent' in intentOrPreview ? intentOrPreview.intent : intentOrPreview;
-      const key = idempotencyKey ?? base.idempotencyKey;
-      if (state.processedKeys.includes(key)) return { ok: true, noop: true, diff: null, changeId: meta.changeId };
-      const intent = { ...base, idempotencyKey: key } as Intent;
-      const before = state;
-      const res = applyIntent(before, intent, todayNow());
-      const fail = applyOutcome(res);
-      if (fail) return fail;
-      if (!res.ok) return { ok: false };
-      const c = commit(stack, ensurePlan(before, todayNow()), res.nextState);
-      stack = c.stack;
-      state = c.state;
-      setChange(res.diff);
-      emit(true);
-      return { ok: true, noop: res.diff.noop, diff: res.diff, changeId: meta.changeId };
+    apply,
+
+    /** Replace the creative itinerary's planned purchases (source 'itinerary') and set the allocation mode.
+     * Goes through the normal apply path (undo, persistence, highlights). */
+    applyItinerary(purchases: PlannedPurchase[], mode: 'itemised' | 'even' = 'itemised'): ApplyOutcome {
+      return apply({ kind: 'itinerary', idempotencyKey: freshKey(), purchases: structuredClone(purchases), mode });
     },
 
     undo(): boolean {

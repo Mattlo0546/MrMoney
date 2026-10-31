@@ -30,6 +30,8 @@ export function validateState(s: EngineState): Record<string, string> {
   if (!isISODate(p.planStart)) e.planStart = 'Enter a valid start date.';
   if (!isISODate(p.horizonEnd)) e.horizonEnd = 'Enter a valid end date.';
   else if (isISODate(p.planStart) && p.horizonEnd < p.planStart) e.horizonEnd = 'The end date must be after the start date.';
+  if (p.allocationMode !== undefined && p.allocationMode !== 'even' && p.allocationMode !== 'itemised')
+    e.allocationMode = 'Choose even or itemised allocation.';
   if (!okMoney(p.minimumReserve)) e.minimumReserve = 'Enter a reserve of 0 or more.';
   if (!okMoney(p.savingsGoal)) e.savingsGoal = 'Enter a savings goal of 0 or more.';
   if (p.savingsDeadlines !== undefined && !(Array.isArray(p.savingsDeadlines) && p.savingsDeadlines.every((x) => okMoney(x.amount) && isISODate(x.byDate))))
@@ -77,6 +79,7 @@ export function generatePlan(s: EngineState, today: ISODate): Plan {
   if (Object.keys(errs).length) throw new EngineValidationError(errs);
 
   const W = futureDays(s, today);
+  const itemised = s.profile.allocationMode === 'itemised';
   const uses = cellUseMap(s);
   const planned = new Map<string, number>();
   for (const a of s.plan?.allocations ?? []) if (a.day < today) planned.set(cellKey(a.day, a.category), a.planned.pence);
@@ -111,6 +114,25 @@ export function generatePlan(s: EngineState, today: ISODate): Plan {
   } else if (P <= hardTotal) {
     totals = hardDay;
     gap = hardTotal - P;
+  } else if (itemised) {
+    // Itemised: each day gets exactly what it uses (actuals + planned purchases) plus any
+    // kept-available amount; nothing else is spread. The rest stays unallocated as a buffer.
+    const caps = capSeries(s, today, W);
+    const prefs = prefMinMap(s);
+    const lbPref = W.map((d, i) => hardDay[i] + (prefs.get(d) ?? 0));
+    let ok = lbPref.reduce((a, b) => a + b, 0) <= P;
+    // Kept-available amounts must not spend money before it arrives (I3); uses always may.
+    let accP = 0, accU = 0;
+    for (let i = 0; ok && i < W.length; i++) {
+      accP += lbPref[i];
+      accU += hardDay[i];
+      if (accP > Math.max(caps[i], accU)) ok = false;
+    }
+    totals = ok ? lbPref : hardDay;
+    if (!ok && prefs.size) reasons.push('Some kept-available amounts could not be honoured with the money available.');
+    unallocated = P - totals.reduce((a, b) => a + b, 0);
+    if (unallocated > 0)
+      reasons.push(`${formatMoney(unallocated)} isn't tied to a specific purchase yet — it stays as your buffer.`);
   } else {
     const caps = capSeries(s, today, W);
     const E = caps.slice();
@@ -135,7 +157,7 @@ export function generatePlan(s: EngineState, today: ISODate): Plan {
       cats.map((c) => ({
         weight: prof.get(c)?.weight ?? 0,
         hard: usesByDay.get(d)?.get(c) ?? 0,
-        floor: prof.get(c)?.essential ? (prof.get(c)?.minimumDaily?.pence ?? 0) : 0,
+        floor: !itemised && prof.get(c)?.essential ? (prof.get(c)?.minimumDaily?.pence ?? 0) : 0,
       })),
     );
     cats.forEach((c, j) => planned.set(cellKey(d, c), res.amounts[j]));

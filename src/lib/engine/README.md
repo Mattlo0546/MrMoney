@@ -14,6 +14,12 @@ Pure TypeScript, no clock (`today` is passed in). Integer pence (GBP), ISO calen
 - **Actuals:** an actual first uses today's whole remaining allowance: its own category, then the day's other categories, lowest priority first. Overspend is spread evenly over the days after today, lowest-priority non-essential category first. **Essential floors are never cut** (D16), so whatever can't be covered becomes a funding gap. The diff reports `absorbed`, `overspend`, `takenFromLater`, `fromUnallocated` (after the plan has ended) and `uncovered`.
 - **Cash repair:** if an incremental change breaks I3, the engine first moves the excess to later days in take order, keeping today's amounts and the essential floors. Only if that fails does it do a full re-plan (`diff.replanned`).
 
+## Itemised mode and the creative itinerary
+
+- `profile.allocationMode === 'itemised'`: each day is planned at exactly its uses (actuals + outstanding planned purchases) plus kept-available amounts (only if they fit the cash caps). Essential floors don't apply. The rest of the pool is `unallocated` ("£X isn't tied to a specific purchase yet — it stays as your buffer."). If uses exceed the pool, it is a funding gap as in even mode.
+- Every intent and `ensurePlan` is a full `generatePlan` re-plan in itemised mode. An expense comes out of the buffer (`fromUnallocated`), or the planned purchase it completes (`absorbed`); a hypothetical fits when it fits in the buffer without opening a gap or a new cash shortfall (no borrowing or trade-off options). Diffs carry `itemised`, `bufferBefore` and `bufferAfter`.
+- The `itinerary` intent replaces every planned purchase with `source: 'itinerary'`, validates the new ones (dates today…end, integer pence ≥ 0, Σ lines = amount, unique ids), adds missing categories (weight 0, lowest priority, non-essential), sets the mode and re-plans. `itineraryBudget(state, today)` gives what an itinerary may plan: the pool minus non-itinerary uses from today on, per-day cumulative cash caps, and income dates.
+
 ## Planned purchases (hypotheticals) and borrowing (D16)
 
 1. **Day available** = the unused part of the purchase's own category + that day's unused non-essential categories. Essentials are never used to make room.

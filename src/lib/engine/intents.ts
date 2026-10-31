@@ -3,12 +3,13 @@ import { addDays, endOfMonth, formatDayRange, formatShortDate, isISODate } from 
 import { computeDiff } from './diff';
 import { explain } from './explain';
 import { cashViolations } from './invariants';
+import { isItemised, validateItineraryPurchases, withItineraryCategories } from './itinerary';
 import { evenSplitLatest, formatMoney, gbp, isMoney, largestRemainder as largestRemainderLocal, MAX_PENCE } from './money';
 import { finalizePlan, futureDays, generatePlan, validateState } from './plan';
 import { amountOn, occurrences } from './recurrence';
 import type {
   ApplyResult, BorrowSource, Borrowing, CategoryId, ChangeSet, Clarification, Commitment, EngineError, EngineState,
-  Explanation, HypotheticalIntent, ISODate, Intent, Plan, PlannedPurchase,
+  Explanation, HypotheticalIntent, ISODate, Intent, ItineraryIntent, Plan, PlannedPurchase,
 } from './types';
 import {
   addEven, cellFree, cellUse, dayAvailable, dayRemaining, daysAfter, getP, intraDayTake, isEssential, makeWork,
@@ -38,6 +39,8 @@ export function ensurePlan(state: EngineState, today: ISODate): EngineState {
 function rollForward(s: EngineState, today: ISODate): Plan | null {
   const prev = s.plan;
   if (!prev || !isISODate(today) || prev.computedFor > today) return null;
+  // Itemised mode always re-plans: every day is exactly its purchases, the rest is buffer.
+  if (isItemised(s)) return null;
   if (Object.keys(validateState(s)).length || today < s.profile.planStart) return null;
   if (prev.fundingGap.pence > 0 || prev.unallocated.pence > 0) return null;
   const W = futureDays(s, today);
@@ -77,6 +80,8 @@ interface Outcome {
   replan?: boolean;
   /** Expense on today: the free part of its own cell before it was recorded. */
   ownFree?: number;
+  /** Runs on the final state (plan included); a Fail rejects the intent. */
+  check?: (next: EngineState) => Fail | null;
 }
 type Handler = (w: Work, today: ISODate) => Outcome | Fail;
 
@@ -86,7 +91,9 @@ function runHandler(base: EngineState, intent: Intent, today: ISODate, handler: 
   const out = handler(w, today);
   if ('ok' in out) return out;
   next.processedKeys.push(intent.idempotencyKey);
-  let replanned = !!out.replan;
+  // Itemised mode: every intent is a full re-plan, so changes come out of the buffer, not other days.
+  const itemised = isItemised(next);
+  let replanned = !!out.replan || itemised;
   if (!replanned) {
     refresh(w);
     // Fallback 1: repair cash timing on the working grid (today kept, take order, floors).
@@ -94,8 +101,14 @@ function runHandler(base: EngineState, intent: Intent, today: ISODate, handler: 
   }
   // Fallback 2 (last resort): a full deterministic re-plan.
   next.plan = replanned ? generatePlan(next, today) : finalizePlan(next, today, w.planned, w.gap, w.unallocated, w.reasons);
-  const diff = computeDiff(base, next, intent, today, { ...out.extras, replanned });
-  if (replanned && intent.kind === 'expense') reconcileExpense(diff, intent.date === today, out.ownFree ?? 0);
+  const bad = out.check?.(next);
+  if (bad) return bad;
+  const buffer = itemised || isItemised(base) || intent.kind === 'itinerary'
+    ? { itemised, bufferBefore: base.plan!.unallocated, bufferAfter: next.plan.unallocated }
+    : {};
+  const diff = computeDiff(base, next, intent, today, { ...out.extras, ...buffer, replanned });
+  if (itemised && intent.kind === 'expense') reconcileItemisedExpense(diff);
+  else if (replanned && intent.kind === 'expense') reconcileExpense(diff, intent.date === today, out.ownFree ?? 0);
   return { ok: true, nextState: next, diff, explanationFacts: explain(diff) };
 }
 
@@ -113,6 +126,25 @@ function reconcileExpense(d: ChangeSet, sameDay: boolean, ownFree: number) {
   d.takenFromLater = gbp(later);
   d.uncovered = gbp(amount - absorbed - later - fromUnalloc);
 }
+
+/** Itemised mode: an expense is covered by the planned purchase it completes (absorbed), then by
+ * the buffer (fromUnallocated); what neither covers becomes a funding gap (uncovered). */
+function reconcileItemisedExpense(d: ChangeSet) {
+  const amount = d.amount!.pence;
+  const fromBuffer = Math.min(amount, Math.max(0, d.bufferBefore!.pence - d.bufferAfter!.pence));
+  const uncovered = Math.min(amount - fromBuffer, Math.max(0, d.fundingGapAfter.pence - d.fundingGapBefore.pence));
+  const absorbed = amount - fromBuffer - uncovered;
+  d.absorbed = gbp(absorbed);
+  d.overspend = gbp(amount - absorbed);
+  d.takenFromLater = gbp(0);
+  if (fromBuffer > 0) d.fromUnallocated = gbp(fromBuffer);
+  else delete d.fromUnallocated;
+  d.uncovered = gbp(uncovered);
+}
+
+/** Sum of cash-timing related deficits (used to detect a purchase that spends money before it arrives). */
+const cashShort = (p: Plan) =>
+  p.deficits.filter((x) => x.kind === 'cash-timing' || x.kind === 'reserve-short' || x.kind === 'bills-short').reduce((a, x) => a + x.amount.pence, 0);
 
 function noop(base: EngineState, intent: Intent, today: ISODate): ApplyResult {
   const diff: ChangeSet = { ...computeDiff(base, base, intent, today), noop: true };
@@ -179,6 +211,21 @@ export function applyIntent(state: EngineState, intent: Intent, today: ISODate):
         const d = intent.date;
         w.s.preferences = w.s.preferences.filter((x) => x.date !== d);
         const before = dayRemaining(w, d);
+        if (isItemised(w.s)) {
+          // Itemised: the re-plan holds the amount on that day out of the buffer, if it can.
+          w.s.preferences.push({ id: `pref-${intent.idempotencyKey}`, kind: 'keepAvailable', date: d, amount: intent.amount, label: intent.label });
+          const extras: NonNullable<Outcome['extras']> = { amount: intent.amount, dayRemainingBefore: gbp(before), target: { day: d, category: '', categoryName: '' } };
+          return {
+            extras,
+            check: (next) => {
+              const after = dayRemaining(makeWork(next, today), d);
+              if (after < intent.amount.pence)
+                return err('insufficient-flexible', `There isn't ${formatMoney(intent.amount.pence - after)} more of unplanned money to keep for ${formatShortDate(d)}.`);
+              extras.dayRemainingAfter = gbp(after);
+              return null;
+            },
+          };
+        }
         if (before < intent.amount.pence) {
           const need = intent.amount.pence - before;
           const moved = moveIntoDay(w, d, need, null);
@@ -205,6 +252,15 @@ export function applyIntent(state: EngineState, intent: Intent, today: ISODate):
         w.s.profile.savingsGoal = gbp(beforeGoal.pence + intent.amount.pence);
         if (deadline)
           w.s.profile.savingsDeadlines = [...(w.s.profile.savingsDeadlines ?? []), { amount: intent.amount, byDate: deadline }];
+        if (isItemised(w.s))
+          // Itemised: the goal comes out of the buffer; it must not open a funding gap.
+          return {
+            extras: { amount: intent.amount, savingsGoal: { before: beforeGoal, after: w.s.profile.savingsGoal, byDate: deadline } },
+            check: (next) =>
+              next.plan!.fundingGap.pence > base.plan!.fundingGap.pence || cashShort(next.plan!) > cashShort(base.plan!)
+                ? err('insufficient-flexible', `Only ${formatMoney(base.plan!.unallocated)} isn't tied to a purchase yet${deadline ? ` to save by ${formatShortDate(deadline)}` : ''}.`)
+                : null,
+          };
         const days = reallocDays(w).filter((d) => d > w.today && (!deadline || d <= deadline));
         const taken = takeEven(w, takeOrder(w.s), days, intent.amount.pence, true);
         if (taken < intent.amount.pence)
@@ -239,6 +295,8 @@ export function applyIntent(state: EngineState, intent: Intent, today: ISODate):
     }
     case 'removePlannedPurchase':
       return removePlannedPurchase(base, intent, today);
+    case 'itinerary':
+      return itinerary(base, intent, today);
     default:
       return err('invalid', `Unknown intent kind.`);
   }
@@ -255,6 +313,32 @@ function matchPurchase(s: EngineState, date: ISODate, cat: CategoryId, note?: st
     open.find((x) => x.category === cat) ??
     open.find((x) => norm(x.label) === norm(cat) || (!!note && norm(x.label) === norm(note)))
   );
+}
+
+function itinerary(base: EngineState, intent: ItineraryIntent, today: ISODate): ApplyResult {
+  if (intent.mode !== 'itemised' && intent.mode !== 'even') return err('invalid', 'Choose itemised or even allocation.');
+  if (today > base.profile.horizonEnd) return err('out-of-range', 'Your plan has ended. Set a new end date first.');
+  const keep = base.plannedPurchases.filter((x) => x.source !== 'itinerary');
+  const bad = validateItineraryPurchases(intent.purchases, today, base.profile.horizonEnd, keep);
+  if (bad) return err('invalid', bad);
+  const purchases: PlannedPurchase[] = intent.purchases.map((x) => ({ ...clone(x), source: 'itinerary' as const }));
+  const replaced = base.plannedPurchases.length - keep.length;
+  return runHandler(base, intent, today, (w) => {
+    w.s.plannedPurchases = [...keep, ...purchases];
+    w.s.profile.categories = withItineraryCategories(w.s.profile.categories, purchases);
+    w.s.profile.allocationMode = intent.mode;
+    return {
+      replan: true,
+      extras: {
+        itinerary: {
+          purchases: purchases.length,
+          planned: gbp(purchases.reduce((a, x) => a + x.amount.pence, 0)),
+          replaced,
+          mode: intent.mode,
+        },
+      },
+    };
+  });
 }
 
 function removePlannedPurchase(base: EngineState, intent: Extract<Intent, { kind: 'removePlannedPurchase' }>, today: ISODate): ApplyResult {
@@ -687,6 +771,7 @@ export function affordability(state: EngineState, r: RequestLike, today: ISODate
   }
   const key = r.idempotencyKey ?? uniqueKey(base, `req:${r.date}:${r.category}:${r.amount.pence}`);
   const day = formatShortDate(r.date);
+  if (isItemised(base)) return affordItemised(base, r, today, key);
   if (r.amount.pence <= avail + borrowable) {
     const res = placeRequest(base, r, today, key, null, noBorrow);
     if (!res.ok) return res;
@@ -733,6 +818,7 @@ export function affordability(state: EngineState, r: RequestLike, today: ISODate
 function hypothetical(base: EngineState, intent: HypotheticalIntent, today: ISODate): ApplyResult {
   const bad = validateRequest(base, intent, today);
   if (bad) return bad;
+  if (isItemised(base)) return placeItemised(base, intent, today, intent.idempotencyKey);
   let m = measure(base, intent, today);
   let noBorrow = false;
   if (m.borrowable > 0 && intent.amount.pence <= m.avail + m.borrowable) {
@@ -751,6 +837,63 @@ function hypothetical(base: EngineState, intent: HypotheticalIntent, today: ISOD
   const st = strategies(w, intent.date).find((s) => s.id === intent.tradeoffOptionId);
   if (!st) return err('unknown-option', 'That trade-off option is no longer available.');
   return placeRequest(base, intent, today, intent.idempotencyKey, st, noBorrow);
+}
+
+// --------------------------- itemised planned purchases -------------------
+
+/** Itemised mode: a new planned purchase fits when it fits in the buffer (plan.unallocated)
+ * without opening a funding gap or spending money before it arrives. Full re-plan. */
+function placeItemised(base: EngineState, r: RequestLike, today: ISODate, key: string): ApplyResult {
+  const intent: HypotheticalIntent = {
+    kind: 'hypothetical', amount: r.amount, date: r.date, category: r.category, label: r.label, idempotencyKey: key,
+  };
+  const buffer = base.plan!.unallocated.pence;
+  return runHandler(base, intent, today, (w) => {
+    const before = dayRemaining(w, r.date);
+    w.s.plannedPurchases.push({ id: `pp-${key}`, date: r.date, category: r.category, amount: r.amount, label: r.label ?? categoryName(w.s, r.category), ...(r.ref ? { ref: r.ref } : {}) });
+    const extras: NonNullable<Outcome['extras']> = {
+      amount: r.amount,
+      target: { day: r.date, category: r.category, categoryName: categoryName(w.s, r.category), label: r.label },
+      dayRemainingBefore: gbp(before),
+      dayAvailableBefore: gbp(buffer),
+    };
+    return {
+      extras,
+      check: (next) => {
+        const p = next.plan!;
+        if (p.fundingGap.pence > base.plan!.fundingGap.pence)
+          return err('shortfall', `${formatMoney(r.amount)} is ${formatMoney(r.amount.pence - buffer)} more than the ${formatMoney(buffer)} that isn't tied to a purchase yet.`, {
+            shortfall: r.amount.pence - buffer, dayRemaining: buffer, dayAvailable: buffer, borrowable: 0,
+          });
+        if (cashShort(p) > cashShort(base.plan!)) return err('cash-constraint', 'That would spend money before it arrives.');
+        extras.dayRemainingAfter = gbp(dayRemaining(makeWork(next, today), r.date));
+        return null;
+      },
+    };
+  });
+}
+
+function affordItemised(base: EngineState, r: RequestLike, today: ISODate, key: string): Affordability | Fail {
+  const buffer = base.plan!.unallocated.pence;
+  const res = placeItemised(base, r, today, key);
+  if (res.ok) {
+    const after = res.nextState.plan!.unallocated.pence;
+    return {
+      fits: true, amount: r.amount.pence, dayRemaining: buffer, dayAvailable: buffer, remainingAfter: after, borrowed: 0,
+      message: `Fits — it comes out of your ${formatMoney(buffer)} buffer, leaving ${formatMoney(after)}`,
+      preview: { nextState: res.nextState, diff: res.diff, explanation: res.explanationFacts },
+    };
+  }
+  if (res.error?.code === 'shortfall' || res.error?.code === 'cash-constraint') {
+    const shortfall = res.error.code === 'shortfall' ? (res.error.details as { shortfall: number }).shortfall : r.amount.pence;
+    return {
+      fits: false, amount: r.amount.pence, dayRemaining: buffer, dayAvailable: buffer, borrowable: 0, shortfall, options: [],
+      message: res.error.code === 'shortfall'
+        ? `${formatMoney(shortfall)} short — only ${formatMoney(buffer)} isn't tied to a purchase yet`
+        : `That would spend money before it arrives on ${formatShortDate(r.date)}`,
+    };
+  }
+  return res;
 }
 
 // --------------------------- commitments ----------------------------------

@@ -24,7 +24,7 @@ export function sameProtected(a: ProtectedSnapshot, b: ProtectedSnapshot): boole
 type Extras = Partial<Pick<ChangeSet,
   'amount' | 'target' | 'absorbed' | 'overspend' | 'dayRemainingBefore' | 'dayRemainingAfter' |
   'shortfall' | 'commitment' | 'savingsGoal' | 'replanned' | 'takenFromLater' | 'fromUnallocated' | 'uncovered' |
-  'dayAvailableBefore' | 'borrowed' | 'tradeoff' | 'removedPurchase'>>;
+  'dayAvailableBefore' | 'borrowed' | 'tradeoff' | 'removedPurchase' | 'itemised' | 'bufferBefore' | 'bufferAfter' | 'itinerary'>>;
 
 export function computeDiff(
   before: EngineState, after: EngineState, intent: Intent, today: ISODate, extras: Extras = {},

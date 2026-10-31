@@ -1,7 +1,7 @@
-import { Pin } from 'lucide-react';
+import { Pin, ShoppingBag, ShoppingBasket, Tag, TrainFront, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import { formatMoney } from '@/lib/engine';
 import { VALUE_ICONS } from '@/components/ui/Value';
-import type { DayInfo } from './data';
+import type { Bucket, DayInfo, PurchaseItem } from './data';
 
 export const money = (p: number) => formatMoney(p);
 
@@ -23,16 +23,40 @@ export function shortLabel(label: string, max = 11): string {
   return `${label.slice(0, max - 1)}…`;
 }
 
-export function chipsFor(day: DayInfo, preview?: ChipSpec[]): ChipSpec[] {
+/**
+ * Chips for one day. Bills are one-off monthly payments and are listed separately (Spending plan panel), never on
+ * the day. Spending-plan purchases are summarised by `dayHint` unless `itinerary` asks for them as chips too.
+ */
+export function chipsFor(day: DayInfo, preview?: ChipSpec[], opts: { itinerary?: boolean } = {}): ChipSpec[] {
   const out: ChipSpec[] = [];
-  for (const f of day.fixed) out.push({ key: f.id, kind: 'fixed', label: f.name, pence: f.pence });
   for (const e of day.entries) {
     out.push({ key: e.id, kind: e.kind === 'income' ? 'income' : 'actual', label: e.label, pence: e.pence, itemKey: `ledger:${e.id}` });
   }
   // One chip per planned purchase, under its own label. Category cells are never listed again.
-  for (const p of day.purchases) out.push({ key: p.id, kind: 'planned', label: p.label, pence: p.pence, itemKey: `${day.date}|${p.category}` });
+  for (const p of day.purchases) if (opts.itinerary || p.source !== 'itinerary') out.push({ key: p.id, kind: 'planned', label: p.label, pence: p.pence, itemKey: `${day.date}|${p.category}` });
   if (preview) out.push(...preview);
   return out;
+}
+
+export const BUCKET_ICON: Record<Bucket, LucideIcon> = {
+  groceries: ShoppingBasket, transport: TrainFront, eatingOut: UtensilsCrossed, shopping: ShoppingBag, other: Tag,
+};
+export const BUCKET_LABEL: Record<Bucket, string> = {
+  groceries: 'Groceries', transport: 'Transport', eatingOut: 'Eating out', shopping: 'Shopping', other: 'Other',
+};
+const BUCKET_ORDER: Bucket[] = ['eatingOut', 'shopping', 'groceries', 'transport', 'other'];
+
+/** "Dinner: egg fried rice" -> "egg fried rice". */
+export const stripPrefix = (label: string) => label.replace(/^[^:]{1,24}:\s*/, '');
+
+/** A tiny "why this day costs what it does" hint: the buckets in the day's spending plan and its headline item. */
+export function dayHint(day: DayInfo): { buckets: Bucket[]; headline: PurchaseItem | null } {
+  const itin = day.purchases.filter((p) => p.source === 'itinerary');
+  if (!itin.length) return { buckets: [], headline: null };
+  const buckets = BUCKET_ORDER.filter((b) => itin.some((p) => p.bucket === b));
+  const treat = itin.find((p) => /treat|payday/i.test(p.reason ?? ''));
+  const headline = treat ?? [...itin].sort((a, b) => BUCKET_ORDER.indexOf(a.bucket) - BUCKET_ORDER.indexOf(b.bucket) || b.pence - a.pence)[0];
+  return { buckets, headline };
 }
 
 const SR = { actual: 'Spent', income: 'Received', fixed: 'Bill', planned: 'Planned', preview: 'Preview' } as const;

@@ -110,9 +110,12 @@ export function explain(d: ChangeSet): Explanation {
           : `All ${m(d.takenFromLater ? 'takenFromLater' : 'overspend', later!)} comes from later days.`);
         break;
       }
-      if (absorbed) pieces.push(`That day's allowance covered ${m('absorbed', d.absorbed!)}`);
+      if (absorbed) pieces.push(d.itemised ? `The planned purchase covered ${m('absorbed', d.absorbed!)}` : `That day's allowance covered ${m('absorbed', d.absorbed!)}`);
       if (laterPence > 0) pieces.push(`${m('takenFromLater', later!)} comes from later days`);
-      if (d.fromUnallocated) pieces.push(`${m('fromUnallocated', d.fromUnallocated)} comes from money not assigned to any day`);
+      if (d.fromUnallocated)
+        pieces.push(d.itemised
+          ? `${m('fromUnallocated', d.fromUnallocated)} comes out of your buffer${d.bufferAfter ? ` (${m('bufferAfter', d.bufferAfter)} left)` : ''}`
+          : `${m('fromUnallocated', d.fromUnallocated)} comes from money not assigned to any day`);
       if (uncovered > 0) pieces.push(`${m('uncovered', d.uncovered!)} couldn't be covered`);
       parts.push(`${cap(pieces.join('; '))}.`);
       break;
@@ -122,6 +125,11 @@ export function explain(d: ChangeSet): Explanation {
       fact('dayRemainingBefore', 'Day had left', d.dayRemainingBefore);
       fact('dayRemainingAfter', 'Day has left', d.dayRemainingAfter);
       const what = t!.label ? `${t!.label} (${lc(t!.categoryName)})` : lc(t!.categoryName);
+      if (d.itemised) {
+        parts.push(`Set aside ${m('amount', d.amount!)} for ${what} on ${formatShortDate(t!.day)}.`);
+        if (d.bufferAfter) parts.push(`It comes out of your buffer; ${m('bufferAfter', d.bufferAfter)} isn't tied to a purchase now.`);
+        break;
+      }
       const b = d.borrowed;
       const avail = d.dayAvailableBefore ? m('dayAvailableBefore', d.dayAvailableBefore) : null;
       if (b) fact('borrowed', 'Borrowed from the following days', b.amount);
@@ -164,8 +172,19 @@ export function explain(d: ChangeSet): Explanation {
       break;
     case 'removePlannedPurchase':
       fact('amount', 'Planned purchase removed', d.amount);
-      parts.push(`Removed the ${m('amount', d.amount!)} planned purchase (${t!.label ?? lc(t!.categoryName)}, ${formatShortDate(t!.day)}); that money is free to spend on ${formatShortDate(t!.day)} again.`);
+      parts.push(d.itemised && d.bufferAfter
+        ? `Removed the ${m('amount', d.amount!)} planned purchase (${t!.label ?? lc(t!.categoryName)}, ${formatShortDate(t!.day)}); that money goes back to your buffer, now ${m('bufferAfter', d.bufferAfter)}.`
+        : `Removed the ${m('amount', d.amount!)} planned purchase (${t!.label ?? lc(t!.categoryName)}, ${formatShortDate(t!.day)}); that money is free to spend on ${formatShortDate(t!.day)} again.`);
       break;
+    case 'itinerary': {
+      const it = d.itinerary!;
+      fact('planned', 'Planned purchases', it.planned, String(it.purchases));
+      if (d.bufferAfter) fact('buffer', 'Buffer', d.bufferAfter);
+      const n = `${it.purchases} purchase${it.purchases === 1 ? '' : 's'}`;
+      parts.push(`Applied your spending plan: ${n}, ${m('itinerary.planned', it.planned)} planned${d.bufferAfter ? `, ${m('bufferAfter', d.bufferAfter)} buffer` : ''}.`);
+      if (it.mode === 'itemised') parts.push('Every day now holds only its planned purchases.');
+      break;
+    }
     case 'settingsEdit':
       parts.push('Updated your settings and re-planned the days ahead.');
       break;
@@ -173,7 +192,7 @@ export function explain(d: ChangeSet): Explanation {
   for (const x of d.sameDaySources) fact(`sameDayFrom:${x.category}`, `${x.categoryName} that day`, x.amount);
   for (const x of d.sources) fact(`from:${x.category}`, `${x.categoryName} decreased`, x.amount);
   for (const x of d.additions) fact(`to:${x.category}`, `${x.categoryName} increased`, x.amount);
-  if (d.intentKind !== 'settingsEdit') {
+  if (d.intentKind !== 'settingsEdit' && d.intentKind !== 'itinerary') {
     const tday = t?.day ? ` on ${formatShortDate(t.day)}` : '';
     // For an expense, the same-day reductions are the "covered by that day" part above.
     if (d.intentKind === 'hypothetical' && d.sameDaySources.length)

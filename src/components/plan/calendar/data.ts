@@ -1,10 +1,27 @@
 import { addDays, dateRange, endOfMonth, ensurePlan, occurrences } from '@/lib/engine';
-import type { DeficitItem, EngineState, ISODate } from '@/lib/engine';
+import type { DeficitItem, EngineState, ISODate, ItemRef, PurchaseLine } from '@/lib/engine';
 
 export interface FixedItem { id: string; name: string; pence: number }
 export interface EntryItem { id: string; kind: 'expense' | 'income'; category?: string; label: string; pence: number; note?: string }
 export interface PlannedItem { category: string; name: string; planned: number; actual: number }
-export interface PurchaseItem { id: string; label: string; pence: number; category: string }
+export type Bucket = 'groceries' | 'transport' | 'eatingOut' | 'shopping' | 'other';
+export interface PurchaseItem {
+  id: string; label: string; pence: number; category: string; categoryName: string; bucket: Bucket;
+  /** Itemised breakdown (creative spending plan). */
+  lines?: PurchaseLine[]; reason?: string; source?: 'itinerary'; ref?: ItemRef;
+}
+
+/** Which kind of spending a category is, from its id/name (and, as a tie-breaker, the merchant of its lines). */
+export function bucketOf(categoryId: string, categoryName: string, lines?: PurchaseLine[]): Bucket {
+  const s = `${categoryId} ${categoryName}`.toLowerCase();
+  if (/groc|food shop|supermarket/.test(s)) return 'groceries';
+  if (/transport|travel|commute|tfl|tube|bus|fare/.test(s)) return 'transport';
+  if (/eat|restaurant|takeaway|dining|meal/.test(s)) return 'eatingOut';
+  if (/shop|cloth|fashion|stuff|want/.test(s)) return 'shopping';
+  if (/food/.test(s)) return 'groceries';
+  if (lines?.some((l) => l.ref.domain === 'tfl.gov.uk')) return 'transport';
+  return 'other';
+}
 
 export interface DayInfo {
   date: ISODate;
@@ -70,6 +87,9 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
     day.items.push({ category: a.category, name: names.get(a.category) ?? titleCase(a.category), planned: a.planned.pence, actual: a.actual.pence });
     day.plannedFlexible += a.planned.pence;
   }
+  // Money set aside for a planned purchase is already inside its category's planned cell. The category row only
+  // shows what is left over (in itemised mode usually nothing), so the purchase is never counted twice.
+  const earmarked = new Map<string, number>();
   for (const t of state.ledger) {
     // The ledger holds both expenses and income (an "I received" intent is a ledger transaction of kind 'income').
     const income = t.kind === 'income';
@@ -87,7 +107,21 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
   for (const t of state.ledger) if (t.kind === 'expense' && t.plannedPurchaseId) consumed.add(t.plannedPurchaseId);
   for (const p of state.plannedPurchases) {
     if (consumed.has(p.id)) continue;
-    days.get(p.date)?.purchases.push({ id: p.id, label: p.label, pence: p.amount.pence, category: p.category });
+    const day = days.get(p.date);
+    if (!day) continue;
+    const categoryName = names.get(p.category) ?? titleCase(p.category);
+    day.purchases.push({
+      id: p.id, label: p.label, pence: p.amount.pence, category: p.category, categoryName, bucket: bucketOf(p.category, categoryName, p.lines),
+      lines: p.lines, reason: p.reason, source: p.source, ref: p.ref,
+    });
+    const k = `${p.date}|${p.category}`;
+    earmarked.set(k, (earmarked.get(k) ?? 0) + p.amount.pence);
+  }
+  for (const day of days.values()) {
+    if (!day.purchases.length) continue;
+    day.items = day.items
+      .map((it) => ({ ...it, planned: Math.max(0, it.planned - (earmarked.get(`${day.date}|${it.category}`) ?? 0)) }))
+      .filter((it) => it.planned > 0 || it.actual > 0);
   }
   const undated: DeficitItem[] = [];
   for (const d of plan.deficits) {
