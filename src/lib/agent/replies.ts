@@ -121,11 +121,16 @@ export function replyFromToolResults(results: ToolResult[], ctx: ChatContext, co
         break;
       }
       case 'change_commitment':
-      case 'set_goal':
-      case 'apply_deal': {
+      case 'set_goal': {
         const ex = brief(str(r.explanation));
         parts.push(ex || 'Here\'s the preview.');
         hint = CONFIRM_HINT;
+        break;
+      }
+      case 'apply_deal': {
+        const ex = brief(str(r.explanation));
+        parts.push(ex || 'Applied the student deal to your calendar.');
+        hint = r.applied ? UNDO_HINT : CONFIRM_HINT;
         break;
       }
       case 'use_rate_in_projections': {
@@ -153,7 +158,7 @@ export function replyFromToolResults(results: ToolResult[], ctx: ChatContext, co
 /** Reply after research, without a model call: the top cited item plus how to use it. */
 export function replyFromResearch(r: ResearchResult): string {
   if (!r.items.length) return 'I couldn\'t get live results just now. Please try again in a minute.';
-  if (r.sample) return 'Live search isn\'t available right now, so here are some sample offers. Check with the provider before acting.';
+  if (r.sample) return 'Here are curated London student deals matched to your plan. Check with the provider before acting.';
   const top = r.items[0];
   const what = `${top.provider}${top.product && top.product !== top.provider ? ` ${top.product}` : ''}`;
   const rateTopic = r.topic === 'savings_rates' || r.topic === 'cash_isa_rates';

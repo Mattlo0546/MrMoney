@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { annotateCitations, cacheKey, CACHE_TTL_MS, citeItems, clearResearchCache, parseExtracted, runResearch } from './research';
 import { geminiResponse, hangingFetch, scriptedFetch } from './testkit';
+import { SAMPLE_LABEL } from './types';
 
 const LINES = ['* Zopa Easy Access: 4.56% AER variable.', '* Chase Saver: 4.50% AER with bonus.', '* Cahoot Simple Saver: 5.00% AER.'];
 const GROUNDED_TEXT = LINES.join('\n');
@@ -108,7 +109,7 @@ describe('runResearch', () => {
     const reasons: string[] = [];
     const r = await runResearch({ topic: 'cheap_food', query: 'student food deals' }, { apiKey: 'k', fetchImpl: f.impl, today: '2026-10-31', onFallback: (x) => reasons.push(x) });
     expect(r.sample).toBe(true);
-    expect(r.label).toMatch(/Sample/);
+    expect(r.label).toBe(SAMPLE_LABEL);
     expect(r.items.length).toBeGreaterThan(0);
     expect(r.items.every((i) => i.sourceUrl.startsWith('http'))).toBe(true);
     expect(reasons).toHaveLength(1);

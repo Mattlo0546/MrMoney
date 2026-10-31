@@ -1,4 +1,4 @@
-/** Bubble effect for changed cells/chips (contract: scale + lime halo, staggered 40ms, 400ms cap). */
+/** Bubble effect for changed cells/chips (contract: scale + emerald halo, staggered 40ms, 400ms cap). */
 import { bubbleDelay, playBubble } from '@/components/ui/bubble';
 
 /** `rippleMs`: stagger the days in date order by this much each (capped at ~1.4s) instead of the default 40ms/400ms. */

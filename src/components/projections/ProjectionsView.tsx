@@ -753,7 +753,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                     <span
                       className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
                         selected
-                          ? 'border-pos bg-pos text-white'
+                          ? 'border-transparent bg-grad-positive'
                           : 'border-line bg-surface text-muted'
                       }`}
                     >
@@ -841,7 +841,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                     <span
                       className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
                         selected
-                          ? 'border-accent bg-accent text-white'
+                          ? 'border-transparent bg-grad-primary'
                           : 'border-line bg-surface text-muted'
                       }`}
                     >

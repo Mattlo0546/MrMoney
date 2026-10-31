@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CATALOGUE, CuratedOfferSource, matchOffers, potentialSaving } from './index';
+import { demoFixture, generatePlan } from '@/lib/engine';
+import { buildPlanData } from '@/components/plan/calendar/data';
+import { applyDealToState, applyOffersToState, CATALOGUE, CuratedOfferSource, matchOffers, potentialSaving } from './index';
 
 const plan = [
   { category: 'eating-out', plannedPence: 5_000 },
@@ -8,9 +10,9 @@ const plan = [
 ];
 
 describe('catalogue', () => {
-  it('has 10-14 offers, all sample with source, checked date, confidence', () => {
+  it('has 10-35 offers, all sample with source, checked date, confidence', () => {
     expect(CATALOGUE.length).toBeGreaterThanOrEqual(10);
-    expect(CATALOGUE.length).toBeLessThanOrEqual(14);
+    expect(CATALOGUE.length).toBeLessThanOrEqual(35);
     for (const o of CATALOGUE) {
       expect(o.sample).toBe(true);
       expect(o.source).toMatch(/^https?:\/\//);
@@ -67,7 +69,7 @@ describe('potentialSaving', () => {
     const zizzi = CATALOGUE.find((o) => o.id === 'zizzi-student')!;
     expect(potentialSaving(zizzi, 5_000).pence).toBe(1_500);
     expect(potentialSaving({ ...zizzi, percentOff: undefined, amountOffPence: 500 }, 300).pence).toBe(300);
-    expect(potentialSaving(CATALOGUE.find((o) => o.id === 'lidl-plus')!, 5_000).pence).toBe(0);
+    expect(potentialSaving({ ...zizzi, percentOff: undefined, amountOffPence: undefined }, 5_000).pence).toBe(0);
   });
 });
 
@@ -79,5 +81,65 @@ describe('CuratedOfferSource', () => {
     expect(uk.some((o) => o.area === 'London')).toBe(false);
     expect(lon.length).toBeGreaterThan(uk.length);
     expect(uk.every((o) => o.sample === true)).toBe(true);
+  });
+  it('includes London student food, NeoTaste, Too Good To Go, clothes, and transport offers', () => {
+    const ids = CATALOGUE.map((o) => o.id);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        'neotaste-london-2for1',
+        'tgtg-pret-magic-bag',
+        'itsu-half-price-sale',
+        'asos-student-discount',
+        'nike-student-discount',
+        'rokit-beyond-retro-london',
+        'student-oyster-18plus',
+        'railcard-on-oyster',
+      ]),
+    );
+  });
+});
+
+describe('applyDealToState & calendar discount reflection', () => {
+  it('discounts planned purchases and reflects savedPence and originalTotal on calendar days', () => {
+    const seed = demoFixture();
+    const initial = { ...seed.state, plan: generatePlan(seed.state, seed.today) };
+    const beforeData = buildPlanData(initial, seed.today);
+
+    const neotaste = CATALOGUE.find((o) => o.id === 'neotaste-london-2for1')!;
+    const res = applyDealToState(
+      initial,
+      {
+        id: neotaste.id,
+        title: neotaste.title,
+        category: neotaste.category,
+        percentOff: neotaste.percentOff,
+      },
+      seed.today,
+    );
+
+    expect(res.savedPence).toBeGreaterThan(0);
+    expect(res.alreadyApplied).toBe(false);
+    expect(res.nextState.profile.appliedDeals).toHaveLength(1);
+
+    const afterData = buildPlanData(res.nextState, seed.today);
+    const discountedDays = [...afterData.days.values()].filter((d) => (d.savedPence ?? 0) > 0);
+    expect(discountedDays.length).toBeGreaterThan(0);
+    for (const day of discountedDays) {
+      expect(day.originalTotal).toBeGreaterThan(day.total);
+      expect(day.dealLabels?.length).toBeGreaterThan(0);
+      const beforeDay = beforeData.days.get(day.date);
+      if (beforeDay) {
+        expect(day.total).toBeLessThanOrEqual(beforeDay.total);
+      }
+    }
+  });
+
+  it('applyOffersToState applies the best deal per category across the calendar', () => {
+    const seed = demoFixture();
+    const initial = { ...seed.state, plan: generatePlan(seed.state, seed.today) };
+    const out = applyOffersToState(initial, CATALOGUE, seed.today);
+    expect(out.appliedCount).toBeGreaterThan(0);
+    expect(out.totalSavedPence).toBeGreaterThan(0);
+    expect((out.nextState.profile.appliedDeals ?? []).length).toBe(out.appliedCount);
   });
 });

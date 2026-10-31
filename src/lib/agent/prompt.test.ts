@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INTENT_RULES, systemPrompt } from './prompt';
+import { INTENT_RULES, LONDON_STUDENT_DEALS_RULE, systemPrompt } from './prompt';
 import { functionDeclarations } from './tools';
 
 const ctx = { today: '2026-11-10', demoMode: true, hasPlan: true, summary: { todayAllowancePence: 2584, plannedSavingsPence: 15000, reservePence: 50000 } };
@@ -38,5 +38,12 @@ describe('system prompt: style and context', () => {
     expect(sys).toMatch(/ONE per turn/);
     expect(sys).toMatch(/As soon as you have all three, call quick_plan/);
     expect(sys).not.toMatch(/setup_plan/);
+  });
+  it('specializes for London students and instructs autonomous apply_deal usage', () => {
+    const sys = systemPrompt(ctx);
+    expect(sys).toContain(LONDON_STUDENT_DEALS_RULE);
+    expect(sys).toMatch(/NeoTaste/);
+    expect(sys).toMatch(/Too Good To Go/);
+    expect(sys).toMatch(/AUTONOMOUSLY call apply_deal/);
   });
 });

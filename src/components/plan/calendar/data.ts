@@ -2,13 +2,17 @@ import { addDays, dateRange, endOfMonth, ensurePlan, occurrences } from '@/lib/e
 import type { DeficitItem, EngineState, ISODate, ItemRef, PurchaseLine } from '@/lib/engine';
 
 export interface FixedItem { id: string; name: string; pence: number }
-export interface EntryItem { id: string; kind: 'expense' | 'income'; category?: string; label: string; pence: number; note?: string }
+export interface EntryItem {
+  id: string; kind: 'expense' | 'income'; category?: string; label: string; pence: number; note?: string;
+  originalPence?: number; dealTitle?: string; dealPercentOff?: number;
+}
 export interface PlannedItem { category: string; name: string; planned: number; actual: number }
 export type Bucket = 'groceries' | 'transport' | 'eatingOut' | 'shopping' | 'other';
 export interface PurchaseItem {
   id: string; label: string; pence: number; category: string; categoryName: string; bucket: Bucket;
   /** Itemised breakdown (creative spending plan). */
   lines?: PurchaseLine[]; reason?: string; source?: 'itinerary'; ref?: ItemRef;
+  originalPence?: number; dealTitle?: string; dealPercentOff?: number;
 }
 
 /** Which kind of spending a category is, from its id/name (and, as a tie-breaker, the merchant of its lines). */
@@ -33,6 +37,12 @@ export interface DayInfo {
   plannedFlexible: number;
   /** Planned flexible money for the day (bills are shown as chips). Planned, not spent. */
   total: number;
+  /** Total student deal discount saved on this calendar day (pence). */
+  savedPence: number;
+  /** Pre-discount total for the day (total + savedPence). */
+  originalTotal: number;
+  /** Student deals applied to this day. */
+  dealLabels: string[];
   entries: EntryItem[];
   purchases: PurchaseItem[];
   deficits: DeficitItem[];
@@ -71,7 +81,7 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
   const rangeStart = addDays(`${shiftM(histStart.slice(0, 7), -1)}-01`, -7);
   const rangeEnd = addDays(endOfMonth(end), 7);
   for (const d of dateRange(rangeStart, rangeEnd)) {
-    days.set(d, { date: d, inPlan: d >= start && d <= end, fixed: [], fixedTotal: 0, items: [], plannedFlexible: 0, total: 0, entries: [], purchases: [], deficits: [] });
+    days.set(d, { date: d, inPlan: d >= start && d <= end, fixed: [], fixedTotal: 0, items: [], plannedFlexible: 0, total: 0, entries: [], purchases: [], deficits: [], savedPence: 0, originalTotal: 0, dealLabels: [] });
   }
   for (const c of state.commitments) {
     for (const o of occurrences(c, rangeStart, rangeEnd)) {
@@ -96,6 +106,9 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
     days.get(t.date)?.entries.push({
       id: t.id, kind: income ? 'income' : 'expense', category: t.category,
       label: income ? t.note ?? 'Income' : t.category ? names.get(t.category) ?? titleCase(t.category) : 'Expense', pence: t.amount.pence, note: t.note,
+      ...(t.originalPence !== undefined ? { originalPence: t.originalPence } : {}),
+      ...(t.dealTitle ? { dealTitle: t.dealTitle } : {}),
+      ...(t.dealPercentOff !== undefined ? { dealPercentOff: t.dealPercentOff } : {}),
     });
   }
   const seen = new Set(state.ledger.map((t) => t.id));
@@ -113,6 +126,9 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
     day.purchases.push({
       id: p.id, label: p.label, pence: p.amount.pence, category: p.category, categoryName, bucket: bucketOf(p.category, categoryName, p.lines),
       lines: p.lines, reason: p.reason, source: p.source, ref: p.ref,
+      ...(p.originalPence !== undefined ? { originalPence: p.originalPence } : {}),
+      ...(p.dealTitle ? { dealTitle: p.dealTitle } : {}),
+      ...(p.dealPercentOff !== undefined ? { dealPercentOff: p.dealPercentOff } : {}),
     });
     const k = `${p.date}|${p.category}`;
     earmarked.set(k, (earmarked.get(k) ?? 0) + p.amount.pence);
@@ -129,7 +145,33 @@ export function buildPlanData(state: EngineState, today: ISODate): PlanData {
     if (day) day.deficits.push(d);
     else undated.push(d);
   }
-  for (const day of days.values()) day.total = day.plannedFlexible;
+  const evenDeals = (state.profile.appliedDeals ?? []).filter((ad) => (ad.dailySavedPence ?? 0) > 0);
+  for (const day of days.values()) {
+    day.total = day.plannedFlexible;
+    let saved = 0;
+    const labels = new Set<string>();
+    for (const p of day.purchases) {
+      if (p.originalPence !== undefined && p.originalPence > p.pence) {
+        saved += p.originalPence - p.pence;
+        if (p.dealTitle) labels.add(p.dealTitle);
+      }
+    }
+    for (const e of day.entries) {
+      if (e.kind === 'expense' && e.originalPence !== undefined && e.originalPence > e.pence) {
+        saved += e.originalPence - e.pence;
+        if (e.dealTitle) labels.add(e.dealTitle);
+      }
+    }
+    if (day.inPlan && day.date >= today && day.total > 0) {
+      for (const ad of evenDeals) {
+        saved += ad.dailySavedPence ?? 0;
+        labels.add(ad.title);
+      }
+    }
+    day.savedPence = saved;
+    day.originalTotal = day.total + saved;
+    day.dealLabels = [...labels];
+  }
   let minMonth = start.slice(0, 7);
   for (const d of days.values()) {
     if (d.date >= `${shiftM(histStart.slice(0, 7), -1)}-01` && d.date.slice(0, 7) < minMonth && (d.fixed.length > 0 || d.entries.length > 0)) minMonth = d.date.slice(0, 7);

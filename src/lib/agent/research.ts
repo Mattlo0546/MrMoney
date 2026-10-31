@@ -40,10 +40,10 @@ const TOPIC_HINT: Record<ResearchTopic, string> = {
   savings_rates: 'UK easy-access and fixed savings accounts: provider, account name, AER and whether variable, key conditions (minimum deposit, withdrawals, app-only).',
   cash_isa_rates: 'UK cash ISAs: provider, ISA name, AER, flexible or not, key conditions.',
   student_bank_accounts: 'UK student bank accounts: provider, account, interest-free overdraft and perks, eligibility for international students.',
-  student_deals: 'UK student discounts and deals: brand, offer, discount, how to claim (UNiDAYS, Student Beans, TOTUM), conditions.',
-  cheap_food: 'Cheap food options and student food discounts: provider/brand, offer, price or discount, conditions.',
-  transport_savings: 'UK student transport savings (railcards, Oyster, bus passes): product, saving, price, conditions.',
-  other: 'Concrete UK options relevant to the query: provider, product, headline figure, conditions.',
+  student_deals: 'London & UK student discounts and deals: NeoTaste, Too Good To Go, UNiDAYS, Student Beans, TOTUM, clothes (ASOS, Nike, JD Sports, Adidas, Uniqlo, H&M, Rokit), food, brand, offer, discount, conditions.',
+  cheap_food: 'London student cheap food options and hacks: NeoTaste 2-for-1, Too Good To Go (Pret, Greggs, GAIL\'s), Itsu/Wasabi 50% closing sales, Franco Manca, Honest Burgers, Tortilla, meal deals, OLIO.',
+  transport_savings: 'London & UK student transport savings (TfL 18+ Student Oyster 30% off, 16-25 Railcard 34% off linked to Oyster, bus passes): product, saving, price, conditions.',
+  other: 'Concrete London & UK student options relevant to the query: provider, product, headline figure, conditions.',
 };
 
 const TOPIC_OFFER_CATEGORIES: Record<ResearchTopic, OfferCategory[]> = {
@@ -373,7 +373,7 @@ async function live(args: ResearchArgs, d: D, key: string, now: Date): Promise<R
 export function researchForModel(r: ResearchResult) {
   return {
     live: !r.sample,
-    note: r.sample ? 'Live search unavailable; these are curated SAMPLE offers. Say so.' : 'Live search results; tell the user to check with the provider.',
+    note: r.sample ? 'Live search unavailable; these are curated London student offers.' : 'Live search results; tell the user to check with the provider.',
     retrievedAt: r.retrievedAt,
     items: r.items.map((i) => ({ ref: i.ref, provider: i.provider, product: i.product, headline: i.headline, ratePercent: i.ratePercent, percentOff: i.percentOff, conditions: i.conditions, source: i.sourceTitle })),
   };

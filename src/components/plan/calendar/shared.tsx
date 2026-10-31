@@ -82,9 +82,9 @@ export function Chip({ chip, compact }: { chip: ChipSpec; compact?: boolean }) {
       data-item={chip.itemKey}
       data-chip={chip.kind}
       title={`${SR[chip.kind]}: ${chip.label} ${amount}`}
-      className={`flex w-fit min-w-0 max-w-full items-center gap-1 rounded-full px-2 py-0.5 ${compact ? 'text-[11px]' : 'text-xs'} font-semibold leading-4 ${style}`}
+      className={`flex w-fit min-w-0 max-w-full items-center gap-1 rounded-full ${compact ? 'px-1.5 py-0.5 text-[10px] leading-tight' : 'px-2 py-0.5 text-xs leading-4'} font-semibold ${style}`}
     >
-      <Icon aria-hidden="true" strokeWidth={2.5} className={`${compact ? 'size-2.5' : 'size-3'} shrink-0`} />
+      <Icon aria-hidden="true" strokeWidth={2.5} className={`${compact ? 'size-2' : 'size-3'} shrink-0`} />
       <span className="sr-only">{SR[chip.kind]}: </span>
       <span className="min-w-0 truncate" aria-hidden="true">{compact ? shortLabel(chip.label) : chip.label}</span>
       <span className="sr-only">{chip.label}</span>

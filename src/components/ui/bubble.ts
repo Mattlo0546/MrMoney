@@ -6,8 +6,8 @@ export interface BubbleOptions {
   maxDelayMs?: number;
 }
 
-const HALO = 'rgb(124 58 237 / 0.28)';
-const NONE = 'rgb(124 58 237 / 0)';
+const HALO = 'rgb(5 150 105 / 0.32)';
+const NONE = 'rgb(5 150 105 / 0)';
 
 export function bubbleDelay(index: number): number {
   return Math.min(Math.max(index, 0) * 40, 400);
@@ -20,9 +20,9 @@ export function playBubble(el: HTMLElement | null | undefined, opts: BubbleOptio
   if (reduced) {
     return el.animate(
       [
-        { boxShadow: '0 0 0 3px #7c3aed', opacity: 1, offset: 0 },
-        { boxShadow: '0 0 0 3px #7c3aed', opacity: 1, offset: 0.8 },
-        { boxShadow: '0 0 0 3px rgb(124 58 237 / 0)', opacity: 1, offset: 1 },
+        { boxShadow: '0 0 0 3px #047857', opacity: 1, offset: 0 },
+        { boxShadow: '0 0 0 3px #047857', opacity: 1, offset: 0.8 },
+        { boxShadow: '0 0 0 3px rgb(4 120 87 / 0)', opacity: 1, offset: 1 },
       ],
       { duration: 1200, delay, fill: 'none', easing: 'linear' },
     );

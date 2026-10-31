@@ -194,7 +194,7 @@ export type ApplyDealArgs = ClientToolArgs['apply_deal'];
 export type UseRateInProjectionsArgs = ClientToolArgs['use_rate_in_projections'];
 
 /** Tools that must go through a confirm card (preview -> Apply/Discard) before committing. */
-export const CONFIRM_TOOLS: readonly ClientToolName[] = ['check_purchase', 'change_commitment', 'set_goal', 'plan_goal', 'apply_deal', 'use_rate_in_projections'];
+export const CONFIRM_TOOLS: readonly ClientToolName[] = ['check_purchase', 'change_commitment', 'set_goal', 'plan_goal', 'use_rate_in_projections'];
 
 /** A client tool call. Args are already zod-validated by the server; the client re-validates with CLIENT_TOOL_SCHEMAS. */
 export type ClientToolCall = { [K in ClientToolName]: { id: string; name: K; args: ClientToolArgs[K] } }[ClientToolName];
@@ -231,7 +231,7 @@ export interface ResearchItem {
 }
 
 export const RESEARCH_LABEL = 'Live search result. Check with the provider before acting.';
-export const SAMPLE_LABEL = 'Sample offers (live search unavailable). Check with the provider before acting.';
+export const SAMPLE_LABEL = 'Curated student deals. Check with the provider before acting.';
 
 export interface ResearchResult {
   topic: ResearchTopic;

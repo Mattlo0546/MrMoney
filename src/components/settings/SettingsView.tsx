@@ -9,6 +9,7 @@ import { formatShortDate, gbp } from '@/lib/engine';
 import type { Category, EngineState, Intent } from '@/lib/engine';
 import { useAppStore } from '@/lib/store';
 import { applyTheme, readTheme } from '@/components/shell/theme';
+import { resetApp } from '@/components/shell/reset';
 import { Btn, Card, Choice, Field, PageFrame, parsePounds, penceToInput } from './kit';
 
 type Errors = Record<string, string>;
@@ -334,7 +335,7 @@ export function SettingsView() {
             <p id="reset-d" className="mt-2 text-muted">This deletes your plan, ledger and settings from this device. It can&apos;t be undone.</p>
             <div className="mt-6 flex gap-3">
               <Btn ref={cancelRef} variant="ghost" className="flex-1" onClick={() => setConfirmReset(false)}>Cancel</Btn>
-              <Btn variant="danger" className="flex-1" onClick={() => { store.reset(); setConfirmReset(false); router.replace('/onboarding'); }}>Reset</Btn>
+              <Btn variant="danger" className="flex-1" onClick={() => { resetApp('onboarding'); setConfirmReset(false); router.replace('/plan'); }}>Reset</Btn>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ const DESCRIPTIONS: Record<ClientToolName, string> = {
   plan_goal:
     'The user wants to buy a specific thing ("I want a basketball", "saving for AirPods", "my goal is new trainers"). Re-plans their spending calendar around it: treats before the goal day become cheaper meals, a little is set aside each day, and the item lands on byDate (default two weeks out). label = the item, short. amountPence = its price in integer pence. Shown as a preview with the calendar changes; the user taps Apply.',
   keep_available: 'Keep an amount of the daily allowance available on a date (e.g. a planned day out).',
-  apply_deal: 'Apply a found deal (dealRef from research) to a planned purchase or category: newAmountPence OR percentOff. Preview, then the user confirms.',
+  apply_deal: 'Autonomously apply a student deal or discount (dealRef from research or catalogue, or dealRef="all" with category="all") to a planned purchase or category (eating-out, groceries, transport, shopping): give newAmountPence OR percentOff. Discounts matching expenses on the calendar immediately, with Undo.',
   use_rate_in_projections: 'Use a rate found by research (sourceRef = the item ref) in the savings or investments projection. Only with the user\'s consent; preview, then confirm.',
   undo_last: 'Undo the last applied change.',
   start_demo: 'Load the demo student (only when the user asks for a demo).',

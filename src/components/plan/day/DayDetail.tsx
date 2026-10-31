@@ -28,9 +28,22 @@ export function PurchaseCard({ p, changed }: { p: PurchaseItem; changed: boolean
         <IconBadge icon={BUCKET_ICON[p.bucket]} tone="primary" size="sm" />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold leading-snug">{p.label}</span>
-          {p.reason && <span className="mt-0.5 inline-flex rounded-full bg-grad-primary-soft px-2 py-0.5 text-[11px] font-bold text-accent">{p.reason}</span>}
+          <span className="mt-0.5 flex flex-wrap items-center gap-1">
+            {p.reason && <span className="inline-flex rounded-full bg-grad-primary-soft px-2 py-0.5 text-[11px] font-bold text-accent">{p.reason}</span>}
+            {p.dealTitle && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-grad-positive-soft px-2 py-0.5 text-[11px] font-bold text-pos">
+                <IconBadge icon="deal" tone="positive" size="xs" className="!bg-transparent" />
+                {p.dealTitle}{p.dealPercentOff ? ` (-${p.dealPercentOff}%)` : ''}
+              </span>
+            )}
+          </span>
         </span>
-        <span className="font-display text-lg font-extrabold tabular-nums">{formatMoney(p.pence)}</span>
+        <span className="flex flex-col items-end tabular-nums">
+          <span className={`font-display text-lg font-extrabold ${p.originalPence !== undefined && p.originalPence > p.pence ? 'text-pos' : ''}`}>{formatMoney(p.pence)}</span>
+          {p.originalPence !== undefined && p.originalPence > p.pence && (
+            <span className="text-xs font-semibold text-muted line-through">{formatMoney(p.originalPence)}</span>
+          )}
+        </span>
         <ChevronDown aria-hidden="true" size={16} className={`shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && lines.length > 0 && (
@@ -47,8 +60,14 @@ export function PurchaseCard({ p, changed }: { p: PurchaseItem; changed: boolean
                     {listed != null && listed !== l.pence ? ` · ${formatMoney(listed)}${l.ref.detail ? ` for ${l.ref.detail}` : ''}` : l.ref.detail ? ` · ${l.ref.detail}` : ''}
                   </span>
                   {l.note && <span className="block text-xs font-semibold text-pos">{l.note}</span>}
+                  {l.dealTitle && <span className="block text-xs font-semibold text-pos">Discounted with {l.dealTitle}</span>}
                 </span>
-                <span className={`shrink-0 font-bold tabular-nums ${l.pence === 0 ? 'text-muted' : ''}`}>{l.pence === 0 ? '£0' : formatMoney(l.pence)}</span>
+                <span className="shrink-0 text-right tabular-nums">
+                  <span className={`block font-bold ${l.pence === 0 ? 'text-muted' : l.originalPence && l.originalPence > l.pence ? 'text-pos' : ''}`}>{l.pence === 0 ? '£0' : formatMoney(l.pence)}</span>
+                  {l.originalPence !== undefined && l.originalPence > l.pence && (
+                    <span className="block text-[11px] font-semibold text-muted line-through">{formatMoney(l.originalPence)}</span>
+                  )}
+                </span>
                 {l.ref.sourceUrl && (
                   <a href={l.ref.sourceUrl} target="_blank" rel="noopener noreferrer"
                     className="-my-1 grid size-11 shrink-0 place-items-center rounded-full text-accent hover:bg-surface-2">
@@ -123,9 +142,20 @@ export function DayDetail({ info, today, changed }: { info: DayInfo; today: ISOD
         <h3 className="flex items-center gap-2 font-display text-xl font-extrabold"><IconBadge icon="date" tone="primary" size="sm" />{longDate(info.date)}</h3>
         <div className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-grad-primary-soft p-3">
           <IconBadge icon="allowance" tone="primary" size="lg" solid />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm text-muted">Planned for the day</p>
-            <p className="font-display text-4xl font-extrabold leading-tight tabular-nums text-grad-primary">{formatMoney(info.total)}</p>
+            <div className="flex flex-wrap items-baseline gap-2">
+              <p className={`font-display text-4xl font-extrabold leading-tight tabular-nums ${info.savedPence > 0 ? 'text-pos' : 'text-grad-primary'}`}>{formatMoney(info.total)}</p>
+              {info.savedPence > 0 && (
+                <span className="text-base font-semibold text-muted line-through tabular-nums">{formatMoney(info.originalTotal)}</span>
+              )}
+            </div>
+            {info.savedPence > 0 && (
+              <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-grad-positive-soft px-2.5 py-0.5 text-xs font-bold text-pos">
+                <IconBadge icon="deal" tone="positive" size="xs" className="!bg-transparent" />
+                Saved {formatMoney(info.savedPence)} today{info.dealLabels.length ? ` · ${info.dealLabels.slice(0, 2).join(', ')}` : ''}
+              </p>
+            )}
           </div>
         </div>
       </header>
@@ -173,7 +203,14 @@ export function DayDetail({ info, today, changed }: { info: DayInfo; today: ISOD
             {others.map((p) => p.lines?.length ? <PurchaseCard key={p.id} p={p} changed={false} /> : (
               <li key={p.id} className="flex items-center gap-2 rounded-2xl border border-dashed border-line-strong px-3 py-2 text-muted">
                 <IconBadge icon="purchase" tone="neutral" size="sm" />
-                <span className="flex-1 font-semibold text-text">{p.label}</span><WithIcon icon="reserve" tone="primary" size={13} className="tabular-nums">Set aside {formatMoney(p.pence)}</WithIcon>
+                <span className="min-w-0 flex-1 font-semibold text-text">
+                  {p.label}
+                  {p.dealTitle && <span className="ml-1.5 rounded-full bg-grad-positive-soft px-2 py-0.5 text-[11px] font-bold text-pos">{p.dealTitle}</span>}
+                </span>
+                {p.originalPence !== undefined && p.originalPence > p.pence && (
+                  <span className="text-xs font-semibold text-muted line-through tabular-nums">{formatMoney(p.originalPence)}</span>
+                )}
+                <WithIcon icon="reserve" tone="primary" size={13} className="tabular-nums">Set aside {formatMoney(p.pence)}</WithIcon>
               </li>
             ))}
           </ul>

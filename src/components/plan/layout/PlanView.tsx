@@ -83,7 +83,7 @@ function Segmented<T extends string>({ value, onChange, items, label }: { value:
     <div role="tablist" aria-label={label} className="flex gap-1 rounded-full border border-line bg-surface-2 p-1">
       {items.map((t) => (
         <button key={t.id} role="tab" type="button" aria-selected={value === t.id} id={`tab-${label}-${t.id}`} onClick={() => onChange(t.id)}
-          className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-bold transition-colors ${value === t.id ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
+          className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2 text-sm font-bold transition-colors ${value === t.id ? 'bg-grad-primary shadow-glow' : 'text-muted hover:text-text'}`}>
           {t.icon && <t.icon aria-hidden="true" size={15} strokeWidth={2.3} />}
           {t.label}
         </button>
@@ -230,7 +230,7 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   }, [enterKey]);
 
   const mobileFill = useFillHeight<HTMLDivElement>(420);
-  const asideFill = useFillHeight<HTMLElement>(560);
+  const asideFill = useFillHeight<HTMLElement>(420);
 
   if (!state || !data) return null;
 
@@ -251,8 +251,8 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
   const entering = enterKey > 0;
 
   const banner = deficitBanner && (
-    <div role="alert" className="flex gap-3 rounded-3xl border border-neg/25 bg-grad-negative-soft p-4">
-      <IconBadge icon="shortfall" tone="negative" size="md" solid />
+    <div role="alert" className="flex gap-3 rounded-2xl border border-neg/25 bg-grad-negative-soft p-3">
+      <IconBadge icon="shortfall" tone="negative" size="sm" solid />
       <div className="min-w-0">
         <p className="font-bold text-neg">
           {data.fundingGap > 0 ? `Your plan is ${formatMoney(data.fundingGap)} short.` : 'Part of your plan is not fully covered.'}
@@ -265,23 +265,23 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
 
   if (desktop) {
     return (
-      <div className="mx-auto flex max-w-[1600px] items-start gap-4 p-6">
+      <div className="mx-auto flex max-w-[1600px] items-start gap-3.5 px-4 py-3 lg:px-6 lg:py-3.5">
         <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
-        <div ref={rootRef} key={`plan-${enterKey}`} className={`flex min-w-0 flex-1 flex-col gap-4 ${entering ? 'sp-plan-in' : ''}`}>
+        <div ref={rootRef} key={`plan-${enterKey}`} className={`flex min-w-0 flex-1 flex-col gap-3 ${entering ? 'sp-plan-in' : ''}`}>
           {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} todayPlanned={todayPlanned} />}
           {banner}
           <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
         </div>
-        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[72px] flex max-h-[calc(100dvh-88px)] w-[420px] shrink-0 flex-col rounded-3xl border border-line bg-surface p-4 shadow-card ${entering ? 'sp-panel-in' : ''}`}>
+        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[68px] flex max-h-[calc(100dvh-80px)] w-[400px] shrink-0 flex-col rounded-2xl border border-line bg-surface p-3.5 shadow-card ${entering ? 'sp-panel-in' : ''}`}>
+          <div className="mb-2.5">
+            <Segmented label="panel" value={tab} onChange={setTab} items={TABS} />
+          </div>
           <div className="flex min-h-0 flex-1 flex-col" hidden={tab !== 'chat'} style={tab !== 'chat' ? { display: 'none' } : undefined}>
-            <ChatPanel variant="panel" autoFocus={entering} header={<Segmented label="panel" value={tab} onChange={setTab} items={TABS} />} />
+            <ChatPanel variant="panel" autoFocus={entering} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
           </div>
           {tab !== 'chat' && (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <div className="mb-3"><Segmented label="panel" value={tab} onChange={setTab} items={TABS} /></div>
-              <div role="tabpanel" aria-labelledby={`tab-panel-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
-                {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : tab === 'plan' ? <ItineraryPanel /> : <OffersPanel />}
-              </div>
+            <div role="tabpanel" aria-labelledby={`tab-panel-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
+              {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : tab === 'plan' ? <ItineraryPanel /> : <OffersPanel />}
             </div>
           )}
         </aside>

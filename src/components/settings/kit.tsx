@@ -1,25 +1,11 @@
 'use client';
-import type { ComponentProps, CSSProperties, InputHTMLAttributes, ReactNode } from 'react';
+import type { ComponentProps, InputHTMLAttributes, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { IconBadge, iconFor, type Tone, type ValueKind } from '@/components/ui/Value';
 
-/** Local aliases for the global tokens in globals.css (kept so older call sites keep working). */
-export const TOKENS = {
-  '--p-bg': 'var(--bg)',
-  '--p-surface': 'var(--surface)',
-  '--p-surface2': 'var(--surface-2)',
-  '--p-line': 'var(--line)',
-  '--p-text': 'var(--text)',
-  '--p-muted': 'var(--muted)',
-  '--p-accent': 'var(--accent)',
-  '--p-accent-ink': 'var(--accent-ink)',
-  '--p-lime': 'var(--pos)',
-  '--p-coral': 'var(--neg)',
-} as CSSProperties;
-
 export function PageFrame({ title, icon, children }: { title: string; icon?: ValueKind | LucideIcon; children: ReactNode }) {
   return (
-    <div style={TOKENS} className="min-h-dvh bg-bg text-text">
+    <div className="min-h-dvh bg-bg text-text">
       <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
         <h1 className="mb-6 flex items-center gap-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
           {icon && <IconBadge icon={icon} tone="primary" size="lg" solid />}

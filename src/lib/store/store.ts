@@ -10,6 +10,7 @@ type UndoStack = ReturnType<typeof createUndoStack>;
 import {
   clearPersisted, emptyPersisted, loadPersisted, savePersisted, type LoadStatus, type PersistedV1, type StorageAdapter,
 } from './storage';
+import { applyDealToState, applyOffersToState, type DealInput, type Offer } from '@/lib/offers';
 
 export type PreviewResult = ApplyResult & { intent: Intent; today: ISODate; affordability?: Affordability };
 
@@ -212,6 +213,48 @@ export function createAppStore(opts: AppStoreOptions) {
      * Goes through the normal apply path (undo, persistence, highlights). */
     applyItinerary(purchases: PlannedPurchase[], mode: 'itemised' | 'even' = 'itemised'): ApplyOutcome {
       return apply({ kind: 'itinerary', idempotencyKey: freshKey(), purchases: structuredClone(purchases), mode });
+    },
+
+    /** Apply a single deal/offer to matching planned purchases, logged expenses, and/or category allocations. */
+    applyOffer(deal: DealInput): (ApplyOutcome & { savedPence?: number; matchedCount?: number }) {
+      if (!state) return { ok: false, error: { code: 'invalid', message: 'No plan yet.' } };
+      const today = todayNow();
+      const before = ensurePlan(state, today);
+      try {
+        const res = applyDealToState(before, deal, today);
+        if (res.alreadyApplied || res.savedPence <= 0) {
+          return { ok: true, noop: true, diff: null, changeId: meta.changeId, savedPence: res.savedPence, matchedCount: res.matchedCount };
+        }
+        const c = commit(stack, before, res.nextState);
+        stack = c.stack;
+        state = c.state;
+        setChange(res.diff);
+        emit(true);
+        return { ok: true, noop: false, diff: res.diff, changeId: meta.changeId, savedPence: res.savedPence, matchedCount: res.matchedCount };
+      } catch (e) {
+        return { ok: false, error: { code: 'invalid', message: e instanceof Error ? e.message : 'Could not apply deal' } };
+      }
+    },
+
+    /** Apply all available offers across categories at once, committing to undo stack and updating calendar. */
+    applyAllOffers(offers: readonly Offer[]): (ApplyOutcome & { savedPence?: number; appliedCount?: number }) {
+      if (!state) return { ok: false, error: { code: 'invalid', message: 'No plan yet.' } };
+      const today = todayNow();
+      const before = ensurePlan(state, today);
+      try {
+        const res = applyOffersToState(before, offers, today);
+        if (res.totalSavedPence <= 0) {
+          return { ok: true, noop: true, diff: null, changeId: meta.changeId, savedPence: 0, appliedCount: 0 };
+        }
+        const c = commit(stack, before, res.nextState);
+        stack = c.stack;
+        state = c.state;
+        setChange(res.diff);
+        emit(true);
+        return { ok: true, noop: false, diff: res.diff, changeId: meta.changeId, savedPence: res.totalSavedPence, appliedCount: res.appliedCount };
+      } catch (e) {
+        return { ok: false, error: { code: 'invalid', message: e instanceof Error ? e.message : 'Could not apply deals' } };
+      }
     },
 
     undo(): boolean {

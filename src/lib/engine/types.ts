@@ -49,6 +49,21 @@ export interface Profile {
    * purchases (and actuals) need; nothing else is spread, and what is left stays unallocated ("not tied to a
    * purchase yet"). Essential floors do not apply in itemised mode. */
   allocationMode?: 'even' | 'itemised';
+  /** Deals applied across the plan (used to track applied deals and category-level discounts on the calendar). */
+  appliedDeals?: AppliedDeal[];
+}
+
+export interface AppliedDeal {
+  id: string;
+  title: string;
+  category: CategoryId;
+  percentOff?: number;
+  amountOffPence?: number;
+  /** Total pence saved across the plan by applying this deal. */
+  savedPence: number;
+  /** Daily pence saved in 'even' allocation mode for this category. */
+  dailySavedPence?: number;
+  appliedAt: ISODate;
 }
 
 export interface SavingsDeadline {
@@ -115,6 +130,14 @@ export interface Transaction {
   plannedPurchaseId?: string;
   /** Expense: the exact item and merchant it was spent on. */
   ref?: ItemRef;
+  /** Original expense amount in pence before any deal discount was applied. */
+  originalPence?: number;
+  /** ID of the offer/deal applied to this transaction. */
+  dealId?: string;
+  /** Title/headline of the deal applied. */
+  dealTitle?: string;
+  /** Discount percentage applied. */
+  dealPercentOff?: number;
 }
 
 /** "Keep £X available for <date>": that day's unspent allowance stays >= amount. */
@@ -136,6 +159,10 @@ export interface PurchaseLine {
   ref: ItemRef;
   /** e.g. "already in your cupboard", "left over from Tue's omelette", "off-peak fare". */
   note?: string;
+  /** Original line price in pence before any deal discount was applied. */
+  originalPence?: number;
+  /** Title of the deal applied to this line. */
+  dealTitle?: string;
 }
 
 /** An applied hypothetical: money set aside on a day for a planned purchase. */
@@ -153,6 +180,14 @@ export interface PlannedPurchase {
   source?: 'itinerary';
   /** Why this day: e.g. "Friday treat", "payday", "commute day (Circle line)". */
   reason?: string;
+  /** Original total amount in pence before any deal discount was applied. */
+  originalPence?: number;
+  /** ID of the offer/deal applied to this planned purchase. */
+  dealId?: string;
+  /** Title/headline of the deal applied. */
+  dealTitle?: string;
+  /** Discount percentage applied. */
+  dealPercentOff?: number;
 }
 
 export interface Allocation {

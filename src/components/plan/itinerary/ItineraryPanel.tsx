@@ -155,14 +155,6 @@ export function ItineraryPanel({ onShowCalendar }: { onShowCalendar?: () => void
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="relative overflow-hidden rounded-3xl bg-grad-hero p-4 shadow-glow">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 size-32 rounded-full bg-white/10" />
-        <p className="relative flex items-center gap-2 text-sm font-bold"><IconBadge icon={Sparkles} tone="onGradient" size="sm" />Spending plan</p>
-        <p className="relative mt-2 text-sm">
-          Every day gets a real plan: the dinner you&apos;ll cook, your tube fare, the trainers you&apos;re saving for. Each pound links to the exact item.
-        </p>
-      </header>
-
       {res && store.catalog && (
         <PlanSummary res={res} catalog={store.catalog} onShowCalendar={onShowCalendar}
           onShuffle={() => store.catalog && replan({ ...store, seed: store.seed + 1 }, store.catalog)} onReset={resetToEven} />
@@ -230,7 +222,7 @@ export function ItineraryPanel({ onShowCalendar }: { onShowCalendar?: () => void
               <li key={b.id} className="flex items-center gap-2">
                 <span className="min-w-0 flex-1 truncate font-semibold">{b.name}</span>
                 <span className="text-xs text-muted"><WithIcon icon="date" tone="neutral" size={12}>{formatShortDate(b.date)}</WithIcon></span>
-                <span className="w-20 text-right font-bold tabular-nums">{formatMoney(b.pence)}</span>
+                <WithIcon icon="bills" tone="warning" size={13} className="w-24 justify-end font-bold tabular-nums">{formatMoney(b.pence)}</WithIcon>
               </li>
             ))}
           </ul>
@@ -247,10 +239,8 @@ function PlanSummary({ res, catalog, onShowCalendar, onShuffle, onReset }: {
   return (
     <section aria-label="Plan summary" className="flex flex-col gap-3 rounded-3xl border border-line bg-surface p-4 shadow-soft">
       <div className="flex flex-wrap items-center gap-2">
-        {catalog.live ? (
+        {catalog.live && (
           <span className="inline-flex items-center gap-1 rounded-full bg-grad-positive px-2.5 py-1 text-xs font-bold"><Globe aria-hidden="true" size={12} />Live prices via Google Search</span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-line-strong px-2.5 py-1 text-xs font-bold text-muted">Sample prices</span>
         )}
         <span className="text-xs text-muted"><WithIcon icon="checked" tone="neutral" size={12}>Checked {formatShortDate(catalog.generatedAt.slice(0, 10))}</WithIcon></span>
       </div>

@@ -108,12 +108,12 @@ export function Stat({ icon, tone = 'primary', label, value, valueTestId, classN
   icon: ValueKind | LucideIcon; tone?: Tone; label: ReactNode; value: ReactNode; valueTestId?: string; className?: string; children?: ReactNode;
 }) {
   return (
-    <div className={cx('flex flex-col justify-center gap-1.5 rounded-3xl border border-line bg-surface p-4 shadow-soft', className)}>
-      <dt className="flex items-center gap-2 text-sm font-semibold text-muted">
-        <IconBadge icon={icon} tone={tone} size="sm" />
+    <div className={cx('flex flex-col justify-center gap-1 rounded-2xl border border-line bg-surface p-2.5 lg:p-3 shadow-soft', className)}>
+      <dt className="flex items-center gap-1.5 text-xs font-semibold text-muted">
+        <IconBadge icon={icon} tone={tone} size="xs" />
         {label}
       </dt>
-      <dd data-testid={valueTestId} className="font-display text-2xl font-extrabold tabular-nums tracking-tight">{value}</dd>
+      <dd data-testid={valueTestId} className="font-display text-xl lg:text-2xl font-extrabold tabular-nums tracking-tight">{value}</dd>
       {children}
     </div>
   );

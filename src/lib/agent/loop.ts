@@ -201,7 +201,7 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
       const research = cards.find((c) => c.type === 'research_results');
       if (research && research.type === 'research_results') {
         const text = research.sample
-          ? 'Live search isn\'t available right now, so here are some sample offers. Check with the provider before acting.'
+          ? 'Here are curated London student deals matched to your plan. Check with the provider before acting.'
           : 'Here\'s what I found. These are live search results, so check with the provider before acting.';
         return { kind: 'reply', text, cards, phase: 'done' };
       }

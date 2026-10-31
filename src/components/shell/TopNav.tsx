@@ -5,6 +5,7 @@ import { CalendarDays, ChartLine, Landmark, SlidersHorizontal, Wallet } from 'lu
 import { useAppSnapshot } from '@/lib/store';
 import { AppMenu } from './AppMenu';
 import { MrMoneyLogo } from './MrMoneyLogo';
+import { ResetButton } from './ResetButton';
 
 const LINKS = [
   { href: '/plan', label: 'Plan', icon: Wallet },
@@ -64,6 +65,7 @@ export function TopNav() {
               <span className="hidden lg:inline">{labels.full}</span>
             </span>
           )}
+          <ResetButton />
           {hasPlan && <AppMenu />}
         </div>
       </div>

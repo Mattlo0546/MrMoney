@@ -3,8 +3,10 @@
  * Animated "money map": the monthly surplus pot on the left flows into buckets on the right. Bars and curves
  * animate whenever the allocation changes, so the user sees their money being reallocated.
  */
+import { createElement } from 'react';
 import type { Allocation, Bucket, FinanceProfile } from '@/lib/finance/types';
 import { formatPence } from '@/lib/finance/allocate';
+import { VALUE_ICONS, type ValueKind } from '@/components/ui/Value';
 
 export type RowKey = Bucket | 'cash';
 
@@ -29,6 +31,11 @@ const LABELS: Record<RowKey, string> = {
   lifetime_isa: 'Lifetime ISA',
   index_fund: 'Index fund (S&S ISA)',
   speculative: 'Crypto / fun money',
+};
+/** The icon each bucket's amount wears (icon-per-value rule), shared with the cards on /money. */
+export const BUCKET_KIND: Record<RowKey, ValueKind> = {
+  cash: 'balance', debt: 'shortfall', overdraft: 'shortfall', emergency_fund: 'reserve', short_goals: 'goal',
+  lifetime_isa: 'savings', index_fund: 'investments', speculative: 'sparkle',
 };
 export const ROW_ORDER: RowKey[] = ['debt', 'overdraft', 'emergency_fund', 'short_goals', 'lifetime_isa', 'index_fund', 'speculative', 'cash'];
 
@@ -77,7 +84,8 @@ export function MoneyMap({ rows, keys, surplusPence, title, animKey }: { rows: R
       <g className="money-pot">
         <rect x={POT_X} y={potY - 52} width={POT_W} height={104} rx={22} fill="url(#money-pot)" />
         <text x={POT_X + 18} y={potY - 22} fill="rgba(255,255,255,.85)" fontSize="12" fontWeight="700">Spare each month</text>
-        <text x={POT_X + 18} y={potY + 14} fill="#fff" fontSize="30" fontWeight="800" className="num" fontFamily="inherit">{formatPence(surplusPence)}</text>
+        {createElement(VALUE_ICONS.allowance, { x: POT_X + 18, y: potY - 8, width: 24, height: 24, color: '#fff', strokeWidth: 2.4, 'aria-hidden': true })}
+        <text x={POT_X + 48} y={potY + 14} fill="#fff" fontSize="30" fontWeight="800" className="num" fontFamily="inherit">{formatPence(surplusPence)}</text>
         <text x={POT_X + 18} y={potY + 36} fill="rgba(255,255,255,.8)" fontSize="11" fontWeight="600">{title}</text>
       </g>
       {shown.map((key, i) => {
@@ -105,12 +113,14 @@ export function MoneyMap({ rows, keys, surplusPence, title, animKey }: { rows: R
               />
             ))}
             <text x={X0} y={y + 22} fontSize="14" fontWeight="700" fill="currentColor">{LABELS[key]}</text>
+            {createElement(VALUE_ICONS[BUCKET_KIND[key]], { x: BAR_X1 - 98, y: y + 6, width: 18, height: 18, color: active ? color : 'currentColor', opacity: active ? 1 : 0.4, strokeWidth: 2.4, 'aria-hidden': true })}
             <text x={BAR_X1} y={y + 22} fontSize="16" fontWeight="800" fill={active ? color : 'currentColor'} textAnchor="end" className="num money-amount" opacity={active ? 1 : 0.4}>
               {formatPence(pence)}
             </text>
             <rect x={X0} y={barY} width={BAR_X1 - X0} height={14} rx={7} fill="currentColor" opacity={0.08} />
             <rect x={X0} y={barY} width={Math.max(0, (BAR_X1 - X0) * share)} height={14} rx={7} fill={color} className="money-bar" />
-            <text x={X0} y={y + 64} fontSize="11" fontWeight="600" fill="currentColor" opacity={0.55}>{Math.round(share * 100)}% of spare money</text>
+            {createElement(VALUE_ICONS.percent, { x: X0, y: y + 53, width: 12, height: 12, color: 'currentColor', opacity: 0.55, strokeWidth: 2.6, 'aria-hidden': true })}
+            <text x={X0 + 16} y={y + 64} fontSize="11" fontWeight="600" fill="currentColor" opacity={0.55}>{Math.round(share * 100)}% of spare money</text>
           </g>
         );
       })}

@@ -11,11 +11,11 @@
  *   neg      rose → red        shortfalls, over budget, destructive
  *
  * Every gradient's lightest stop keeps white text at ≥ 4.5:1 (WCAG AA body text).
- * The legacy names (--lime, --lime-fill, --coral, --navy) are aliases kept for older call sites.
+ * The old dark/lime look (--lime, --lime-fill, --coral, --navy, --c-*) has been removed; use these tokens only.
  */
 :root {
   /* Surfaces */
-  --bg: #f7f8fb;
+  --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f2f3f8;
   --line: #e5e7ef;
@@ -53,12 +53,6 @@
   --shadow-glow: 0 10px 30px -12px rgb(79 70 229 / 0.55);
   --shadow-glow-pos: 0 10px 30px -14px rgb(4 120 87 / 0.5);
   --overlay: rgb(15 23 42 / 0.45);
-
-  /* Legacy aliases */
-  --lime: var(--pos);
-  --lime-fill: var(--pos);
-  --coral: var(--neg);
-  --navy: var(--warn);
 
   --radius-card: 24px;
   --radius-input: 16px;
@@ -113,10 +107,6 @@
   --color-neg: var(--neg);
   --color-neg-soft: var(--neg-soft);
   --color-overlay: var(--overlay);
-  --color-lime: var(--lime);
-  --color-lime-fill: var(--lime-fill);
-  --color-coral: var(--coral);
-  --color-navy: var(--navy);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
   --radius-card: 24px;
@@ -185,11 +175,16 @@ h1, h2, h3 {
   outline: none !important;
 }
 
+/* Keyboard focus ring (box-shadow, so it survives the outline reset above). Text fields show theirs on the wrapper. */
+:is(a, button, summary, [role="tab"], [role="radio"], [role="menuitem"], [role="gridcell"] button, [tabindex]):focus-visible {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-2);
+}
+
 /* Bubble: used via playBubble() (Web Animations API) or by adding .bubble */
 @keyframes bubble-pop {
-  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(124 58 237 / 0); }
-  30%  { transform: scale(1.06); box-shadow: 0 0 0 6px rgb(124 58 237 / 0.28); }
-  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(124 58 237 / 0); }
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(5 150 105 / 0); }
+  30%  { transform: scale(1.06); box-shadow: 0 0 0 6px rgb(5 150 105 / 0.32); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(5 150 105 / 0); }
 }
 @keyframes bubble-ring {
   0%, 80% { opacity: 1; }
@@ -202,7 +197,7 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   .bubble {
     animation: bubble-ring 1200ms linear both;
-    box-shadow: 0 0 0 3px var(--accent-2);
+    box-shadow: 0 0 0 3px var(--pos);
   }
   *, *::before, *::after {
     scroll-behavior: auto !important;

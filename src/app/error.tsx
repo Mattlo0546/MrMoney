@@ -16,7 +16,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <p className="text-sm text-muted">{error.message}</p>
       <div className="flex gap-3">
         <button type="button" onClick={reset} className="rounded-full border px-5 py-2.5 font-semibold">Try again</button>
-        <button type="button" onClick={hardReset} className="rounded-full bg-accent px-5 py-2.5 font-semibold text-white">Reset MrMoney</button>
+        <button type="button" onClick={hardReset} className="rounded-full bg-grad-primary px-5 py-2.5 font-semibold shadow-glow">Reset MrMoney</button>
       </div>
     </main>
   );

@@ -89,6 +89,12 @@ export function newChat() {
   set({ messages: [], phase: 'idle', statusLabel: '' });
 }
 
+/** Complete reset for app reset / demo restart (ignores busy guard). */
+export function resetChat() {
+  clearHistory();
+  set({ messages: [], phase: 'idle', statusLabel: '', busy: false });
+}
+
 // ------------------------------------------------------------------ wire format
 
 function cardSummary(c: UiCard): string {
@@ -283,6 +289,20 @@ async function runTurn(text: string, signal: AbortSignal, retried = false): Prom
       const retry = resp.phase === 'error' && toolResults && !retried && !committed
         && resp.cards.some((c) => c.type === 'error' && /send (it|that|your message)? ?again/i.test(c.message));
       if (retry) return runTurn(text, signal, true);
+      // Autonomously apply findable student deals to existing planned expenses when deal research completes and a plan exists
+      const hasDealResearch = (resp.cards ?? []).some(
+        (c) => c.type === 'research_results' && (c.topic === 'student_deals' || c.topic === 'cheap_food' || c.topic === 'transport_savings'),
+      );
+      if (hasDealResearch && snap.state && !committed) {
+        const autoDeal = executeCall({
+          id: newId('auto-deal'),
+          name: 'apply_deal',
+          args: { category: 'all', percentOff: 25, dealRef: 'all' },
+        });
+        if (autoDeal.result.ok && autoDeal.cards.length) {
+          serverCards.push(...autoDeal.cards);
+        }
+      }
       // Don't repeat a message that a card already shows (error text, clarify question).
       const dup = serverCards.some((c) => (c.type === 'error' && c.message.trim() === resp.text.trim()));
       const replyText = dup ? '' : resp.text;
@@ -424,6 +444,34 @@ export function undoCard(cardId: string) {
 export function proposeRate(item: { provider: string; headline: string; ratePercent: number; ref?: string }, bucket: 'savings' | 'investments' = 'savings') {
   const ex = executeCall({ id: newId('local'), name: 'use_rate_in_projections', args: { bucket, ratePercent: item.ratePercent, sourceRef: item.ref ?? item.provider } });
   push({ role: 'assistant', text: `Use ${item.provider}'s ${item.headline} as your base ${bucket} rate in projections?`, cards: ex.cards });
+}
+
+/** "Apply deal" on a research item: immediately applies the deal discount to matching expenses on the calendar if a plan exists. */
+export function applyResearchDeal(
+  item: { provider: string; product?: string; headline: string; percentOff?: number; ref?: string },
+  onPrefill?: (t: string) => void,
+) {
+  const snap = getAppStore().getSnapshot();
+  if (!snap.state) {
+    onPrefill?.(`Apply the ${item.provider} deal (${item.headline}${item.ref ? `, ref ${item.ref}` : ''}) to my planned `);
+    return;
+  }
+  const ex = executeCall({
+    id: newId('local'),
+    name: 'apply_deal',
+    args: {
+      plannedPurchaseLabel: `${item.provider}${item.product && item.product !== item.provider ? ` ${item.product}` : ''}`.slice(0, 60),
+      category: 'eating-out',
+      percentOff: item.percentOff && item.percentOff > 0 ? item.percentOff : 20,
+      dealRef: item.ref ?? item.provider,
+    },
+  });
+  if (ex.result.ok && ex.cards.length) {
+    const resObj = (ex.result.result ?? {}) as { explanation?: string };
+    push({ role: 'assistant', text: resObj.explanation ?? `Applied ${item.provider} (${item.headline}) to your calendar.`, cards: ex.cards });
+  } else {
+    onPrefill?.(`Apply the ${item.provider} deal (${item.headline}${item.ref ? `, ref ${item.ref}` : ''}) to my planned `);
+  }
 }
 
 export function markClarifyAnswered(cardId: string) {

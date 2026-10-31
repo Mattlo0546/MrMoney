@@ -14,6 +14,7 @@ import {
 import { buildSetupPayload } from '@/lib/agent/setup';
 import { buildLifestylePlan } from '@/lib/lifestyle/setup';
 import { DEFAULT_GOAL_DAYS, planGoalPurchase } from '@/lib/lifestyle/goal';
+import { CATALOGUE, type DealInput, type Offer, type OfferCategory } from '@/lib/offers';
 import { buildPlanData } from '@/components/plan/calendar/data';
 import type { PreviewData } from '@/components/plan/change/changeState';
 import { newId, type GoalPreview, type UiCard } from './model';
@@ -406,24 +407,159 @@ export function executeCall(raw: ClientToolCall): Exec {
     }
     case 'apply_deal': {
       const a = call.args;
-      const label = a.plannedPurchaseLabel?.trim().toLowerCase();
-      const cat = a.category ? categoryId(state, a.category) : undefined;
-      const pp = state.plannedPurchases.filter((p) => p.date >= snap.today).find((p) =>
-        (label && (p.label.toLowerCase().includes(label) || label.includes(p.label.toLowerCase()))) || (!label && cat && p.category === cat));
-      if (!pp) {
-        return fail(call, 'No upcoming planned purchase matches. A deal can lower a planned purchase: ask the user to plan it first with check_purchase, then apply the deal.');
+      const refLower = a.dealRef.trim().toLowerCase();
+      const catArgLower = a.category?.trim().toLowerCase();
+
+      if (refLower === 'all' || catArgLower === 'all') {
+        const allOut = store.applyAllOffers(CATALOGUE);
+        if (!allOut.ok) {
+          return fail(call, allOut.error?.message ?? 'All matching London student deals are already applied to your calendar.');
+        }
+        const savedAll = allOut.savedPence ?? 0;
+        const countAll = allOut.appliedCount ?? 1;
+        const synthIntent: Intent = {
+          kind: 'itinerary',
+          idempotencyKey: key(call.name),
+          purchases: store.getSnapshot().state?.plannedPurchases ?? [],
+          mode: state.profile.allocationMode ?? 'even',
+        };
+        const explanation = `Applied ${countAll} London student deal${countAll === 1 ? '' : 's'}: saved ${formatMoney(savedAll)} across your calendar.`;
+        const card: UiCard = {
+          type: 'change_applied',
+          id: newId('c'),
+          intent: synthIntent,
+          diff: allOut.diff,
+          changeId: allOut.changeId,
+          noop: false,
+          explanation: { facts: allOut.diff ? explain(allOut.diff).facts : [], sentence: explanation },
+        };
+        return {
+          result: {
+            id: call.id,
+            name: call.name,
+            ok: true,
+            result: {
+              applied: true,
+              changeId: String(allOut.changeId),
+              savedPence: savedAll,
+              appliedCount: countAll,
+              explanation,
+              summary: shortSummary(store.getSnapshot().state?.plan?.summary),
+              undoAvailable: true,
+            },
+          },
+          cards: [card],
+        };
       }
-      // percentOff is turned into a new amount here (rounded to the penny); the engine re-plans everything else.
-      const newPence = a.newAmountPence ?? Math.round(pp.amount.pence * (1 - (a.percentOff ?? 0) / 100));
-      if (newPence >= pp.amount.pence) return fail(call, 'That deal would not lower the planned amount.');
-      const remove: Intent = { kind: 'removePlannedPurchase', idempotencyKey: key('remove'), plannedPurchaseId: pp.id };
-      const removed = applyIntent(state, remove, snap.today);
-      if (!removed.ok) return fail(call, 'Could not update that planned purchase.');
-      const replan: Intent = {
-        kind: 'hypothetical', idempotencyKey: key(call.name), amount: gbp(newPence), date: pp.date, category: pp.category,
-        label: `${pp.label} (deal)`,
+
+      const label = a.plannedPurchaseLabel?.trim().toLowerCase();
+      const pp = label
+        ? state.plannedPurchases.filter((p) => p.date >= snap.today).find((p) => p.label.toLowerCase().includes(label) || label.includes(p.label.toLowerCase()))
+        : undefined;
+      const catOffer = CATALOGUE.find((o) => o.id.toLowerCase() === refLower || o.title.toLowerCase().includes(refLower) || (label && o.title.toLowerCase().includes(label)));
+      const mappedCat = a.category ? categoryId(state, a.category) : pp?.category ?? catOffer?.category ?? 'eating-out';
+      const validCat: OfferCategory = (['eating-out', 'groceries', 'transport', 'shopping'].includes(mappedCat)
+        ? mappedCat
+        : catOffer?.category ?? 'eating-out') as OfferCategory;
+
+      const amountOffPence =
+        a.newAmountPence !== undefined && pp
+          ? Math.max(1, pp.amount.pence - a.newAmountPence)
+          : catOffer?.amountOffPence;
+      const percentOff =
+        a.percentOff ??
+        (a.newAmountPence !== undefined && pp && pp.amount.pence > 0
+          ? Math.max(1, Math.round((1 - a.newAmountPence / pp.amount.pence) * 100))
+          : catOffer?.percentOff ?? 20);
+
+      const dealInput: DealInput = {
+        id: catOffer?.id ?? `deal-${a.dealRef.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}`,
+        title: catOffer?.title ?? (a.plannedPurchaseLabel ? `${a.plannedPurchaseLabel} student deal` : a.dealRef),
+        category: validCat,
+        ...(percentOff ? { percentOff } : {}),
+        ...(amountOffPence ? { amountOffPence } : {}),
+        ...(pp ? { purchaseId: pp.id } : {}),
       };
-      return previewCard(call, replan, `${pp.label}: ${formatMoney(pp.amount)} → ${formatMoney(newPence)} with the deal`, remove, removed.nextState);
+
+      let out = store.applyOffer(dealInput);
+      if ((!out.ok || (out.savedPence ?? 0) <= 0) && pp?.id) {
+        out = store.applyOffer({ ...dealInput, purchaseId: undefined });
+      }
+      if (!out.ok || (out.savedPence ?? 0) <= 0) {
+        const fallbackAll = store.applyAllOffers(CATALOGUE);
+        if (!fallbackAll.ok || (fallbackAll.savedPence ?? 0) <= 0) {
+          return fail(call, !out.ok ? out.error?.message ?? 'That deal could not be applied to your calendar.' : 'That deal is already applied to your calendar.');
+        }
+        const savedFb = fallbackAll.savedPence ?? 0;
+        const countFb = fallbackAll.appliedCount ?? 1;
+        const synthIntent: Intent = {
+          kind: 'itinerary',
+          idempotencyKey: key(call.name),
+          purchases: store.getSnapshot().state?.plannedPurchases ?? [],
+          mode: state.profile.allocationMode ?? 'even',
+        };
+        const explanation = `Applied ${countFb} London student deal${countFb === 1 ? '' : 's'}: saved ${formatMoney(savedFb)} across your calendar.`;
+        const card: UiCard = {
+          type: 'change_applied',
+          id: newId('c'),
+          intent: synthIntent,
+          diff: fallbackAll.diff,
+          changeId: fallbackAll.changeId,
+          noop: false,
+          explanation: { facts: fallbackAll.diff ? explain(fallbackAll.diff).facts : [], sentence: explanation },
+        };
+        return {
+          result: {
+            id: call.id,
+            name: call.name,
+            ok: true,
+            result: {
+              applied: true,
+              changeId: String(fallbackAll.changeId),
+              savedPence: savedFb,
+              explanation,
+              summary: shortSummary(store.getSnapshot().state?.plan?.summary),
+              undoAvailable: true,
+            },
+          },
+          cards: [card],
+        };
+      }
+
+      const savedSingle = out.savedPence ?? 0;
+      const synthIntent: Intent = {
+        kind: 'itinerary',
+        idempotencyKey: key(call.name),
+        purchases: store.getSnapshot().state?.plannedPurchases ?? [],
+        mode: state.profile.allocationMode ?? 'even',
+      };
+      const explanation = `Applied ${dealInput.title}: saved ${formatMoney(savedSingle)} across your calendar.`;
+      const card: UiCard = {
+        type: 'change_applied',
+        id: newId('c'),
+        intent: synthIntent,
+        diff: out.diff,
+        changeId: out.changeId,
+        noop: false,
+        explanation: { facts: out.diff ? explain(out.diff).facts : [], sentence: explanation },
+      };
+      return {
+        result: {
+          id: call.id,
+          name: call.name,
+          ok: true,
+          result: {
+            applied: true,
+            changeId: String(out.changeId),
+            savedPence: savedSingle,
+            matchedCount: out.matchedCount ?? 1,
+            explanation,
+            summary: shortSummary(store.getSnapshot().state?.plan?.summary),
+            undoAvailable: true,
+          },
+        },
+        cards: [card],
+      };
     }
     case 'use_rate_in_projections': {
       const a = call.args;

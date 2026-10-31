@@ -17,7 +17,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/reui/dropdown-menu';
-import { getAppStore } from '@/lib/store';
+import { resetApp } from './reset';
 import { applyTheme, readTheme, type Theme } from './theme';
 
 /**
@@ -36,8 +36,8 @@ export function AppMenu() {
 
   function onReset() {
     if (!window.confirm('Reset MrMoney? This clears your plan and starts again.')) return;
-    getAppStore().reset();
-    router.replace('/onboarding');
+    resetApp('onboarding');
+    router.replace('/plan');
   }
 
   return (
