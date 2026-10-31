@@ -12,7 +12,7 @@ import { DEFAULT_PROFILE, FinanceProfileSchema, type Allocation, type FinancePro
 import { Button, Card, Spinner } from '@/components/ui';
 import { allocationRows, currentRows, MoneyMap, ROW_ORDER, type RowKey } from './MoneyMap';
 
-const KEY = 'studentplan:money:v1';
+const KEY = 'mrmoney:money:v1';
 const GREETING = 'I\'m Money. I research live UK savings rates, ISA platforms and index funds, then split your spare cash with the allocation engine. Ask me where your money should go.';
 const CHIPS = [
   'How should I split my spare money each month?',
