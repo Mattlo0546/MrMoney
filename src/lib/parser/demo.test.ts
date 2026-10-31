@@ -63,6 +63,21 @@ describe('DemoParser expenses', () => {
   });
 });
 
+describe('DemoParser committed expenses (D17)', () => {
+  it('PRD sentence is an expense', async () => {
+    expect(await intent('I need to spend £35 on a replacement shower filter today')).toMatchObject({
+      kind: 'expense', amount: { pence: 3500 }, date: '2026-11-10', category: 'household',
+    });
+  });
+  it.each(['I have to spend £20 on groceries today', "I've got to pay £20 for the train today", 'I need to buy a £20 jacket today'])(
+    'committed: %s', async (s) => {
+      expect((await intent(s)).kind).toBe('expense');
+    });
+  it('"I want to buy" without a question clarifies', async () => {
+    await clarifies('I want to buy a £30 jacket');
+  });
+});
+
 describe('DemoParser hypotheticals', () => {
   it('PRD example: dinner tomorrow', async () => {
     expect(await intent('Can I spend £20 on dinner tomorrow?')).toMatchObject({
@@ -74,10 +89,13 @@ describe('DemoParser hypotheticals', () => {
       kind: 'hypothetical', amount: { pence: 6000 }, date: '2026-11-14',
     });
   });
-  it('"I need to spend" is hypothetical', async () => {
-    expect(await intent('I need to spend £35 on a replacement shower filter today')).toMatchObject({
+  it('"can I spend" the PRD amount stays hypothetical', async () => {
+    expect(await intent('can I spend £35 on a replacement shower filter today')).toMatchObject({
       kind: 'hypothetical', amount: { pence: 3500 }, date: '2026-11-10', category: 'household',
     });
+  });
+  it('trailing ? keeps "I need to spend" hypothetical', async () => {
+    expect((await intent('I need to spend £35 on a shower filter today?')).kind).toBe('hypothetical');
   });
   it.each([
     ['what if I buy a £30 jacket on friday', '2026-11-13'],

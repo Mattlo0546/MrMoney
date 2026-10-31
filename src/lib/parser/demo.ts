@@ -157,7 +157,9 @@ function pickLabel(t: string): string | undefined {
 
 // ---------- intent cues ----------
 
-const HYPO = /\b(can i|could i|should i|may i|would it be ok|is it ok|is it okay|afford|if i|what if|what happens if|am i able|will i be able|i need to|i have to|i want to (spend|buy|get)|i'?d like to (spend|buy|get)|i plan to|planning to|going to (spend|buy|get)|thinking (of|about)|i'?m about to|how about)\b/;
+const HYPO = /\b(can i|could i|should i|may i|would it be ok|is it ok|is it okay|afford|if i|what if|what happens if|am i able|will i be able|i want to (spend|buy|get)|i'?d like to (spend|buy|get)|i plan to|planning to|going to (spend|buy|get)|thinking (of|about)|i'?m about to|how about)\b/;
+// D17: "I need to spend £X on Y today" is a committed expense, not a hypothetical.
+const COMMITTED = /\b(i need to|i have to|i'?ve got to|i have got to|i got to|i gotta)\s+(spend|pay|buy)\b/;
 const PAST_EXPENSE = /\b(spent|spend|paid|pay|bought|purchased|cost me|splurged|blew|picked up|ordered|got (a|an|some|the|my)?)\b/;
 const INCOME = /\b(received|recieved|got paid|paid me|earned|gift(ed)?|gave me|given|came in|extra .*\bin\b|bonus|refund|top[- ]?up|transferred|sent me|income|windfall|stipend|wages?|salary)\b/;
 const PREFERENCE = /\b(keep|hold|leave|set aside|reserve|put aside|have)\b.*\b(available|free|spare|aside|back|handy|for)\b/;
@@ -199,6 +201,7 @@ export function parseDemo(text: string, ctx: ParseContext): ParseResult {
   else if (INCOME.test(t) && !/\b(spent|paid for|bought|can i|afford)\b/.test(t)) kind = 'income';
   else if (hypoCue && !/\b(spent|bought|paid)\b/.test(t.replace(/\b(if|what if) i (spent|bought|paid)\b/, ''))) kind = 'hypothetical';
   else if (hypoCue) kind = 'hypothetical';
+  else if (COMMITTED.test(t)) kind = 'expense';
   else if (PAST_EXPENSE.test(t) && /\b(spent|paid|bought|purchased|cost me|splurged|blew|picked up|ordered|got)\b/.test(t)) kind = 'expense';
 
   if (!kind) {

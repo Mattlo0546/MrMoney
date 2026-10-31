@@ -19,6 +19,7 @@ const ctx = {
 };
 const parser = new GeminiParser({ apiKey: key, fallback: false });
 const phrases = [
+  'I need to spend £35 on a replacement shower filter today',
   'I spent £35 on a shower filter today',
   'Can I spend £20 on dinner tomorrow?',
   'My rent increases by £50 next month',
