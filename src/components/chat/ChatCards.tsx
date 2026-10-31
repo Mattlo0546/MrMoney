@@ -182,12 +182,18 @@ function Clarify({ c, onReply, disabled, showQuestion }: { c: Extract<UiCard, { 
   );
 }
 
-function domainOf(url: string): string {
+/** The source's domain. Grounding links are Google redirect URLs, so prefer a domain-like title. */
+function domainOf(url: string, title?: string): string {
+  let host = '';
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    host = new URL(url).hostname.replace(/^www\./, '');
   } catch {
-    return url;
+    host = '';
   }
+  const t = (title ?? '').trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+  const titleIsDomain = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(t);
+  if (/vertexaisearch|googleusercontent|google\.com$/.test(host) || !host) return titleIsDomain ? t : title?.trim() || host || 'Source';
+  return host;
 }
 
 function timeLabel(iso?: string): string {
@@ -212,20 +218,20 @@ function Research({ c, onPrefill }: { c: Extract<UiCard, { type: 'research_resul
             <p className="text-sm font-bold">{it.provider}{it.product ? <span className="font-semibold text-(--c-muted)"> · {it.product}</span> : null}</p>
             <p className="font-display text-2xl font-extrabold text-(--c-lime) num">{it.headline}</p>
             {it.conditions.length > 0 && (
-              <ul className="mt-1 list-disc pl-5 text-xs text-(--c-muted)">{it.conditions.slice(0, 4).map((x) => <li key={x}>{x}</li>)}</ul>
+              <ul className="mt-1 list-disc pl-5 text-xs text-(--c-muted)">{it.conditions.slice(0, 3).map((x) => <li key={x}>{x}</li>)}</ul>
             )}
             <a href={it.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-(--c-text) underline underline-offset-4">
-              {domainOf(it.sourceUrl)}<span className="sr-only"> (source for {it.provider}, opens in a new tab)</span>
+              {domainOf(it.sourceUrl, it.sourceTitle)}<span className="sr-only"> (source for {it.provider}, opens in a new tab)</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
             </a>
             <div className="mt-2 flex flex-wrap gap-2">
               {typeof it.ratePercent === 'number' && (
                 <button type="button" data-testid="use-in-projections" onClick={() => proposeRate({ provider: it.provider, headline: it.headline, ratePercent: it.ratePercent!, ref: it.ref })}
-                  className={`${btn} min-h-10 bg-(--c-lime-fill) px-4 text-[#0B0C1F]`}>Use in projections</button>
+                  className={`${btn} min-h-10 bg-(--c-lime-fill) px-4 text-xs text-[#0B0C1F]`}>Use in projections</button>
               )}
               <button type="button" data-testid="apply-to-purchase"
                 onClick={() => onPrefill(`Apply the ${it.provider} deal (${it.headline}${it.ref ? `, ref ${it.ref}` : ''}) to my planned `)}
-                className={`${btn} min-h-10 border border-(--c-line) px-4`}>Apply to a purchase</button>
+                className={`${btn} min-h-10 border border-(--c-line) px-4 text-xs`}>Apply to a purchase</button>
             </div>
           </li>
         ))}

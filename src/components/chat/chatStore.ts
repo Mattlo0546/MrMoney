@@ -232,6 +232,7 @@ export async function sendMessage(raw: string): Promise<void> {
     await runTurn(text, controller.signal);
   } catch (e) {
     if ((e as Error).name !== 'AbortError') {
+      console.warn('[chat] turn failed', e);
       if (e instanceof ChatUnavailable) await offlineTurn(text, true);
       else push({ role: 'assistant', text: '', cards: [{ type: 'error', id: newId('e'), message: 'Something went wrong, and nothing was changed. Please try again.' }] });
     }
@@ -257,10 +258,18 @@ async function runTurn(text: string, signal: AbortSignal, retried = false): Prom
     else patchMessage(turnMsgId, (m) => ({ ...m, text: draft ? draft : m.text, cards: [...(m.cards ?? []), ...cards] }));
   };
 
-  for (let step = 0; step < 8; step++) {
+  let resent = false;
+  for (let step = 0; step < 9; step++) {
     const snap = getAppStore().getSnapshot();
     const body = { messages, context: buildContext(snap), ...(toolResults ? { toolResults, modelState } : {}) };
-    const resp = await postChat(body, (phase, label) => set({ phase: phase === 'researching' ? 'searching' : 'thinking', statusLabel: label }), signal);
+    const onStatus = (phase: 'thinking' | 'researching', label: string) => set({ phase: phase === 'researching' ? 'searching' : 'thinking', statusLabel: label });
+    let resp = await postChat(body, onStatus, signal);
+    // Continuation failed transiently: resend the identical request once (the server replays; tools are not re-run).
+    if (resp.kind === 'reply' && resp.phase === 'error' && toolResults && !resent
+      && resp.cards.some((c) => c.type === 'error' && c.retryable && !/send (it|that|your message)? ?again/i.test(c.message))) {
+      resent = true;
+      resp = await postChat(body, onStatus, signal);
+    }
     if (step === 0 && looksUnavailable(resp)) throw new ChatUnavailable('model unavailable');
     if (state.offline) set({ offline: false });
 
@@ -268,7 +277,11 @@ async function runTurn(text: string, signal: AbortSignal, retried = false): Prom
 
     if (resp.kind === 'reply') {
       // Expired/tampered modelState: resend the user's message once without tool results.
-      const retry = resp.phase === 'error' && toolResults && !retried && resp.cards.some((c) => c.type === 'error' && c.retryable);
+      // Invalid/expired modelState ("send again"): resend the user's message without tool results, but only
+      // when nothing was committed this turn (otherwise the model could repeat an applied change).
+      const committed = !!turnMsgId && (state.messages.find((m) => m.id === turnMsgId)?.cards ?? []).some((c) => c.type === 'change_applied' || c.type === 'plan_created');
+      const retry = resp.phase === 'error' && toolResults && !retried && !committed
+        && resp.cards.some((c) => c.type === 'error' && /send (it|that|your message)? ?again/i.test(c.message));
       if (retry) return runTurn(text, signal, true);
       // Don't repeat a message that a card already shows (error text, clarify question).
       const dup = serverCards.some((c) => (c.type === 'error' && c.message.trim() === resp.text.trim()));
@@ -442,4 +455,10 @@ export function startDemoLocal(label = 'Try a demo student') {
     cards: ex.cards,
   });
   set({ planCreatedAt: Date.now() });
+}
+
+/** Keep the greeting in the history once the conversation starts (not sent to the model). */
+export function addOpening(text: string) {
+  getChat();
+  if (state.messages.length === 0) push({ role: 'assistant', text, localOnly: true });
 }

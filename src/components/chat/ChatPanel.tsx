@@ -7,7 +7,7 @@ import {
 import { useAppSnapshot } from '@/lib/store';
 import { MotionStyles } from '@/components/plan/change/motion';
 import { ChatCard } from './ChatCards';
-import { newChat, sendMessage, startDemoLocal, useChat } from './chatStore';
+import { addOpening, newChat, sendMessage, startDemoLocal, useChat } from './chatStore';
 import { PHASE_LABEL } from './model';
 
 const SETUP_CHIPS = ['I have £3,900 until 31 Jan', 'Try a demo student'];
@@ -76,9 +76,13 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [text]);
 
+  const opening = hasPlan
+    ? 'Tell me what changed: "I spent £12 on lunch", "Can I spend £40 on Saturday?", or ask me to find a better savings rate.'
+    : "Hey! Tell me about your money and I'll build your plan. How much do you have, and how long does it need to last?";
   const send = (value: string) => {
     const v = value.trim();
     if (!v || chat.busy) return;
+    if (chat.messages.length === 0) addOpening(opening);
     if (/^try (a )?demo( student)?$/i.test(v)) startDemoLocal(v);
     else void sendMessage(v);
     setText('');
@@ -96,9 +100,6 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
 
   const status = chat.busy ? chat.statusLabel || PHASE_LABEL[chat.phase] || 'Thinking…' : '';
   const lastAssistant = [...chat.messages].reverse().find((m) => m.role === 'assistant');
-  const opening = hasPlan
-    ? 'Tell me what changed: "I spent £12 on lunch", "Can I spend £40 on Saturday?", or ask me to find a better savings rate.'
-    : "Hey! Tell me about your money and I'll build your plan. How much do you have, and how long does it need to last?";
 
   return (
     <div className={`spc flex min-h-0 flex-1 flex-col ${welcome ? 'mx-auto w-full max-w-[720px]' : ''}`}>
@@ -142,7 +143,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
         {welcome && chat.messages.length === 0 && (
           <h1 className="text-center font-display text-3xl font-extrabold leading-tight lg:text-4xl">Know what you can spend today.</h1>
         )}
-        <Bubble role="assistant" testId="chat-opening">{opening}</Bubble>
+        {chat.messages.length === 0 && <Bubble role="assistant" testId="chat-opening">{opening}</Bubble>}
         {chat.messages.map((m) => (
           <div key={m.id} className="flex flex-col gap-2">
             {m.text && <Bubble role={m.role}>{m.text}</Bubble>}
@@ -190,6 +191,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
             id={id}
             ref={inputRef}
             data-testid="chat-input"
+            style={{ outline: 'none' }}
             rows={1}
             value={text}
             maxLength={2000}
@@ -201,7 +203,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
               }
             }}
             placeholder={hasPlan ? 'Tell me what changed…' : 'e.g. I have £3,900 to last until 31 Jan, rent £620 on the 1st'}
-            className={`max-h-40 min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-(--c-text) outline-none placeholder:text-(--c-muted) ${welcome ? 'text-lg' : 'text-base'}`}
+            className={`max-h-40 min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 focus-visible:outline-none text-(--c-text) outline-none placeholder:text-(--c-muted) ${welcome ? 'text-lg' : 'text-base'}`}
           />
           <button
             type="submit"

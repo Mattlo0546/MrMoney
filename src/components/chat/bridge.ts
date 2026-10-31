@@ -11,7 +11,7 @@ import type { AppSnapshot } from '@/lib/store';
 import {
   CLIENT_TOOL_SCHEMAS, type ChatContext, type ChatSummary, type ClientToolCall, type PlanDigest, type ToolResult,
 } from '@/lib/agent/types';
-import { buildPayload, defaultForm, uid, type Form } from '@/components/onboarding/model';
+import { buildSetupPayload } from '@/lib/agent/setup';
 import { buildPlanData } from '@/components/plan/calendar/data';
 import type { PreviewData } from '@/components/plan/change/changeState';
 import { newId, type UiCard } from './model';
@@ -193,7 +193,7 @@ function previewCard(call: ClientToolCall, intent: Intent, title: string, replac
     result: {
       id: call.id, name: call.name, ok: true,
       result: {
-        status: 'preview_shown_awaiting_user',
+        status: 'preview shown, awaiting user',
         note: 'Nothing is committed. The user taps Apply or Discard on the card.',
         previewId: card.id,
         ...(aff
@@ -219,44 +219,12 @@ function previewOn(state: EngineState, intent: Intent): PreviewData | null {
 
 // ------------------------------------------------------------------ setup_plan
 
-function poundsText(pence: number): string {
-  return pence % 100 === 0 ? String(pence / 100) : (pence / 100).toFixed(2);
-}
-
 function setupPlan(call: Extract<ClientToolCall, { name: 'setup_plan' }>): Exec {
-  const a = call.args;
   const today = londonToday();
-  const base = defaultForm(today);
-  // Priority order: the model's list first, then the rest in default order.
-  const order = [...a.priorities, ...base.flex.map((f) => f.id).filter((id) => !(a.priorities as string[]).includes(id))];
-  const flex = order.map((id) => base.flex.find((f) => f.id === id)!).filter(Boolean);
-  const form: Form = {
-    ...base,
-    fundsType: a.fundsType,
-    funds: poundsText(a.funds),
-    allowanceDay: String(a.allowanceDay ?? 1),
-    openingBalance: '0',
-    horizonEnd: a.horizonEnd,
-    hasJob: false,
-    others: a.incomes.map((i) => ({ id: uid('inc'), amount: poundsText(i.amountPence), date: i.date, confirmed: i.confirmed })),
-    commits: a.commitments.map((c) => ({
-      id: uid('cm'), name: c.name, amount: poundsText(c.amountPence), recurrence: c.recurrence,
-      day: String(c.dayOfMonth ?? 1), date: c.date ?? '',
-    })),
-    reserve: poundsText(a.minimumReserve),
-    goal: poundsText(a.savingsGoal),
-    food: poundsText(a.foodWeeklyPence),
-    transport: poundsText(a.transportWeeklyPence),
-    flex,
-    city: a.city ?? '',
-  };
-  const payload = buildPayload(form, today);
-  // Keep the model's income labels and job/other source (the form builder only knows "other").
-  const incomes = payload.incomes.map((inc, i) => {
-    const src = a.incomes[i];
-    return { ...inc, note: src?.label ?? inc.note, source: src?.source ?? (/job|shift|wage|pay/i.test(src?.label ?? '') ? 'job' : 'other') } as typeof inc;
-  });
-  const profile = { ...payload.profile, hasJob: incomes.some((i) => i.source === 'job') };
+  // Backend helper over the onboarding form builder (src/components/onboarding/model.ts).
+  const payload = buildSetupPayload(call.args, today);
+  const incomes = payload.incomes;
+  const profile = { ...payload.profile, hasJob: payload.profile.hasJob || incomes.some((i) => i.source === 'job') };
   const store = getAppStore();
   const res = store.completeOnboarding(profile, { commitments: payload.commitments, incomes });
   if (!res.ok) {
@@ -407,7 +375,7 @@ export function executeCall(raw: ClientToolCall): Exec {
         state: 'open',
       };
       return {
-        result: { id: call.id, name: call.name, ok: true, result: { status: 'confirm_shown_awaiting_user', previewId: card.id } },
+        result: { id: call.id, name: call.name, ok: true, result: { status: 'preview shown, awaiting user', previewId: card.id } },
         cards: [card],
       };
     }
