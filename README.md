@@ -24,6 +24,10 @@ pnpm dev                     # http://localhost:3210
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | Vitest: engine, store and parser unit and property tests |
 | `pnpm test:e2e` | Playwright journeys on desktop (1440x1000) and mobile (390x844); expects the app on http://localhost:3210 (reuses a running server) |
+| `pnpm codegraph:explore "<query>"` | Semantic + AST call-graph search via [CodeGraph](https://github.com/colbymchenry/codegraph) |
+| `pnpm codegraph:sync` | Incrementally sync `.codegraph/` after file edits (also runs automatically via MCP watcher and git hooks) |
+| `pnpm codegraph:status` | Check CodeGraph index statistics and freshness |
+| `pnpm codegraph:affected` | Show symbols and files affected by current git changes |
 
 ## Architecture
 
