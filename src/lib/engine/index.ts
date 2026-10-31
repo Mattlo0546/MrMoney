@@ -1,0 +1,15 @@
+export * from './types';
+export { gbp, ZERO, formatMoney, isMoney, largestRemainder } from './money';
+export { addDays, dateRange, dayOfWeek, daysInMonth, endOfMonth, formatShortDate, isISODate } from './dates';
+export { occurrences, amountOn } from './recurrence';
+export { generatePlan, validateState, summarize, EngineValidationError } from './plan';
+export { applyIntent, previewIntent, affordability, ensurePlan } from './intents';
+export type { Affordability, TradeoffOption } from './intents';
+export { explain } from './explain';
+export { computeDiff, protectedSnapshot } from './diff';
+export { createUndoStack, pushSnapshot, undo, canUndo, commit } from './undo';
+export type { UndoStack } from './undo';
+export { project } from './projections';
+export type { ProjectionAssumptions, ProjectionPoint, ProjectionResult, Scenario } from './projections';
+export { checkInvariants } from './invariants';
+export { demoFixture, demoBaseState, DEMO_TODAY } from './fixture';
