@@ -14,6 +14,8 @@ Demo date is fixed at 10 Nov 2026 (shown as demo mode). Fixture: £3,900 lump su
 | 2:10 | Type: `I received an extra £200` | Funds | Funds up £200, shown as income |
 | 2:25 | Click **Undo** | Funds | Back to the figure before the £200 |
 | 2:35 | Type: `I spent $20 on lunch` | The question | Asks about the currency; nothing changes |
+| 2:40 | Open **Money**. Click **How should I split my spare money each month?** | The money map animating: spare cash flowing into buckets; "Why this split" and the paid-plan check | Gemini 4 Argon calls the allocation engine; the map reallocates £250 a month |
+| 2:50 | Click **Find me the best savings account right now** | "Searching the web…", then live cited rates and the green **+£/yr, worth switching** cards | Live research, £-per-year gain computed by the engine, not the model |
 | 2:45 | Open **Projections** | Empty state | "Enter rates": nothing is pre-filled; labelled not advice |
 | 2:55 | Close: "Your data stays on your device; Gemini only reads the sentence, the engine does the maths." | | |
 

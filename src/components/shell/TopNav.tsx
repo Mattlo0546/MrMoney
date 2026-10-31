@@ -1,13 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, ChartLine, SlidersHorizontal, Wallet } from 'lucide-react';
+import { CalendarDays, ChartLine, Landmark, SlidersHorizontal, Wallet } from 'lucide-react';
 import { useAppSnapshot } from '@/lib/store';
 import { AppMenu } from './AppMenu';
 
 const LINKS = [
   { href: '/plan', label: 'Plan', icon: Wallet },
   { href: '/projections', label: 'Projections', icon: ChartLine },
+  { href: '/money', label: 'Money', icon: Landmark },
   { href: '/settings', label: 'Settings', icon: SlidersHorizontal },
 ];
 
@@ -69,7 +70,7 @@ export function TopNav() {
       </div>
       {hasPlan && (
         <nav aria-label="Main" className="px-4 pb-3 lg:hidden">
-          <div className="mx-auto grid max-w-[1400px] grid-cols-3 gap-1 rounded-full border border-line bg-surface-2 p-1">
+          <div className="mx-auto grid max-w-[1400px] grid-cols-4 gap-1 rounded-full border border-line bg-surface-2 p-1">
             {LINKS.map((l) => {
               const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
               return (
