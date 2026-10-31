@@ -16,8 +16,8 @@ _Updated by the orchestrator at every step. Newest entry first._
 |---|---|---|---|
 | agent-backend (Opus) | Execution | /api/chat with gemini-4-argon function calling + research tool (Google Search grounding) → `src/lib/agent/` | 🔄 running |
 | chat-ui (Opus) | Execution | Chat-first UI: setup interview, chat panel with cards, mobile Chat/Calendar toggle → `src/components/chat/` | 🔄 running |
-| fix-calendar (Sonnet) | Execution | QA Q1, Q3, Q4, Q7, Q8, Q10–Q12, Q16, Q17: hero, full month, income chip, preview on calendar | 🔄 running |
-| fix-composer (Sonnet) | Execution | QA Q5, Q6, Q13 + fidelity: sticky Apply/Undo, clarify, Undo after income, offers city | 🔄 running |
+| fix-calendar (Sonnet) | Execution | QA Q1, Q3, Q4, Q7, Q8, Q10–Q12, Q16, Q17 | ✅ done: committed |
+| fix-composer (Sonnet) | Execution | QA Q5, Q6, Q13 + fidelity | ✅ done: Undo was below the fold, now a sticky footer; cards reusable for chat |
 | fix-shell (Sonnet) | Execution | QA Q2, Q9, Q14, Q20 + G1/G2 | ✅ done: no horizontal scroll at 390 on all pages; reset → onboarding; ReUI repeats dropdown |
 | deliverables (Sonnet) | Execution | e2e Playwright suite, README, demo script, limitations | ✅ done: README and limitations final; demo script and journey e2e are DRAFTS pending chat |
 | qa-1 (Sonnet) | QA | Independent browser QA | ✅ done: 20 defects → `.prd-to-production/qa/qa-1.md` |

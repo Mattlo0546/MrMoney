@@ -31,7 +31,7 @@ export interface Form {
 export type Errors = Record<string, string>;
 
 export const STEPS = [
-  { slug: 'welcome', title: 'Make your money last' },
+  { slug: 'welcome', title: 'Know what you can spend today.' },
   { slug: 'funds', title: 'How much money do you have?' },
   { slug: 'last-until', title: 'When does it need to last until?' },
   { slug: 'job', title: 'Do you have a job?' },

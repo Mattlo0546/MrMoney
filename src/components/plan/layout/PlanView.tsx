@@ -1,23 +1,23 @@
 'use client';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { formatMoney } from '@/lib/engine';
 import type { ISODate } from '@/lib/engine';
 import { useAppSnapshot } from '@/lib/store';
-import { Composer } from '@/components/plan/composer/Composer';
-import { useChangeView } from '@/components/plan/change/changeState';
-import { ChangePanel } from '@/components/plan/change/ChangePanel';
+import { Sheet } from '@/components/ui/Sheet';
+import { playBubble } from '@/components/ui/bubble';
+import { ChatPanel } from '@/components/chat/ChatPanel';
+import { useOpenPreview } from '@/components/chat/chatStore';
 import { OffersPanel } from '@/components/plan/offers/OffersPanel';
 import { buildPlanData } from '../calendar/data';
 import { MonthCalendar } from '../calendar/MonthCalendar';
 import { Agenda } from '../calendar/Agenda';
 import { playBubbles } from '../calendar/bubble';
-import { DayDetail } from '../day/DayDetail';
+import { DayDetail, longDate } from '../day/DayDetail';
 import type { ChipSpec, PreviewChips } from '../calendar/shared';
 import { SummaryStrip } from './SummaryStrip';
 
-type Tab = 'day' | 'change' | 'offers';
-const TABS: { id: Tab; label: string }[] = [{ id: 'day', label: 'Day' }, { id: 'change', label: 'Change' }, { id: 'offers', label: 'Offers' }];
+type Tab = 'chat' | 'day' | 'deals';
+const TABS: { id: Tab; label: string }[] = [{ id: 'chat', label: 'Chat' }, { id: 'day', label: 'Day' }, { id: 'deals', label: 'Deals' }];
 
 function useIsDesktop(): boolean {
   return useSyncExternalStore(
@@ -31,6 +31,28 @@ function useIsDesktop(): boolean {
   );
 }
 
+/** Sets an element's height to fill the viewport below its top edge (keyboard-aware on mobile). */
+function useFillHeight<T extends HTMLElement>(min = 360) {
+  const ref = useRef<T>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      el.style.height = `${Math.max(min, vh - top)}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
+  }, [min]);
+  return ref;
+}
+
 function Skeleton() {
   return (
     <div aria-busy="true" aria-label="Loading your plan" className="mx-auto flex max-w-[1600px] flex-col gap-4 p-4 lg:p-6">
@@ -40,84 +62,107 @@ function Skeleton() {
   );
 }
 
-function Empty() {
+/** First visit: a centred, full-height chat. */
+function FirstVisit() {
+  const ref = useFillHeight<HTMLDivElement>(480);
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 p-8 text-center">
-      <h1 className="font-display text-3xl font-extrabold">No plan yet</h1>
-      <p className="text-[var(--muted)]">Answer a few quick questions and we will build your day-by-day plan.</p>
-      <Link href="/onboarding" className="inline-flex min-h-11 items-center rounded-full bg-[var(--accent)] px-6 font-bold text-[var(--accent-ink)]">Set up my plan</Link>
+    <div ref={ref} className="flex flex-col px-4 pt-2 lg:pt-6">
+      <ChatPanel variant="welcome" autoFocus />
     </div>
   );
 }
 
-function PanelTabs({ tab, setTab, children }: { tab: Tab; setTab: (t: Tab) => void; children: Record<Tab, React.ReactNode> }) {
+function Segmented<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: { id: T; label: string }[]; label: string }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div role="tablist" aria-label="Plan panel" className="mb-3 flex gap-1 rounded-full bg-[var(--surface-2)] p-1">
-        {TABS.map((t) => (
-          <button key={t.id} role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls="plan-tabpanel" type="button" onClick={() => setTab(t.id)}
-            className={`min-h-11 flex-1 rounded-full text-sm font-bold ${tab === t.id ? 'bg-[var(--accent)] text-[var(--accent-ink)]' : 'text-[var(--muted)]'}`}>{t.label}</button>
-        ))}
-      </div>
-      <div role="tabpanel" id="plan-tabpanel" aria-labelledby={`tab-${tab}`} className="min-h-0 flex-1 overflow-y-auto">{children[tab]}</div>
+    <div role="tablist" aria-label={label} className="flex gap-1 rounded-full bg-[var(--surface-2)] p-1">
+      {items.map((t) => (
+        <button key={t.id} role="tab" type="button" aria-selected={value === t.id} id={`tab-${label}-${t.id}`} onClick={() => onChange(t.id)}
+          className={`min-h-10 flex-1 rounded-full px-3 text-sm font-bold transition-colors ${value === t.id ? 'bg-[var(--accent)] text-[var(--accent-ink)]' : 'text-[var(--muted)]'}`}>
+          {t.label}
+        </button>
+      ))}
     </div>
   );
+}
+
+const ENTER_CSS = `
+@keyframes sp-plan-in{from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:none}}
+@keyframes sp-panel-in{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:none}}
+.sp-plan-in{animation:sp-plan-in 520ms cubic-bezier(.34,1.56,.64,1) both}
+.sp-panel-in{animation:sp-panel-in 420ms cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion:reduce){.sp-plan-in,.sp-panel-in{animation:none}}
+`;
+
+/** Day-by-day bubble when a plan first appears (staggered ~30ms per day, ~1.2s max). */
+function bubbleDays(root: HTMLElement | null) {
+  if (!root) return;
+  const cells = [...root.querySelectorAll<HTMLElement>('[data-day]')].filter((el) => !el.closest('[aria-hidden="true"]'));
+  const uniq = new Map<string, HTMLElement>();
+  for (const el of cells) if (!uniq.has(el.dataset.day!)) uniq.set(el.dataset.day!, el);
+  const list = [...uniq.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, el]) => el);
+  const step = Math.max(12, Math.min(30, 1200 / Math.max(1, list.length)));
+  list.forEach((el, i) => window.setTimeout(() => playBubble(el), 260 + i * step));
 }
 
 export function PlanView() {
   const snap = useAppSnapshot();
+  // Detect "no plan -> plan" inside this session to play the entrance animation.
+  const [sawEmpty, setSawEmpty] = useState(false);
+  const [enterKey, setEnterKey] = useState(0);
+  if (snap.hydrated && !snap.state && !sawEmpty) setSawEmpty(true);
+  if (snap.state && sawEmpty) {
+    setSawEmpty(false);
+    setEnterKey((k) => k + 1);
+  }
+  if (!snap.hydrated) return <Skeleton />;
+  if (!snap.state) return <FirstVisit />;
+  return <PlanLayout enterKey={enterKey} />;
+}
+
+function PlanLayout({ enterKey }: { enterKey: number }) {
+  const snap = useAppSnapshot();
   const desktop = useIsDesktop();
   const rootRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<ISODate | null>(null);
   const [monthOverride, setMonth] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('day');
-  const [sheet, setSheet] = useState(false);
-  const [seenChange, setSeenChange] = useState<number | null>(null);
-  const view = useChangeView();
-  const [seenView, setSeenView] = useState(view);
+  const [tab, setTab] = useState<Tab>('chat');
+  const [mobileView, setMobileView] = useState<'chat' | 'calendar'>('chat');
+  const [daySheet, setDaySheet] = useState(false);
+  const [dealsSheet, setDealsSheet] = useState(false);
+  const [seenChange, setSeenChange] = useState(snap.changeId);
+  const openPreview = useOpenPreview();
 
   const { state, today, changeId, changedDays, changedItems } = snap;
   const data = useMemo(() => (state ? buildPlanData(state, today) : null), [state, today]);
   const changed = useMemo(() => new Set(changedItems), [changedItems]);
 
-  // Adjust state while rendering when a new change arrives: Change tab, sheet, and a visible month.
-  if (snap.hydrated && seenChange === null) setSeenChange(changeId);
-  else if (seenChange !== null && seenChange !== changeId) {
+  // A new change: show the chat (where its card is) and bring the changed month into view.
+  if (seenChange !== changeId) {
     setSeenChange(changeId);
     if (changedDays.length > 0 || changedItems.length > 0) {
-      setTab('change');
-      setSheet(true);
+      setTab('chat');
       const cur = monthOverride ?? (selected ?? today).slice(0, 7);
       if (changedDays.length && !changedDays.some((d) => d.slice(0, 7) === cur)) setMonth(changedDays[0].slice(0, 7));
     }
   }
 
-  // The composer produced something (pending, clarification, preview, result, error): show the Change tab.
-  if (view !== seenView) {
-    setSeenView(view);
-    if (view.status !== 'idle') {
-      setTab('change');
-      setSheet(true);
-      // Bring the previewed day into view.
-      if (view.status === 'preview' && view.intent.kind === 'hypothetical') setMonth(view.intent.date.slice(0, 7));
-    }
-  }
-
-  // Un-applied preview: outline affected days and add preview chips (read from changeState, never mutated here).
+  // Un-applied chat preview: outline affected days and add dashed preview chips.
   const { preview, previewDays } = useMemo(() => {
     const chips: PreviewChips = new Map();
     const days = new Set<ISODate>();
-    if (view.status === 'preview') {
-      const intent = view.intent;
+    const pv = openPreview?.pv;
+    if (openPreview && pv) {
+      const intent = openPreview.intent;
       const add = (d: ISODate, c: ChipSpec) => chips.set(d, [...(chips.get(d) ?? []), c]);
       if (intent.kind === 'hypothetical') {
         days.add(intent.date);
         add(intent.date, { key: `pv-${intent.date}`, kind: 'preview', label: intent.label ?? intent.category, pence: intent.amount.pence });
       }
-      if (view.pv.ok) {
-        for (const d of view.pv.diff.changedDays) days.add(d);
+      if (pv.ok) {
+        for (const d of pv.diff.changedDays) days.add(d);
         const perDay = new Map<ISODate, number>();
-        for (const c of view.pv.diff.cellChanges) {
+        for (const c of pv.diff.cellChanges) {
           if (c.field !== 'planned' || (intent.kind === 'hypothetical' && c.day === intent.date)) continue;
           perDay.set(c.day, (perDay.get(c.day) ?? 0) + (c.from.pence - c.to.pence));
         }
@@ -127,33 +172,51 @@ export function PlanView() {
       }
     }
     return { preview: chips, previewDays: days };
-  }, [view]);
+  }, [openPreview]);
 
+  // Bring a newly previewed day into view (adjust state while rendering, once per preview).
+  const firstPreviewDay = useMemo(() => [...previewDays].sort()[0], [previewDays]);
+  const [seenPreviewDay, setSeenPreviewDay] = useState<ISODate | undefined>(undefined);
+  if (firstPreviewDay !== seenPreviewDay) {
+    setSeenPreviewDay(firstPreviewDay);
+    if (firstPreviewDay) setMonth(firstPreviewDay.slice(0, 7));
+  }
+
+  // Bubble changed days/chips (and the compact today strip on mobile).
   useEffect(() => {
-    if (!snap.hydrated || changeId === 0 || !rootRef.current) return;
+    if (!snap.hydrated || changeId === 0) return;
     if (changedDays.length === 0 && changedItems.length === 0) return;
-    playBubbles(rootRef.current, changedDays, changedItems);
+    if (rootRef.current) playBubbles(rootRef.current, changedDays, changedItems);
+    if (stripRef.current) playBubble(stripRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changeId]);
 
-  if (!snap.hydrated) return <Skeleton />;
-  if (!state || !data) return <Empty />;
+  // Entrance: calendar slides in, then days bubble one by one.
+  useEffect(() => {
+    if (enterKey === 0) return;
+    const t = window.setTimeout(() => bubbleDays(rootRef.current), 120);
+    return () => window.clearTimeout(t);
+  }, [enterKey]);
+
+  const mobileFill = useFillHeight<HTMLDivElement>(420);
+  const asideFill = useFillHeight<HTMLElement>(560);
+
+  if (!state || !data) return null;
 
   const clamp = (d: ISODate) => (data.days.has(d) ? d : d < data.start ? data.start : data.end);
   const sel = clamp(selected ?? today);
   const month = monthOverride ?? sel.slice(0, 7);
   const info = data.days.get(sel)!;
-  const summary = (state.plan ?? null)?.summary;
+  const summary = state.plan?.summary;
   const upcoming = state.incomes.filter((i) => i.confirmed && i.date > today).sort((a, b) => a.date.localeCompare(b.date))[0];
   const nextIncome = upcoming ? { date: upcoming.date, pence: upcoming.amount.pence } : null;
-  const select = (d: ISODate) => { setSelected(d); setTab('day'); if (!desktop) setSheet(true); };
-  const deficitBanner = data.undated.length > 0 || data.fundingGap > 0;
-
-  const panels: Record<Tab, React.ReactNode> = {
-    day: <DayDetail info={info} today={today} changed={changed} />,
-    change: <ChangePanel />,
-    offers: <OffersPanel />,
+  const select = (d: ISODate) => {
+    setSelected(d);
+    if (desktop) setTab('day');
+    else setDaySheet(true);
   };
+  const deficitBanner = data.undated.length > 0 || data.fundingGap > 0;
+  const entering = enterKey > 0;
 
   const banner = deficitBanner && (
     <div role="alert" className="rounded-3xl border border-[var(--coral)] bg-[var(--surface)] p-4">
@@ -167,40 +230,72 @@ export function PlanView() {
 
   if (desktop) {
     return (
-      <div ref={rootRef} className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[1600px] flex-col gap-4 p-6">
-        <div className="flex flex-1 items-start gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-4">
-            {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
-            {banner}
-            <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
-          </div>
-          <aside aria-label="Assistant and details" className="sticky top-4 flex h-[calc(100dvh-6rem)] min-h-[560px] w-[400px] shrink-0 flex-col gap-3 rounded-3xl bg-[var(--surface)] p-4">
-            <Composer />
-            <PanelTabs tab={tab} setTab={setTab}>{panels}</PanelTabs>
-          </aside>
+      <div className="mx-auto flex max-w-[1600px] items-start gap-4 p-6">
+        <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
+        <div ref={rootRef} key={`plan-${enterKey}`} className={`flex min-w-0 flex-1 flex-col gap-4 ${entering ? 'sp-plan-in' : ''}`}>
+          {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
+          {banner}
+          <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
         </div>
+        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[72px] flex max-h-[calc(100dvh-88px)] w-[420px] shrink-0 flex-col rounded-3xl bg-[var(--surface)] p-4 ${entering ? 'sp-panel-in' : ''}`}>
+          <div className="flex min-h-0 flex-1 flex-col" hidden={tab !== 'chat'} style={tab !== 'chat' ? { display: 'none' } : undefined}>
+            <ChatPanel variant="panel" autoFocus={entering} header={<Segmented label="panel" value={tab} onChange={setTab} items={TABS} />} />
+          </div>
+          {tab !== 'chat' && (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="mb-3"><Segmented label="panel" value={tab} onChange={setTab} items={TABS} /></div>
+              <div role="tabpanel" aria-labelledby={`tab-panel-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
+                {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : <OffersPanel />}
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
     );
   }
 
+  const s = summary;
   return (
-    <div ref={rootRef} className="flex flex-col gap-4 p-4 pb-40">
-      {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
-      {banner}
-      <Agenda data={data} today={today} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
-      {sheet && (
-        <div className="fixed inset-0 z-40 flex items-end bg-black/50" onClick={() => setSheet(false)}>
-          <div role="dialog" aria-label="Plan details" onClick={(e) => e.stopPropagation()} className="flex max-h-[75dvh] min-h-[50dvh] w-full flex-col rounded-t-3xl bg-[var(--surface)] p-4 pb-28">
-            <div className="mb-2 flex justify-end">
-              <button type="button" onClick={() => setSheet(false)} className="min-h-11 rounded-full bg-[var(--surface-2)] px-4 text-sm font-bold">Close</button>
-            </div>
-            <PanelTabs tab={tab} setTab={setTab}>{panels}</PanelTabs>
+    <div className="flex flex-col px-4 pt-3">
+      <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
+      {s && (
+        <div ref={stripRef} data-testid="today-strip" className="flex items-center gap-3 rounded-3xl bg-[var(--accent)] px-4 py-3 text-[var(--accent-ink)]">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold opacity-90">Left today</p>
+            <p className="font-display text-3xl font-extrabold leading-none tabular-nums">{formatMoney(s.todayRemaining)}</p>
+          </div>
+          <div className="text-right text-xs font-bold">
+            <p className="opacity-90">Flexible left</p>
+            <p className="text-base tabular-nums">{formatMoney(s.flexibleRemaining)}</p>
           </div>
         </div>
       )}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--line)] bg-[var(--surface)] p-3" onFocusCapture={() => setSheet(true)}>
-        <Composer compact />
+      <div className="mt-3">
+        <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat' }, { id: 'calendar', label: 'Calendar' }]} />
       </div>
+      {mobileView === 'chat' ? (
+        <div ref={mobileFill} className="flex min-h-0 flex-col pb-3 pt-3">
+          <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-[var(--muted)]">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
+        </div>
+      ) : (
+        <div ref={rootRef} className={`flex flex-col gap-4 pb-10 pt-3 ${entering ? 'sp-plan-in' : ''}`}>
+          {s && <SummaryStrip s={s} today={today} nextIncome={nextIncome} />}
+          {banner}
+          {openPreview && (
+            <button type="button" onClick={() => setMobileView('chat')} className="rounded-3xl border border-dashed border-[var(--lime)] p-3 text-left text-sm font-bold text-[var(--lime)]">
+              A preview is waiting in the chat. Tap to Apply or Discard.
+            </button>
+          )}
+          <Agenda data={data} today={today} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
+          <button type="button" onClick={() => setDealsSheet(true)} className="min-h-11 rounded-full border border-[var(--line)] text-sm font-bold">See deals</button>
+        </div>
+      )}
+      <Sheet open={daySheet} onClose={() => setDaySheet(false)} title={longDate(sel)}>
+        <DayDetail info={info} today={today} changed={changed} />
+      </Sheet>
+      <Sheet open={dealsSheet} onClose={() => setDealsSheet(false)} title="Deals">
+        <OffersPanel />
+      </Sheet>
     </div>
   );
 }
