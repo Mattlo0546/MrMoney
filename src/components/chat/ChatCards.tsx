@@ -1,5 +1,5 @@
 'use client';
-import { explain, formatMoney } from '@/lib/engine';
+import { explain, formatMoney, formatShortDate } from '@/lib/engine';
 import { useAppSnapshot } from '@/lib/store';
 import { RESEARCH_LABEL } from '@/lib/agent/types';
 import { BeforeAfter, Card, Protected, PreviewCard, actionLine, kindLabel } from '@/components/plan/change/cards';
@@ -111,7 +111,22 @@ function Preview({ c }: { c: Extract<UiCard, { type: 'preview' }> }) {
       <Card label="Preview">
         <span className="rounded-full border border-dashed border-(--c-lime) px-3 py-1 text-xs font-bold text-(--c-lime)">Preview · not applied</span>
         <p className="mt-3 font-display text-xl font-extrabold leading-snug">{c.title}</p>
-        {diff && <p data-testid="preview-fits" className="mt-2 text-[15px] leading-snug">{explain(diff).sentence}</p>}
+        {c.goal ? (
+          <>
+            <p data-testid="preview-fits" className="mt-2 text-[15px] leading-snug">{c.goal.sentence}</p>
+            <ul className="mt-3 flex flex-col gap-1 text-sm">
+              {c.goal.changes.slice(0, 6).map((d, i) => (
+                <li key={d.date} className="pop flex justify-between gap-3" style={{ animationDelay: `${i * 60}ms` }}>
+                  <span className="text-(--c-muted)">{formatShortDate(d.date)} · {d.what}</span>
+                  {d.savedPence > 0 && <span className="num font-bold">{d.what.startsWith('treats') ? '−' : ''}{formatMoney(d.savedPence)}</span>}
+                </li>
+              ))}
+              {c.goal.changes.length > 6 && <li className="text-(--c-muted)">+ {c.goal.changes.length - 6} more days</li>}
+            </ul>
+          </>
+        ) : (
+          diff && <p data-testid="preview-fits" className="mt-2 text-[15px] leading-snug">{explain(diff).sentence}</p>
+        )}
         {diff && <BeforeAfter diff={diff} />}
         {diff && <Protected diff={diff} />}
       </Card>

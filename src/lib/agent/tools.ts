@@ -11,7 +11,9 @@ const DESCRIPTIONS: Record<ClientToolName, string> = {
   record_income: 'Record money received or expected. confirmed=true only when the user says the amount and date are certain.',
   check_purchase: 'Only for questions: "can I…", "could I afford…", "is it ok…", "what if…", or ending in "?". Preview with Apply/Discard; never commits.',
   change_commitment: 'Change a bill such as rent. Give deltaPence (signed) OR newAmountPence, and effectiveFrom. Shown as a preview the user confirms.',
-  set_goal: 'Save an extra amount, optionally by a date. Shown as a preview the user confirms.',
+  set_goal: 'Save an extra amount of money, optionally by a date (no specific item). Shown as a preview the user confirms.',
+  plan_goal:
+    'The user wants to buy a specific thing ("I want a basketball", "saving for AirPods", "my goal is new trainers"). Re-plans their spending calendar around it: treats before the goal day become cheaper meals, a little is set aside each day, and the item lands on byDate (default two weeks out). label = the item, short. amountPence = its price in integer pence. Shown as a preview with the calendar changes; the user taps Apply.',
   keep_available: 'Keep an amount of the daily allowance available on a date (e.g. a planned day out).',
   apply_deal: 'Apply a found deal (dealRef from research) to a planned purchase or category: newAmountPence OR percentOff. Preview, then the user confirms.',
   use_rate_in_projections: 'Use a rate found by research (sourceRef = the item ref) in the savings or investments projection. Only with the user\'s consent; preview, then confirm.',

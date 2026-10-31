@@ -114,6 +114,12 @@ export function replyFromToolResults(results: ToolResult[], ctx: ChatContext, co
         }
         break;
       }
+      case 'plan_goal': {
+        const ex = brief(str(r.explanation), 260);
+        parts.push(ex || 'Here\'s your calendar, re-planned around it.');
+        hint = CONFIRM_HINT;
+        break;
+      }
       case 'change_commitment':
       case 'set_goal':
       case 'apply_deal': {

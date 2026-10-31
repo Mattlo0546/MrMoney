@@ -163,7 +163,16 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
     const chips: PreviewChips = new Map();
     const days = new Set<ISODate>();
     const pv = openPreview?.pv;
-    if (openPreview && pv) {
+    const goal = openPreview?.goal;
+    if (goal) {
+      const add = (d: ISODate, c: ChipSpec) => chips.set(d, [...(chips.get(d) ?? []), c]);
+      for (const c of goal.changes) {
+        days.add(c.date);
+        if (c.date === goal.date) add(c.date, { key: `pv-goal-${c.date}`, kind: 'preview', label: `🎯 ${goal.label}`, pence: goal.amountPence });
+        else if (c.what.startsWith('treats')) add(c.date, { key: `pv-cut-${c.date}`, kind: 'preview', label: 'Saving mode', pence: c.savedPence, negative: true });
+        else add(c.date, { key: `pv-fund-${c.date}`, kind: 'preview', label: `${goal.label} fund`, pence: c.savedPence });
+      }
+    } else if (openPreview && pv) {
       const intent = openPreview.intent;
       const add = (d: ISODate, c: ChipSpec) => chips.set(d, [...(chips.get(d) ?? []), c]);
       if (intent.kind === 'hypothetical') {
@@ -193,11 +202,22 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
     if (firstPreviewDay) setMonth(firstPreviewDay.slice(0, 7));
   }
 
+  // A new preview: ripple across the days it would change, so the calendar visibly reacts before Apply.
+  const previewKey = openPreview?.id;
+  useEffect(() => {
+    if (!previewKey || !previewDays.size) return;
+    // Wait a frame for the month switch and the preview chips to render.
+    const t = window.setTimeout(() => rootRef.current && playBubbles(rootRef.current, [...previewDays], [], 70), 80);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewKey]);
+
   // Bubble changed days/chips (and the compact today strip on mobile).
   useEffect(() => {
     if (!snap.hydrated || changeId === 0) return;
     if (changedDays.length === 0 && changedItems.length === 0) return;
-    if (rootRef.current) playBubbles(rootRef.current, changedDays, changedItems);
+    // Multi-day re-plans ripple day by day; single changes keep the quick bubble.
+    if (rootRef.current) playBubbles(rootRef.current, changedDays, changedItems, changedDays.length > 3 ? 70 : undefined);
     if (stripRef.current) playBubble(stripRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changeId]);

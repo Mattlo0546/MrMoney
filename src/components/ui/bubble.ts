@@ -2,6 +2,8 @@
 export interface BubbleOptions {
   /** Stagger delay in ms (contract: 40ms per day, capped at 400). */
   delayMs?: number;
+  /** Override the 400ms delay cap (multi-day ripples). */
+  maxDelayMs?: number;
 }
 
 const HALO = 'rgb(124 58 237 / 0.28)';
@@ -13,7 +15,7 @@ export function bubbleDelay(index: number): number {
 
 export function playBubble(el: HTMLElement | null | undefined, opts: BubbleOptions = {}): Animation | null {
   if (!el || typeof el.animate !== 'function') return null;
-  const delay = Math.min(Math.max(opts.delayMs ?? 0, 0), 400);
+  const delay = Math.min(Math.max(opts.delayMs ?? 0, 0), opts.maxDelayMs ?? 400);
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (reduced) {
     return el.animate(

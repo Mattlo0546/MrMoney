@@ -111,6 +111,13 @@ function foodDealsResult(menu: LifestyleMenu, nowMs: number): ResearchResult {
   };
 }
 
+/** "I want / wanna buy / save up for / my goal is …": the price research is a step towards plan_goal, not the answer. */
+const GOAL_RE = /\b(i\s+(really\s+)?(want|wanna|need)\b(?!\s+to\s+(know|see|check))|save\s+up|saving\s+(up\s+)?for|my\s+goal|goal\s+is)/i;
+export function isGoalAsk(messages: ChatMessage[]): boolean {
+  const last = [...messages].reverse().find((m) => m.role === 'user');
+  return !!last && GOAL_RE.test(last.text);
+}
+
 export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatResponse> {
   const apiKey = deps.apiKey?.trim();
   if (!apiKey) return errorReply('The chat assistant isn\'t configured (no API key). You can still use the plan and the demo.', false);
@@ -283,7 +290,8 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
     // Research answered everything this step asked: reply from the cited items without a summary model call.
     const researchCards = cards.filter((c) => c.type === 'research_results');
     const allResearchOk = calls.every((c) => c.name === 'research') && pending.every((p) => p.response?.functionResponse?.response.ok === true);
-    if (deps.directReplies !== false && !clarify && researchCards.length && allResearchOk) {
+    // A goal ("I want a basketball") researched its price: let the model go on to plan_goal with it.
+    if (deps.directReplies !== false && !clarify && researchCards.length && allResearchOk && !(req.context.hasPlan && isGoalAsk(req.messages))) {
       const last = researchCards[researchCards.length - 1];
       if (last.type === 'research_results') return { kind: 'reply', text: replyFromResearch(last), cards, phase: 'done' };
     }
