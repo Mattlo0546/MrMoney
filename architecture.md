@@ -1,4 +1,4 @@
-# Architecture — StudentPlan
+# Architecture — MrMoney
 
 > **Draft, proposed.** Pending approval of [brief.md](.prd-to-production/brief.md) and D3–D8 in [decision.md](decision.md). No app code exists yet.
 
@@ -78,7 +78,7 @@ flowchart LR
 
 ## 6. Persistence and PWA
 
-- Key `studentplan:v1` holds `{ schemaVersion, state, undo }`; migrations run in order on load; corrupt or unknown data falls back to onboarding.
+- Key `mrmoney:v1` holds `{ schemaVersion, state, undo }`; migrations run in order on load; corrupt or unknown data falls back to onboarding.
 - Reset clears the key after a labelled confirmation. Demo mode uses the fixed date 2026-11-10, shown on screen.
 - Manifest + service worker cache the app shell for offline use; offline parsing uses the deterministic parser. Nothing syncs to a server.
 

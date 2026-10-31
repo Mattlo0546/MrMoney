@@ -62,7 +62,7 @@ function checkAmount(m: unknown, field = 'amount'): Fail | null {
   if (typeof m === 'object' && m !== null && (m as { currency?: string }).currency && (m as { currency: string }).currency !== 'GBP')
     return ask(field, `That amount isn't in pounds. How much is it in GBP?`);
   if (typeof m === 'object' && m !== null && typeof (m as { pence?: unknown }).pence === 'number' && Math.abs((m as { pence: number }).pence) > MAX_PENCE)
-    return err('out-of-range', `That amount is too large. The most StudentPlan handles is ${formatMoney(MAX_PENCE)}.`);
+    return err('out-of-range', `That amount is too large. The most MrMoney handles is ${formatMoney(MAX_PENCE)}.`);
   if (!isMoney(m)) return ask(field, 'How much was it, in pounds?');
   if (m.pence <= 0) return ask(field, 'The amount needs to be more than £0. How much was it?');
   return null;

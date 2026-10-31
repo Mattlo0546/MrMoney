@@ -6,7 +6,7 @@ Demo date is fixed at 10 Nov 2026 (shown as demo mode). Fixture: £3,900 lump su
 
 | Time | Do / type | Point at | Expect |
 |---|---|---|---|
-| 0:00 | Open the app. Say: "Students have one pot of money that has to last. StudentPlan tells you what you can spend today." Click **Try a demo student**. | Demo badge | Lands on /plan |
+| 0:00 | Open the app. Say: "Students have one pot of money that has to last. MrMoney tells you what you can spend today." Click **Try a demo student**. | Demo badge | Lands on /plan |
 | 0:20 | Point at the hero and the calendar | Today's allowance; rent chip on the 1st; the 15th | **£25.84 a day**; no guesswork |
 | 0:40 | Type: `I spent £35 on a shower filter today` | The explanation and Undo | Today's £25.84 covered; **£9.16 taken from later shopping**; rent and reserve unchanged; funds down £35 |
 | 1:10 | Type: `Can I spend £20 on dinner tomorrow?` | "Fits", "Preview, not applied"; the summary has not moved | Fits by **borrowing £8.47 from shopping over 12 to 18 Nov**. Click **Apply** |
@@ -17,7 +17,7 @@ Demo date is fixed at 10 Nov 2026 (shown as demo mode). Fixture: £3,900 lump su
 | 2:45 | Open **Projections** | Empty state | "Enter rates": nothing is pre-filled; labelled not advice |
 | 2:55 | Close: "Your data stays on your device; Gemini only reads the sentence, the engine does the maths." | | |
 
-Reset between runs: Settings, **Reset StudentPlan**.
+Reset between runs: Settings, **Reset MrMoney**.
 
 ## After deployment: the phone and QR angle
 Once the app is deployed (Vercel, planned and not yet done), show a QR code to the room. People scan it, tap **Try a demo student** on their phones and type the same sentences. Each phone keeps its own plan locally, so nobody shares data. On mobile the sentence box is a docked bottom bar that opens a sheet. This step is not available until deployment.

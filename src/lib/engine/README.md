@@ -1,4 +1,4 @@
-# StudentPlan engine
+# MrMoney engine
 
 Pure TypeScript, no clock (`today` is passed in). Integer pence (GBP), ISO calendar days. Single amounts are capped at £10,000,000 (`MAX_PENCE`); larger ones return an `out-of-range` error.
 

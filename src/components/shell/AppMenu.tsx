@@ -35,7 +35,7 @@ export function AppMenu() {
   }
 
   function onReset() {
-    if (!window.confirm('Reset StudentPlan? This clears your plan and starts again.')) return;
+    if (!window.confirm('Reset MrMoney? This clears your plan and starts again.')) return;
     getAppStore().reset();
     router.replace('/onboarding');
   }

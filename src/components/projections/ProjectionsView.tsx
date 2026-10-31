@@ -12,7 +12,7 @@ const SCEN = [
   { key: 'base', label: 'Base', icon: Minus },
   { key: 'high', label: 'High', icon: TrendingUp },
 ] as const satisfies readonly { key: Scenario; label: string; icon: unknown }[];
-const KEY = 'studentplan.projections.v1';
+const KEY = 'mrmoney.projections.v1';
 
 interface Inputs {
   months: number;
@@ -49,7 +49,7 @@ function poundsText(v: unknown): string {
 /** Starting balances from onboarding; rates are never pre-filled. */
 function prefill(): Partial<Inputs> {
   try {
-    const raw = localStorage.getItem('studentplan.onboardingExtras');
+    const raw = localStorage.getItem('mrmoney.onboardingExtras');
     if (!raw) return {};
     const x = JSON.parse(raw) as { currentSavings?: unknown; currentInvestments?: unknown };
     return { savingsNow: poundsText(x.currentSavings), invNow: poundsText(x.currentInvestments) };

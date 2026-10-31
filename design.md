@@ -1,4 +1,4 @@
-# StudentPlan — design direction (v2)
+# MrMoney — design direction (v2)
 
 > **Status:** v2 direction approved (D15, D18). Binding order: `.prd-to-production/ui-contract.md` (tokens, fonts, ownership), then `.prd-to-production/design/spec.md` (behaviour, copy, states, figures), then the mockups (`design/index.md`, 62 images). v1 is archived in `design/v1-rejected/`.
 

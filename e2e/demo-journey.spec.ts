@@ -91,7 +91,7 @@ test("R-demo full journey", async ({ page }) => {
 
   await test.step("10 /settings reset -> onboarding", async () => {
     await page.goto("/settings");
-    await page.getByRole("button", { name: "Reset StudentPlan" }).click();
+    await page.getByRole("button", { name: "Reset MrMoney" }).click();
     await page.getByRole("dialog").getByRole("button", { name: /reset/i }).click();
     await expect.soft(page).toHaveURL(/\/onboarding/, { timeout: 10_000 });
     await expect.soft(page.getByRole("button", { name: "Try a demo student" }).first()).toBeVisible();

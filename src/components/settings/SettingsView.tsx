@@ -324,13 +324,13 @@ export function SettingsView() {
       </div>
 
       <Card title="Danger zone" tone="danger" icon={TriangleAlert} hint="Starts you over from scratch.">
-        <Btn variant="danger" onClick={() => setConfirmReset(true)}>Reset StudentPlan</Btn>
+        <Btn variant="danger" onClick={() => setConfirmReset(true)}>Reset MrMoney</Btn>
       </Card>
 
       {confirmReset && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 backdrop-blur-[2px] sm:items-center" onKeyDown={(e) => e.key === 'Escape' && setConfirmReset(false)}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="reset-t" aria-describedby="reset-d" className="w-full max-w-md rounded-[24px] border border-line bg-surface p-6 shadow-card">
-            <h2 id="reset-t" className="text-2xl font-extrabold">Reset StudentPlan?</h2>
+            <h2 id="reset-t" className="text-2xl font-extrabold">Reset MrMoney?</h2>
             <p id="reset-d" className="mt-2 text-muted">This deletes your plan, ledger and settings from this device. It can&apos;t be undone.</p>
             <div className="mt-6 flex gap-3">
               <Btn ref={cancelRef} variant="ghost" className="flex-1" onClick={() => setConfirmReset(false)}>Cancel</Btn>

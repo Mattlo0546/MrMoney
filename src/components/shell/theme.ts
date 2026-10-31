@@ -1,5 +1,5 @@
 export type Theme = 'dark' | 'light';
-export const THEME_KEY = 'studentplan.theme';
+export const THEME_KEY = 'mrmoney.theme';
 
 export function readTheme(): Theme {
   try {

@@ -19,7 +19,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { default: "StudentPlan", template: "%s · StudentPlan" },
+  title: { default: "MrMoney", template: "%s · MrMoney" },
   description: "A calm day-by-day money plan that lasts the whole term.",
 };
 

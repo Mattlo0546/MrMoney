@@ -87,7 +87,7 @@ export function mapGeminiOutput(o: GeminiOutput, ctx: ParseContext): ParseResult
     kind: 'clarify', question: q?.trim() || 'Could you give me a bit more detail?', missing, source: 'gemini',
   });
   if (o.currency && o.currency.toUpperCase() !== 'GBP') {
-    return clarify('StudentPlan works in pounds (GBP) and never converts currency. How much is that in £?', ['currency']);
+    return clarify('MrMoney works in pounds (GBP) and never converts currency. How much is that in £?', ['currency']);
   }
   if (o.kind === 'clarify') return clarify(o.clarifyQuestion, (o.missing ?? ['intent']) as ClarifyField[]);
 

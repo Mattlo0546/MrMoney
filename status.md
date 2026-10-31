@@ -55,7 +55,7 @@ _Updated by the orchestrator at every step. Newest entry first._
 - 2026-10-31: Composer done. Engine oddities (today's allowance after £35, concert figures, Undo after income) sent to engine-fix.
 - 2026-10-31: Gemini latency ~3.5s → ~0.85s (gemini-3.5-flash-lite, D19).
 - 2026-10-31: All 5 routes return 200 on :3210; repo typecheck has 0 errors. Calendar done; browser QA pending.
-- 2026-10-31: Moved StudentPlan to port 3210; port 3000 is the user's northstar app. Fixed the /api/parse 500 by removing `runtime` (incompatible with cacheComponents). Gemini latency is ~7s; to optimise. Shell UI done.
+- 2026-10-31: Moved MrMoney to port 3210; port 3000 is the user's northstar app. Fixed the /api/parse 500 by removing `runtime` (incompatible with cacheComponents). Gemini latency is ~7s; to optimise. Shell UI done.
 - 2026-10-31: User said "build it". 6 agents launched in parallel: 5 UI and 1 engine fix. The engine review verdict is safe to build on.
 - 2026-10-31: Parser done and committed. Decisions D16 (groceries floor, borrow from the week) and D17 ("need to spend" = expense). Engine change waits for the reviewer so all fixes are batched.
 - 2026-10-31: Engine, store and offers verified by the orchestrator: 96 tests pass, typecheck and lint exit 0. Committed. Independent engine review started.
