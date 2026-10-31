@@ -1,0 +1,1458 @@
+{
+ "places": [
+  {
+   "id": "ce-001",
+   "name": "Roti King",
+   "cuisine": "Malaysian",
+   "area": "Bloomsbury (Euston)",
+   "near_university": "UCL",
+   "typical_meal_gbp": 6.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Roti canai",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "price from 2022 Time Out article"
+  },
+  {
+   "id": "ce-002",
+   "name": "ICCO",
+   "cuisine": "Italian (pizza)",
+   "area": "Bloomsbury (Goodge Street)",
+   "near_university": "UCL/SOAS",
+   "typical_meal_gbp": 6,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Funghi pizza",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "2022 price; SOAS blog cited a GBP5 pizza deal"
+  },
+  {
+   "id": "ce-003",
+   "name": "Indian YMCA",
+   "cuisine": "Indian canteen",
+   "area": "Bloomsbury (Fitzrovia)",
+   "near_university": "UCL",
+   "typical_meal_gbp": 6.75,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Chicken curry (dal 3.20, rice 3.30)",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "veg dishes available; halal not stated"
+  },
+  {
+   "id": "ce-004",
+   "name": "Chinese Tapas House",
+   "cuisine": "Chinese",
+   "area": "Chinatown/Soho",
+   "near_university": "LSE/KCL (central)",
+   "typical_meal_gbp": 6,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Jianbing pancake",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-005",
+   "name": "Wong Kei",
+   "cuisine": "Cantonese",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": 7.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Wonton soup",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "cash only per Time Out/chinatown guides"
+  },
+  {
+   "id": "ce-006",
+   "name": "Kati Roll Company",
+   "cuisine": "Indian",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": 5.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Chicken tikka roll",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "2022 price"
+  },
+  {
+   "id": "ce-007",
+   "name": "Supernova",
+   "cuisine": "Burgers",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": 10,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "House cheeseburger",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "Infatuation July 2026"
+  },
+  {
+   "id": "ce-008",
+   "name": "Good Friend",
+   "cuisine": "Taiwanese",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Crispy fried chicken wings",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://chinatown.co.uk/en/discover/how-to-dine-in-chinatown-on-a-20-budget/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "from search snippet 'under 10'; not directly fetched"
+  },
+  {
+   "id": "ce-009",
+   "name": "Maotai Kitchen",
+   "cuisine": "Chinese (Guizhou noodles)",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Hand-pulled noodles",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/blog/seven-weird-and-wonderful-foods-to-eat-in-chinatown-012617",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "Time Out says Chinatown noodles ~GBP10; venue price not seen"
+  },
+  {
+   "id": "ce-010",
+   "name": "Bun House",
+   "cuisine": "Hong Kong",
+   "area": "Chinatown/Soho",
+   "near_university": "central",
+   "typical_meal_gbp": null,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Steamed BBQ pork bao",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://chinatown.co.uk/en/discover/how-to-dine-in-chinatown-on-a-20-budget/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no price shown; listed as grab-and-go; price excluded"
+  },
+  {
+   "id": "ce-011",
+   "name": "India Club",
+   "cuisine": "Indian",
+   "area": "Strand",
+   "near_university": "KCL/LSE",
+   "typical_meal_gbp": 6.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Sambar",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2022 price; I believe this restaurant was reported closed/in dispute 2023 - verify"
+  },
+  {
+   "id": "ce-012",
+   "name": "LSE Fourth Floor Restaurant",
+   "cuisine": "University canteen",
+   "area": "Strand (LSE)",
+   "near_university": "LSE",
+   "typical_meal_gbp": 3.95,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Pasta pot (porridge 0.75)",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://food.lse.ac.uk/story/26365504/breakfast-lunch-and-dinner-for-under-ps10",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "LSE page dated 2026-09-18"
+  },
+  {
+   "id": "ce-013",
+   "name": "LSE Shaw Cafe",
+   "cuisine": "University cafe",
+   "area": "Strand (LSE)",
+   "near_university": "LSE",
+   "typical_meal_gbp": 2.75,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Jacket potato; Friday Curry Club",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://food.lse.ac.uk/story/26365504/breakfast-lunch-and-dinner-for-under-ps10",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "id": "ce-014",
+   "name": "LSE Garrick",
+   "cuisine": "University cafe",
+   "area": "Strand (LSE)",
+   "near_university": "LSE",
+   "typical_meal_gbp": 4.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Meal deal",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://food.lse.ac.uk/story/26365504/breakfast-lunch-and-dinner-for-under-ps10",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "closes 4pm"
+  },
+  {
+   "id": "ce-015",
+   "name": "LSE Bean Counter",
+   "cuisine": "University cafe",
+   "area": "Strand (LSE)",
+   "near_university": "LSE",
+   "typical_meal_gbp": 4.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Meal deal",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://food.lse.ac.uk/story/26365504/breakfast-lunch-and-dinner-for-under-ps10",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "closes 4pm"
+  },
+  {
+   "id": "ce-016",
+   "name": "Tongue & Brisket",
+   "cuisine": "Deli",
+   "area": "Strand (Clerkenwell)",
+   "near_university": "LSE/KCL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Salt beef sandwich",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "'under 10'"
+  },
+  {
+   "id": "ce-017",
+   "name": "Food for Thought",
+   "cuisine": "Vegetarian",
+   "area": "Strand (Covent Garden)",
+   "near_university": "KCL/LSE",
+   "typical_meal_gbp": 8,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Main with salad (~5)",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theculturetrip.com/europe/united-kingdom/england/london/articles/the-best-cheap-eats-in-covent-garden",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "dated guide; cash only; may have closed - verify"
+  },
+  {
+   "id": "ce-018",
+   "name": "Oriental Canteen",
+   "cuisine": "Chinese",
+   "area": "South Kensington",
+   "near_university": "Imperial",
+   "typical_meal_gbp": 8,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Lunch box GBP6-10",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://felixonline.co.uk/articles/2018-11-20-freshers-10-under-10/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "range from Imperial student blog; undated"
+  },
+  {
+   "id": "ce-019",
+   "name": "V&A South Kensington Cafe",
+   "cuisine": "Cafe",
+   "area": "South Kensington",
+   "near_university": "Imperial",
+   "typical_meal_gbp": 6.75,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Sandwich",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.southkenculturequarter.com/discover-more/south-kensington-student-food-guide-2025-budget-friendly-eats-near-campus",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2025 guide via search snippet; page not fetchable"
+  },
+  {
+   "id": "ce-020",
+   "name": "Nando's Gloucester Road",
+   "cuisine": "Portuguese chicken",
+   "area": "South Kensington (Gloucester Rd)",
+   "near_university": "Imperial",
+   "typical_meal_gbp": 8.7,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Halloumi and mushroom, with side",
+   "dietary": {
+    "veg": true,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://felixonline.co.uk/articles/2018-11-20-freshers-10-under-10/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price; halal status not confirmed per branch"
+  },
+  {
+   "id": "ce-021",
+   "name": "Elan Cafe",
+   "cuisine": "Cafe",
+   "area": "South Kensington (Brompton Rd)",
+   "near_university": "Imperial",
+   "typical_meal_gbp": 8,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Tropical bowl",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://felixonline.co.uk/articles/2018-11-20-freshers-10-under-10/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-022",
+   "name": "Beigel Bake",
+   "cuisine": "Jewish bakery",
+   "area": "Mile End (Brick Lane)",
+   "near_university": "QMUL",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Salt beef bagel",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "24h per Londonist snippet"
+  },
+  {
+   "id": "ce-023",
+   "name": "Aladin",
+   "cuisine": "Indian",
+   "area": "Mile End (Brick Lane)",
+   "near_university": "QMUL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Curry, under GBP10",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.roamright.com/travel-insurance-blog/meals-london-25-dollars",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "undated blog"
+  },
+  {
+   "id": "ce-024",
+   "name": "Elephantastic Pizza",
+   "cuisine": "Pizza",
+   "area": "Elephant & Castle",
+   "near_university": "LSBU/UAL",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Half pizza + salad (weekday lunch)",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.arts.ac.uk/colleges/london-college-of-communication/stories/18-top-picks-for-london-living-on-a-student-budget",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "UAL page, undated"
+  },
+  {
+   "id": "ce-025",
+   "name": "Lebo Lebanese Grill",
+   "cuisine": "Lebanese",
+   "area": "Elephant & Castle",
+   "near_university": "LSBU/UAL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Grilled chicken with chips (shared)",
+   "dietary": {
+    "veg": false,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "halal not confirmed"
+  },
+  {
+   "id": "ce-026",
+   "name": "Boston Sausage",
+   "cuisine": "Sausage stall",
+   "area": "Elephant & Castle (Borough Market)",
+   "near_university": "LSBU/UAL",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Sausage burger",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.arts.ac.uk/colleges/london-college-of-communication/stories/18-top-picks-for-london-living-on-a-student-budget",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "weekday stall"
+  },
+  {
+   "id": "ce-027",
+   "name": "Ginger Pig",
+   "cuisine": "British",
+   "area": "Elephant & Castle (Borough Market)",
+   "near_university": "LSBU/UAL",
+   "typical_meal_gbp": 5.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Spicy lamb sausage roll",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2022 price"
+  },
+  {
+   "id": "ce-028",
+   "name": "Shree Krishna Vada Pav",
+   "cuisine": "Maharashtrian",
+   "area": "Elephant & Castle (Vauxhall)",
+   "near_university": "LSBU",
+   "typical_meal_gbp": 2.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Vada pav (to 7.40)",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-029",
+   "name": "Win & Lily's",
+   "cuisine": "Chinese stir-fry",
+   "area": "Elephant & Castle (Vauxhall)",
+   "near_university": "LSBU",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Create-your-own stir-fry",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.arts.ac.uk/colleges/london-college-of-communication/stories/18-top-picks-for-london-living-on-a-student-budget",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "undated"
+  },
+  {
+   "id": "ce-030",
+   "name": "M Manze",
+   "cuisine": "Pie and mash",
+   "area": "Elephant & Castle (Bermondsey)",
+   "near_university": "LSBU",
+   "typical_meal_gbp": 6.55,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Pie, mash and liquor",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "Londonist 2022 says Peckham branch"
+  },
+  {
+   "id": "ce-031",
+   "name": "Seoul Tokyo",
+   "cuisine": "Korean/Japanese",
+   "area": "Elephant & Castle (Borough)",
+   "near_university": "LSBU",
+   "typical_meal_gbp": 8,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Lunch set from GBP8",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.ucl.ac.uk/news/2017/nov/ucl-foodies-top-10-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "dated; unverified"
+  },
+  {
+   "id": "ce-032",
+   "name": "Sushi Waka",
+   "cuisine": "Japanese",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 8,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Sushi lunch box",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-033",
+   "name": "What the Pitta",
+   "cuisine": "Vegan kebab",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 7.95,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Vegan kebab",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-034",
+   "name": "Young Vegans",
+   "cuisine": "Vegan pie",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 7,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Seitan & ale pie",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-035",
+   "name": "Bird",
+   "cuisine": "Fried chicken",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 7,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Small skillet",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-036",
+   "name": "Ma Petite Jamaica",
+   "cuisine": "Jamaican",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 9.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Jerk chicken roti",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-037",
+   "name": "Hache",
+   "cuisine": "Burgers",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 8.95,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Steak cheeseburger",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-038",
+   "name": "Lords of Poke",
+   "cuisine": "Poke",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 8.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Lords Bowl",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-039",
+   "name": "Purezza",
+   "cuisine": "Vegan pizza",
+   "area": "Camden",
+   "near_university": "central",
+   "typical_meal_gbp": 8.95,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Margherita",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://uk.news.yahoo.com/camden-london-cheap-eats-best-162847191.html",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 price"
+  },
+  {
+   "id": "ce-040",
+   "name": "Rendang and Rice",
+   "cuisine": "Indonesian",
+   "area": "Camden (Buck Street)",
+   "near_university": "central",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Curry (Munch Club deal)",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/news/loads-of-buff-camden-market-food-stalls-are-dead-cheap-right-now-012422",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "GBP5 deal expired Feb 2022; current price likely higher"
+  },
+  {
+   "id": "ce-041",
+   "name": "Pizza Union",
+   "cuisine": "Pizza",
+   "area": "King's Cross",
+   "near_university": "UCL",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "12in margherita",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.ucl.ac.uk/news/2017/nov/ucl-foodies-top-10-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2017 price; likely higher now"
+  },
+  {
+   "id": "ce-042",
+   "name": "Morty & Bob's",
+   "cuisine": "British",
+   "area": "King's Cross",
+   "near_university": "UCL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Curry with rice",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": true,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.cityam.com/?p=1723656",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "snippet 'under a tenner'"
+  },
+  {
+   "id": "ce-043",
+   "name": "Angel Dabang",
+   "cuisine": "Korean cafe",
+   "area": "King's Cross (Barnsbury)",
+   "near_university": "UCL",
+   "typical_meal_gbp": 4.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Egg sandwich",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-044",
+   "name": "Zen Mondo",
+   "cuisine": "Japanese",
+   "area": "King's Cross (Angel)",
+   "near_university": "UCL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Fried bun, hand roll, onigiri",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-045",
+   "name": "Baban's Naan",
+   "cuisine": "Kurdish bakery",
+   "area": "King's Cross (Finsbury Park)",
+   "near_university": "UCL",
+   "typical_meal_gbp": 5.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Falafel/Kurdish wrap",
+   "dietary": {
+    "veg": true,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-046",
+   "name": "Durak Tantuni",
+   "cuisine": "Turkish",
+   "area": "Other London (Turnpike Lane)",
+   "near_university": "none",
+   "typical_meal_gbp": 5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Double tantuni wrap",
+   "dietary": {
+    "veg": false,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-047",
+   "name": "Falafel and Shawarma",
+   "cuisine": "Lebanese",
+   "area": "Other London (Camberwell)",
+   "near_university": "UAL",
+   "typical_meal_gbp": 4.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Falafel wrap",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "price 4.50-5"
+  },
+  {
+   "id": "ce-048",
+   "name": "Edami",
+   "cuisine": "Lebanese bakery",
+   "area": "Other London (Dalston)",
+   "near_university": "none",
+   "typical_meal_gbp": 6,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Mankoushe",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-049",
+   "name": "Roti Stop",
+   "cuisine": "Caribbean",
+   "area": "Other London (Stoke Newington)",
+   "near_university": "none",
+   "typical_meal_gbp": 8,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Roti / doubles 4",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-050",
+   "name": "Toconoco",
+   "cuisine": "Japanese",
+   "area": "Other London (Haggerston)",
+   "near_university": "none",
+   "typical_meal_gbp": 8.9,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Daily lunch set",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-051",
+   "name": "Yemanes",
+   "cuisine": "North African wraps",
+   "area": "Other London (Peckham)",
+   "near_university": "UAL",
+   "typical_meal_gbp": 7,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Wrap",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "food truck"
+  },
+  {
+   "id": "ce-052",
+   "name": "Asian Takeaway",
+   "cuisine": "Pan-Asian",
+   "area": "Other London (Peckham)",
+   "near_university": "none",
+   "typical_meal_gbp": 6,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Small box (8 large)",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-053",
+   "name": "Silk Road",
+   "cuisine": "Chinese (Xinjiang)",
+   "area": "Other London (Camberwell)",
+   "near_university": "UAL",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Hand-pulled noodles",
+   "dietary": {
+    "veg": false,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "halal not confirmed"
+  },
+  {
+   "id": "ce-054",
+   "name": "Saravana Bhavan",
+   "cuisine": "South Indian",
+   "area": "Other London (Tooting)",
+   "near_university": "none",
+   "typical_meal_gbp": 5.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Masala dosa",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "2022 price"
+  },
+  {
+   "id": "ce-055",
+   "name": "Roti Joupa",
+   "cuisine": "Trinidadian",
+   "area": "Other London (Finsbury Park)",
+   "near_university": "none",
+   "typical_meal_gbp": 6.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Buss up shot",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2022 price"
+  },
+  {
+   "id": "ce-056",
+   "name": "Persepolis",
+   "cuisine": "Iranian",
+   "area": "Other London (Peckham)",
+   "near_university": "none",
+   "typical_meal_gbp": 6,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Mezze platter",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.timeout.com/london/restaurants/super-cheap-entirely-delicious-meals-for-under-7",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2022 price"
+  },
+  {
+   "id": "ce-057",
+   "name": "Happy Dim Sum",
+   "cuisine": "Chinese dim sum",
+   "area": "Other London (Holloway)",
+   "near_university": "none",
+   "typical_meal_gbp": 2,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Four har gau (~2)",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "per-dish; meal likely ~6-8"
+  },
+  {
+   "id": "ce-058",
+   "name": "Damascene Bakery",
+   "cuisine": "Syrian",
+   "area": "Other London (Shepherd's Bush)",
+   "near_university": "none",
+   "typical_meal_gbp": 4,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Mana'eesh",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-059",
+   "name": "Hut Negril",
+   "cuisine": "Jamaican",
+   "area": "Other London (Greenwich)",
+   "near_university": "none",
+   "typical_meal_gbp": 10,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Jerk chicken",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-060",
+   "name": "Southampton Arms",
+   "cuisine": "Pub",
+   "area": "Other London (Gospel Oak)",
+   "near_university": "none",
+   "typical_meal_gbp": 7.95,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Hot pork bap",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-061",
+   "name": "Paul Rothe & Son",
+   "cuisine": "Deli",
+   "area": "Other London (Marylebone)",
+   "near_university": "none",
+   "typical_meal_gbp": 3.5,
+   "price_basis": "menu price",
+   "signature_cheap_dish": "Cucumber/cream cheese sandwich",
+   "dietary": {
+    "veg": true,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://timeout.com/london/food-drink/londons-best-cheap-eats",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ce-062",
+   "name": "Dr.Noodle",
+   "cuisine": "Chinese",
+   "area": "Other London (New Cross)",
+   "near_university": "none",
+   "typical_meal_gbp": null,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Beef noodle soup",
+   "dietary": {
+    "veg": false,
+    "halal": false,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no price in source; excluded from price stats"
+  },
+  {
+   "id": "ce-063",
+   "name": "Atush Uyghur Cuisine",
+   "cuisine": "Uyghur",
+   "area": "Strand (Farringdon)",
+   "near_university": "KCL/LSE",
+   "typical_meal_gbp": null,
+   "price_basis": "editorial estimate",
+   "signature_cheap_dish": "Leghmen noodles",
+   "dietary": {
+    "veg": false,
+    "halal": true,
+    "vegan": false,
+    "note": "flags only where source states; false = not confirmed"
+   },
+   "source_url": "https://www.theinfatuation.com/london/guides/best-cheap-eats-london",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no price in source"
+  }
+ ],
+ "free_food": [
+  {
+   "id": "ff-01",
+   "name": "Hare Krishna free lunch (SOAS/Birkbeck/Bloomsbury)",
+   "type": "free_meal",
+   "area": "Bloomsbury",
+   "details": "Free vegetarian curry or pasta, weekdays lunchtime (12-2pm per Birkbeck)",
+   "typical_cost_gbp": 0,
+   "source_url": "https://studentsunionucl.org/articles/cheap-eats-around-campus",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "Queues long, runs out; schedule unconfirmed for 2026"
+  },
+  {
+   "id": "ff-02",
+   "name": "Hare Krishna free lunch trolley (LSE)",
+   "type": "free_meal",
+   "area": "Strand (LSE)",
+   "details": "Free vegetarian Indian food outside LSE SU, 12-2pm Mon-Fri per older LSE page",
+   "typical_cost_gbp": 0,
+   "source_url": "https://blogs.lse.ac.uk/studentsatlse/2012/11/20/life-does-offer-free-lunches",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2012 source; verify still operating"
+  },
+  {
+   "id": "ff-03",
+   "name": "Food for Life London (ISKCON)",
+   "type": "free_meal",
+   "area": "Soho",
+   "details": "Free vegetarian meals, mainly for people in need; office on Soho Street",
+   "typical_cost_gbp": 0,
+   "source_url": "https://iskcon.london/food-for-life/",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "id": "ff-04",
+   "name": "Sikh gurdwara langar - Central Gurdwara (Khalsa Jatha)",
+   "type": "free_meal",
+   "area": "Shepherd's Bush",
+   "details": "Free vegetarian langar open to all faiths; head covering required; 58-62 Queensdale Rd W11 4SG",
+   "typical_cost_gbp": 0,
+   "source_url": "https://www.sikhnet.com/node/60616",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "opening hours not verified; check gurdwara site. Southall gurdwaras not researched"
+  },
+  {
+   "id": "ff-05",
+   "name": "KCL Langar on campus at the Strand",
+   "type": "free_meal",
+   "area": "Strand (KCL)",
+   "details": "Event listing for a campus langar",
+   "typical_cost_gbp": 0,
+   "source_url": "https://www.kcl.ac.uk/events/langar-on-campus-at-the-strand",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "not a regular service as far as seen"
+  },
+  {
+   "id": "ff-06",
+   "name": "UCL Union cafes (Print Room etc.) and Wilkins Refectory",
+   "type": "su_cafe",
+   "area": "Bloomsbury (UCL)",
+   "details": "Breakfast under 4 (Print Room, weekdays 8-11); hot lunch 11:30-2:30",
+   "typical_cost_gbp": 4,
+   "source_url": "https://studentsunionucl.org/articles/cheap-eats-around-campus",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "UCL source gives no prices; breakfast figure from search snippet"
+  },
+  {
+   "id": "ff-07",
+   "name": "LSE campus cafes",
+   "type": "su_cafe",
+   "area": "Strand (LSE)",
+   "details": "Porridge 0.75, croissant+coffee 2.00 before 9:30, jacket potato 2.75, meal deal 4.50, free microwaves",
+   "typical_cost_gbp": 0.75,
+   "source_url": "https://food.lse.ac.uk/story/26365504/breakfast-lunch-and-dinner-for-under-ps10",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "dated 2026-09-18"
+  },
+  {
+   "id": "ff-08",
+   "name": "King's Food outlets (KCL)",
+   "type": "su_cafe",
+   "area": "Strand (KCL)",
+   "details": "50% off near closing (red stickers); 10th coffee free",
+   "typical_cost_gbp": null,
+   "source_url": "https://www.kcl.ac.uk/students/a-money-mentors-guide-to-food-fun-and-culture-on-a-budget",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "dated 2025-10-08"
+  },
+  {
+   "id": "ff-09",
+   "name": "QMUL Students' Union Ground Cafe / Union Shop",
+   "type": "su_cafe",
+   "area": "Mile End (QMUL)",
+   "details": "Paninis, sushi, coffee; QM Food lists halal and vegetarian",
+   "typical_cost_gbp": null,
+   "source_url": "https://residentiallife.qmul.ac.uk/story/33075109/places-to-eat-at-queen-mary",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no prices found"
+  },
+  {
+   "id": "ff-10",
+   "name": "University food banks / pantries",
+   "type": "food_bank",
+   "area": "Various",
+   "details": "Imperial College Union has a Food Bank Partnership page; UCL lists other support. Newham food bank reported feeding 1,000+ international students weekly",
+   "typical_cost_gbp": 0,
+   "source_url": "https://www.imperialcollegeunion.org/node/785",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "eligibility and current status not verified for UCL/KCL/LSE/QMUL; check each SU"
+  },
+  {
+   "id": "ff-11",
+   "name": "Too Good To Go",
+   "type": "surplus_app",
+   "area": "London-wide",
+   "details": "Typical bag 2.60-5.00 (Greggs 2.60, Morrisons cafes from 2.99, Aldi 3.30; UCL SU example Thai curry 3.50); no single standard price",
+   "typical_cost_gbp": 3.5,
+   "source_url": "https://www.householdmoneysaving.com/too-good-to-go-review-magic-bag/",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "prices vary by shop and day; LSE and QMUL Union Shop list bags"
+  },
+  {
+   "id": "ff-12",
+   "name": "Olio",
+   "type": "surplus_app",
+   "area": "London-wide",
+   "details": "Free food from neighbours and shops, mostly evening collection; reduced-food section too",
+   "typical_cost_gbp": 0,
+   "source_url": "https://olioapp.com/en/students/how-to-get-free-food-as-a-student-your-planet-friendly-hack/",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "availability depends on local volunteers"
+  },
+  {
+   "id": "ff-13",
+   "name": "Borough Market / Brick Lane end-of-day deals",
+   "type": "market_deal",
+   "area": "Borough / Brick Lane",
+   "details": "Unverified: a travel blog claims ~5pm discounts at some Borough stalls; Brick Lane market is Sunday-focused",
+   "typical_cost_gbp": null,
+   "source_url": "https://www.mightytravels.com/2026/08/london-budget-5-pm-discounts-5-wraps-tuesday-flights/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no official confirmation; ask stalls"
+  },
+  {
+   "id": "ff-14",
+   "name": "Wasabi half-price before closing",
+   "type": "chain_deal",
+   "area": "South Kensington and others",
+   "details": "Most branches halve prices ~30 min before closing",
+   "typical_cost_gbp": null,
+   "source_url": "https://felixonline.co.uk/articles/2018-11-20-freshers-10-under-10/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "2018 source"
+  },
+  {
+   "id": "ff-15",
+   "name": "FirstTable",
+   "type": "app_deal",
+   "area": "London-wide",
+   "details": "50% off first/last table of evening, booking fee about 5; restaurants are not cheap",
+   "typical_cost_gbp": null,
+   "source_url": "https://www.soas.ac.uk/about/blogs/say-goodbye-instant-noodles-how-eat-out-london-student-budget",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "SOAS blog, undated"
+  },
+  {
+   "id": "ff-16",
+   "name": "Bloomsbury Farmers' Market / Lovely International Food Market",
+   "type": "market",
+   "area": "Bloomsbury / Goodge St",
+   "details": "Thursday market between Birkbeck and SOAS; daily lunch market by Goodge Street",
+   "typical_cost_gbp": null,
+   "source_url": "https://studentsunionucl.org/articles/cheap-eats-around-campus",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "no prices"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+  "approvals": {
+    "brief": {
+      "approved_at": "2026-10-31T12:10:47.809902Z",
+      "files": {
+        "brief.md": "afd8dacb2994d910e739e5f8ba9f26fd8cec919c25b1e54756a3caae39123af1",
+        "inventory.json": "631288809517b106f8ae0366e817f5b2d514d35fab892937838b17aab16ae74c"
+      },
+      "message": "Approve PRD v2. Ya let's gemini image generation. here's the API key: [REDACTED \u2014 stored in .env.local, not in the repo] (use nano banana 2.1)\n"
+    }
+  },
+  "version": 1
+}

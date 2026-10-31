@@ -1,0 +1,244 @@
+{
+  "_meta": {
+    "dataset": "StudentPlan student-money reference",
+    "checked": "2026-10-31",
+    "purpose": "Labelled, dated reference data for a 'compare options' feature. Not advice, not a recommendation, no returns promised.",
+    "method": "Public web search and page fetches only, no logins, no scrapers. Provider pages were not all reachable; many facts come from Which?/MoneyToTheMasses/DepositScout/university pages. Fields not verified are null with confidence 'unverified'.",
+    "gaps": [
+      "Official provider pages were not fetched directly; international-student document requirements are mostly from university/student-union guidance and must be re-verified.",
+      "Monzo, Revolut, Chase, Wise student overdraft/perk details not covered by Which? article.",
+      "Remittance fee and FX margin figures are structural only; no live CNY/INR/HKD/SGD/USD->GBP quotes were obtained.",
+      "Bank of England 5 Nov 2026 decision is after the checked date."
+    ]
+  },
+  "bank_accounts": [
+    {
+      "provider": "Santander (Edge Student)",
+      "international_students_can_open": "unclear",
+      "intl_notes": "Which? says most student accounts require 3 years UK residence, so international students are unlikely to qualify for the student overdraft; basic/standard accounts may be available.",
+      "documents": "Typically passport, BRP/eVisa share code, university enrolment letter, proof of UK address (not confirmed on provider page)",
+      "overdraft": "0% student overdraft: GBP1,500 years 1-3, GBP1,800 year 4, GBP2,000 year 5; must pay in about GBP500 every 4 months",
+      "perks": "Free 4-year 16-25 Railcard (code valid 60 days; not valid in Northern Ireland), Boost cashback, prize draw for accounts opened 14 Jul-16 Oct 2026",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "HSBC",
+      "international_students_can_open": "yes (reported)",
+      "intl_notes": "University guides commonly list HSBC as accepting international students; confirm on HSBC site.",
+      "documents": "Passport, BRP/eVisa, university letter, proof of address (unverified)",
+      "overdraft": "0% student overdraft: GBP1,000 yr1, GBP2,000 yr2, GBP3,000 yr3",
+      "perks": "Home&Away discounts scheme",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "NatWest",
+      "international_students_can_open": "unclear",
+      "intl_notes": "Student account generally needs UK residency; verify.",
+      "documents": "unverified",
+      "overdraft": "0%: GBP2,000 yr1 (GBP500 in term 1), GBP2,000 yr2, up to GBP3,250 yr3 for eligible",
+      "perks": "GBP100 cash and 4-year Tastecard; not available if had a NatWest student incentive since 1 Jul 2022",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Lloyds (and Bank of Scotland)",
+      "international_students_can_open": "yes (reported)",
+      "intl_notes": "Named by university guidance as accepting international students; verify.",
+      "documents": "unverified",
+      "overdraft": "0%: GBP1,500 yrs 1-3, GBP2,000 yr4+",
+      "perks": "Up to 15% Everyday Offers cashback; GBP100 cash + GBP120 Deliveroo vouchers for accounts opened from 30 Jul 2026 (pay in GBP500 by 30 Oct 2026); tuition fee prize draw",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Barclays",
+      "international_students_can_open": "yes (reported)",
+      "intl_notes": "Named by university guidance; verify.",
+      "documents": "unverified",
+      "overdraft": "0%: GBP1,000 yr1 (GBP500 in term 1), GBP1,500 yrs 2+",
+      "perks": "No extra perks listed",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Nationwide (FlexStudent)",
+      "international_students_can_open": "unclear",
+      "intl_notes": "Not covered in sources; verify residency rules.",
+      "documents": "unverified",
+      "overdraft": "0%: GBP1,000 yr1, GBP2,000 yr2, GBP3,000 yr3+ (cap); increases need GBP500 paid in per term",
+      "perks": "GBP100 cash + GBP120 Just Eat vouchers (deposit GBP500 by 11 Dec 2026, five debit payments); not if applied before 15 Jul",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Monzo",
+      "international_students_can_open": "yes (reported)",
+      "intl_notes": "Several student guides say passport or BRP, no proof of address needed; one university page says Monzo did not recognise a specific halls address. Monzo is a bank (FSCS-protected).",
+      "documents": "Passport or BRP/eVisa share code, UK mobile number; address usually not required (unverified)",
+      "overdraft": null,
+      "perks": null,
+      "fees": null,
+      "source_url": "https://withrowan.co.uk/guides/student-visa-bank-account",
+      "checked": "2026-10-31",
+      "confidence": "low",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Starling",
+      "international_students_can_open": "yes with UK address",
+      "intl_notes": "Which? says Starling requires international students to have a registered UK address.",
+      "documents": "ID (passport/BRP/eVisa), registered UK address",
+      "overdraft": "GBP500 student overdraft; apply after opening; need 2+ years of study left from 1 Sep 2026",
+      "perks": "GBP50 Amazon gift card; Easy Saver (new customers) see savings; prize draw until 31 Oct 2026",
+      "fees": null,
+      "source_url": "https://www.which.co.uk/news/article/best-student-bank-account-freebies-and-perks-2026-avusO9y1zJeR",
+      "checked": "2026-10-31",
+      "source_dated": "2026-08-19",
+      "confidence": "medium",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Revolut",
+      "international_students_can_open": "yes (reported)",
+      "intl_notes": "Reported as passport plus UK phone; e-money institution, safeguarding rather than FSCS deposit cover (verify, Revolut also has a UK bank licence in transition).",
+      "documents": "Passport, phone, often address",
+      "overdraft": null,
+      "perks": null,
+      "fees": "Free tier plus paid plans; FX fees depend on plan, weekends and currency (verify)",
+      "source_url": "https://www.revolut.com/blog/post/what-do-you-need-to-open-a-bank-account-in-the-uk/",
+      "checked": "2026-10-31",
+      "confidence": "low",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Wise",
+      "international_students_can_open": "yes (multi-currency account, not a bank)",
+      "intl_notes": "Not covered by fetched student sources; money held with Wise is safeguarded, not FSCS-protected.",
+      "documents": "unverified",
+      "overdraft": "none (unverified)",
+      "perks": "Local GBP account details and multi-currency holding",
+      "fees": "Conversion fee from about 0.57% depending on route (Wise-published figure via search result); no markup on mid-market rate per Wise",
+      "source_url": "https://wise.com/gb/blog/best-money-transfer-apps-uk",
+      "checked": "2026-10-31",
+      "confidence": "low",
+      "rates_change_often": true
+    },
+    {
+      "provider": "Chase UK",
+      "international_students_can_open": "unverified",
+      "intl_notes": "No source found.",
+      "documents": null,
+      "overdraft": null,
+      "perks": null,
+      "fees": null,
+      "source_url": "https://moneyfactscompare.co.uk/savings-accounts/easy-access-savings-accounts/",
+      "checked": "2026-10-31",
+      "confidence": "unverified",
+      "rates_change_often": true,
+      "note": "Savings products only in this dataset, see savings section."
+    }
+  ],
+  "base_rate": {
+    "bank_of_england_bank_rate_pct": 3.75,
+    "last_decision": "Held 17 Sep 2026 (per DepositScout page dated 22 Oct 2026); cut from 4.00% on 18 Dec 2025",
+    "next_decision": "2026-11-05",
+    "source_url": "https://depositscout.com/news/bank-of-england-cuts-base-rate-to-3-75",
+    "checked": "2026-10-31",
+    "confidence": "medium",
+    "rates_change_often": true,
+    "note": "Not cross-checked against bankofengland.co.uk. Reported earlier votes in 2026 included MPC members favouring a rise."
+  },
+  "savings": {
+    "easy_access": [
+      {"provider":"LemFi","aer_pct":5.00,"conditions":"Up to GBP250,000; reverts to 3.04% after 6 months","fscs":"Reported via ClearBank; verify","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","source_rates_as_of":"2026-10-05","confidence":"low","rates_change_often":true},
+      {"provider":"Starling Easy Saver","aer_pct":5.00,"conditions":"Includes 2.50% bonus for 6 months, then 2.50%; first GBP25,000 only; new customers opening a Starling current account from 1 Oct, apply within 30 days (Which? lists a different 4.00% figure for students)","fscs":"Starling is FSCS-protected (verify)","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","source_rates_as_of":"2026-10-05","confidence":"low","rates_change_often":true},
+      {"provider":"Stafford BS","aer_pct":4.60,"conditions":"Not detailed","fscs":"Building society, FSCS (verify)","source_url":"https://moneyfactscompare.co.uk/savings-accounts/easy-access-savings-accounts/","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Monument Welcome Saver","aer_pct":4.56,"conditions":"GBP25,000 minimum; moves to tracker after 12 months","fscs":"verify","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Zopa","aer_pct":4.56,"conditions":"New customers; 3 withdrawals a year","fscs":"FSCS (Zopa Bank, verify)","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Tembo HomeSaver","aer_pct":4.55,"conditions":"Up to GBP20,000; 5.55% with a Tembo mortgage","fscs":"verify","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Chase Saver","aer_pct":4.50,"conditions":"New users only (per search summary)","fscs":"Chase UK FSCS via J.P. Morgan Europe (verify)","source_url":"https://moneyfactscompare.co.uk/savings-accounts/easy-access-savings-accounts/","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Oxbury Autumn","aer_pct":4.30,"conditions":"Up to GBP120,000, no bonus","fscs":"verify","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true}
+    ],
+    "regular_savers": [
+      {"provider":"Santander","aer_pct":8.0,"conditions":"Reported as the only remaining 8% account; terms not stated (usually requires a current account)","fscs":"FSCS","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"First Direct","aer_pct":7.00,"conditions":"Fixed; GBP300/month cap; needs First Direct current account","fscs":"FSCS","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Chase UK","aer_pct":6.50,"conditions":"Fixed; GBP300/month cap; free withdrawals","fscs":"verify","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Club Lloyds","aer_pct":6.25,"conditions":"Needs Club Lloyds current account; terms not stated","fscs":"FSCS","source_url":"https://depositscout.com/guides/best-uk-savings-rates-october-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true}
+    ],
+    "caveat": "Many headline rates are bonus/introductory and some require new customers or a current account. Aggregator pages 403'd or were summarised, so rates are as of 5 Oct 2026 and likely stale. International students may fail residency/ID checks for some products."
+  },
+  "money_transfer": {
+    "corridors": ["CNY->GBP","INR->GBP","HKD->GBP","SGD->GBP","USD->GBP"],
+    "providers": [
+      {"provider":"Wise","fee_structure":"Transparent fee (from about 0.57% depending on route) charged on mid-market rate; no FX markup per Wise","alipay_wechat":"unverified","source_url":"https://wise.com/gb/blog/best-money-transfer-apps-uk","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Revolut","fee_structure":"Depends on plan, currency, destination, weekend; self-reported as cheap in own comparisons","alipay_wechat":"unverified","source_url":"https://www.revolut.com/compare/remitly-gbp-to-usd/","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Remitly","fee_structure":"Own exchange rate with markup over mid-market (reported 1%-3.7%); may charge low or no fee","alipay_wechat":"unverified","source_url":"https://wise.com/us/blog/worldremit-vs-remitly","checked":"2026-10-31","confidence":"low","rates_change_often":true,"note":"Source is a competitor blog."},
+      {"provider":"WorldRemit","fee_structure":"Fee plus small margin built into the rate","alipay_wechat":"unverified","source_url":"https://wise.com/gb/blog/remitly-vs-worldremit","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Western Union","fee_structure":"Not retrieved; commonly fee plus FX margin","alipay_wechat":"unverified","source_url":null,"checked":"2026-10-31","confidence":"unverified","rates_change_often":true},
+      {"provider":"Flywire","fee_structure":"University tuition payments via institution's portal; pays in local currency CNY with no stated student fee (verify per university)","alipay_wechat":"Alipay and WeChat listed for China payers (Humboldt State comparison sheet); WeChat limit 10,000 CNY, 50,000 with digital certificate (Furman guide)","source_url":"https://Studentfinancialservices.humboldt.edu/sites/default/files/financialservices/flywire_currency_comparison.pdf","checked":"2026-10-31","confidence":"low","rates_change_often":true,"note":"US university documents; availability depends on the UK university."},
+      {"provider":"Convera","fee_structure":"University tuition payments; competitive FX rate shown at checkout (details not retrieved)","alipay_wechat":"Yes for China payers: Alipay needs a Chinese national ID; WeChat Pay needs national ID or passport upload; also UnionPay and cards","source_url":"https://convera.com/students/faq/country-specific-payments/paying-from-china/","checked":"2026-10-31","confidence":"medium","rates_change_often":true}
+    ],
+    "caveat": "No live quotes for any corridor. Compare total GBP received in each calculator, and check whether the university accepts a given provider."
+  },
+  "bills": {
+    "council_tax": {
+      "rule": "Households where everyone is a full-time student are exempt. Course must last at least 1 year and involve at least 21 hours study per week. Mixed households may get a discount. A student visa alone does not guarantee exemption; part-time courses are generally liable unless 21 hours/week and 24 weeks is confirmed. University issues a certificate; the council decides.",
+      "source_url": "https://www.gov.uk/council-tax/discounts-for-full-time-students",
+      "secondary_source_url": "https://www.ukcisa.org.uk/information--advice/fees-and-money/council-tax",
+      "checked": "2026-10-31",
+      "confidence": "high",
+      "rates_change_often": false
+    },
+    "tv_licence": {
+      "price_gbp_per_year": 180,
+      "rule": "Needed to watch or record live TV or use BBC iPlayer. Halls: usually your own licence for your room. Shared house with a joint tenancy: one licence covers everyone; separate tenancies: each needs one. A home-address licence may cover a device running on battery only.",
+      "source_url": "https://www.tvlicensing.co.uk/",
+      "evidence_url": "https://www.ncl.ac.uk/students/notices-and-events/all-notices/notice-items/tv-licence-what-students-need-to-know/",
+      "checked": "2026-10-31",
+      "confidence": "medium",
+      "rates_change_often": true,
+      "note": "Official TV Licensing page did not load; GBP180 from April 2026 per search summaries of university pages."
+    },
+    "sim_plans": [
+      {"provider":"Smarty","indicative_price":"50GB for GBP8/month (Student Beans) vs 100GB GBP12 (Save the Student)","international_calls":"100 mins to many countries on some plans (unverified)","source_url":"https://www.studentbeans.com/blog/uk/best-sim-only-deals-for-students-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"VOXI","indicative_price":"80GB for GBP10/month (Student Beans) vs 140GB GBP15 (Save the Student)","international_calls":"unverified","source_url":"https://www.studentbeans.com/blog/uk/best-sim-only-deals-for-students-2026","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"giffgaff","indicative_price":"40GB GBP10-12/month; older student offer needing an ac.uk email","international_calls":"unverified","source_url":"https://techradar.com/phones/network-providers/students-get-40gb-of-data-for-just-pound10-with-this-excellent-giffgaff-sim-only-deal","checked":"2026-10-31","confidence":"low","rates_change_often":true},
+      {"provider":"Lebara","indicative_price":"5GB GBP5/month (30-day rolling)","international_calls":"Best for international calls per Save the Student: free roaming in EU, India and China (up to 30GB); included mins to 50+ countries","source_url":"https://www.savethestudent.org/bills-finance/mobile-phones/best-sim-only-deals.html","checked":"2026-10-31","confidence":"low","rates_change_often":true}
+    ],
+    "london_utilities_split": {
+      "per_person_per_month_gbp": {"low": 60, "high": 110},
+      "evidence": "Acolyte Living (Jul 2026) GBP63-92 for gas, electricity, water, broadband; Amber Student about GBP112; Ovo via Glide about GBP50 energy only. The 60-110 range is an inference from these, not a published average. Winter is higher.",
+      "source_url": "https://acolyteliving.com/post/average-cost-student-bills-month-london-2026",
+      "checked": "2026-10-31",
+      "confidence": "low",
+      "rates_change_often": true,
+      "note": "Many London student lets are bills-inclusive; check contract."
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+ "task": "supermarket-loyalty",
+ "checked": "2026-10-31",
+ "schemes": [
+  {
+   "name": "Tesco Clubcard",
+   "cost_to_join": "Free (optional paid Clubcard Plus reported at GBP 7.99/month)",
+   "discount_mechanism": "Clubcard Prices (member-only shelf prices on selected lines, scan card/app or link online account); ~1 point per GBP 1 converts to vouchers at 1p/point",
+   "key_perks": "Clubcard Prices, points-to-vouchers, partner rewards",
+   "student_perk": "None found",
+   "app_vs_card": "App (digital card) or plastic card",
+   "source_url": "https://latestdeals.co.uk/guides/shopping/tesco-clubcard-explained",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "Tesco.com returned 403; secondary sources only, some dated. Voucher timing/min rules disagree between sources."
+  },
+  {
+   "name": "My Waitrose",
+   "cost_to_join": "Free (reported)",
+   "discount_mechanism": "Personalised vouchers/offers and perks; 'Little Treats' monthly rewards unlocked at GBP 50/100/250 monthly spend",
+   "key_perks": "Free hot drink, Little Treats, personalised vouchers, 20% off selected service-counter items on set days, partner offers (Uber Eats), free Waitrose Food magazine; ~10 member benefits",
+   "student_perk": "None found",
+   "app_vs_card": "App/card",
+   "source_url": "https://www.thefinancialwilderness.com/review-of-mywaitrose-worth-it/",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "Name now styled 'My Waitrose' (was MyWaitrose) per 2026 articles; a larger relaunch was described as upcoming and could not be confirmed. Free-coffee rules reported inconsistently."
+  },
+  {
+   "name": "Sainsbury's Nectar",
+   "cost_to_join": "Free (not explicitly confirmed in sources)",
+   "discount_mechanism": "Nectar Prices (member-only prices on selected items, swipe/scan or link to online account; not at Locals/petrol); ~1 point per GBP 1, points worth 0.5p+",
+   "key_perks": "Nectar Prices, points spendable at Sainsbury's and ~300 partners",
+   "student_perk": "None found",
+   "app_vs_card": "App or card",
+   "source_url": "https://www.which.co.uk/news/article/sainsburys-launches-personalised-your-nectar-prices-for-online-shoppers-aFmy81C4IeE9",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "nectar.com page had no detail; sources 2020-2023."
+  },
+  {
+   "name": "Lidl Plus",
+   "cost_to_join": "Free (page does not state; widely free)",
+   "discount_mechanism": "Weekly app-only member offers and personalised coupons; points per shop redeemable in Rewards Marketplace; Lidl Pay applies at checkout",
+   "key_perks": "App-only offers/coupons, points marketplace, digital receipts, partner offers (18+)",
+   "student_perk": "None found",
+   "app_vs_card": "App only (as far as page shows)",
+   "source_url": "https://www.lidl.co.uk/lidl-plus",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "name": "Co-op Membership",
+   "cost_to_join": "GBP 1 (refunded on first in-store shop after selecting a personalised offer)",
+   "discount_mechanism": "Member prices on everyday items plus personalised offers selected weekly; scan card/app",
+   "key_perks": "Member prices, local-cause funding, monthly GBP 50 draws, Funeralcare/Insurance/Legal discounts, AGM vote, Co-op Live presale",
+   "student_perk": "None found",
+   "app_vs_card": "Digital card in Co-op app; plastic card optional",
+   "source_url": "https://www.coop.co.uk/membership",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "Member prices not at independent societies or franchise stores."
+  },
+  {
+   "name": "Morrisons More",
+   "cost_to_join": "Free",
+   "discount_mechanism": "Member prices on selected items (scan card/app, link online, Deliveroo); points on selected products converted to vouchers (e.g. 5,000 points to a GBP 5 'Fiver' per Which?)",
+   "key_perks": "Member prices, points, bonus scan rewards",
+   "student_perk": "None found",
+   "app_vs_card": "App or card",
+   "source_url": "https://www.which.co.uk/news/article/morrisons-brings-back-more-loyalty-card-with-exclusive-prices-akLnI5L93dqi",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "morrisons.com page 404. One source says More is now 'My Morrisons'; conflicting. Points conversion rates conflict."
+  },
+  {
+   "name": "Asda Rewards",
+   "cost_to_join": "Free",
+   "discount_mechanism": "Earn 'Asda Pounds' into a cashpot via Star Products (~10% cashback) and missions; convert to vouchers in app; cashpot expires after 6 months unmoved",
+   "key_perks": "Cashpot cashback, missions, vouchers",
+   "student_perk": "None found",
+   "app_vs_card": "App only",
+   "source_url": "https://latestdeals.co.uk/guides/household-bills/asda-rewards-explained",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "asda.com 403; sources 2022-2023 so terms may have changed."
+  },
+  {
+   "name": "M&S Sparks",
+   "cost_to_join": "Free (Sparks Plus paid trial, GBP 120/yr, invite-only)",
+   "discount_mechanism": "Sparks Prices member pricing on selected items (trialled in ~50 stores; national status unconfirmed); weekly free-shop draw",
+   "key_perks": "App hub, free-shop draw, offers",
+   "student_perk": "Possible student freebie (Percy Pigs) seen in Save the Student result, unverified",
+   "app_vs_card": "App (card also)",
+   "source_url": "https://www.retail-week.com/grocery/mands-launches-members-prices-for-sparks-loyalty-scheme/7044066.article",
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "notes": "marksandspencer.com page yielded no content."
+  },
+  {
+   "name": "Iceland Bonus Card",
+   "cost_to_join": "Free",
+   "discount_mechanism": "Savings-style: top up card, get GBP 1 bonus per GBP 20 loaded (~5%); spend balance in store/online",
+   "key_perks": "Top-up bonus, periodic promos, app offers",
+   "student_perk": "None found",
+   "app_vs_card": "App or physical card",
+   "source_url": "https://www.latestdeals.co.uk/guides/shopping/iceland-bonus-card-how-does-the-loyalty-scheme-work",
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "notes": "Brief suggested a 25% bonus; sources show ~5% top-up bonus (25% was a Bonus Card branding of older/promo offers, not confirmed)."
+  },
+  {
+   "name": "Aldi UK",
+   "cost_to_join": "N/A",
+   "discount_mechanism": "No loyalty scheme; everyday low prices, no card or app required",
+   "key_perks": "None",
+   "student_perk": "None",
+   "app_vs_card": "None",
+   "source_url": "https://www.grocerygazette.co.uk/2026/09/29/aldi-boss-accuses-rivals-of-duping-shoppers-with-loyalty-prices/",
+   "checked": "2026-10-31",
+   "confidence": "high",
+   "notes": "Sept 2026 report: Aldi remains the only major UK supermarket without a scheme."
+  }
+ ],
+ "blocked_sites": [
+  "tesco.com (403)",
+  "asda.com (403)",
+  "morrisons.com (404 path)",
+  "marksandspencer.com (no content)",
+  "iceland.co.uk (truncated)",
+  "nectar.com (no detail)"
+ ]
+}

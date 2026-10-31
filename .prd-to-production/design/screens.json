@@ -1,0 +1,98 @@
+{
+  "revision": "v1",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 1000,
+      "fullPage": true
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "fullPage": true
+    }
+  },
+  "screens": [
+    {
+      "id": "P-onboarding",
+      "desktop": "design/images/onboarding-desktop.png",
+      "mobile": "design/images/onboarding-mobile.png",
+      "states": [
+        "design/images/onboarding-error-desktop.png",
+        "design/images/onboarding-error-mobile.png",
+        "design/images/onboarding-welcome-desktop.png",
+        "design/images/onboarding-welcome-mobile.png",
+        "design/images/onboarding-step-last-until.png",
+        "design/images/onboarding-step-job.png",
+        "design/images/onboarding-step-other-income.png",
+        "design/images/onboarding-step-rent.png",
+        "design/images/onboarding-step-reserve.png",
+        "design/images/onboarding-step-savings.png",
+        "design/images/onboarding-step-food-transport.png",
+        "design/images/onboarding-step-priorities.png"
+      ]
+    },
+    {
+      "id": "P-plan",
+      "desktop": "design/images/plan-desktop.png",
+      "mobile": "design/images/plan-mobile.png",
+      "states": [
+        "design/images/plan-account-menu.png",
+        "design/images/plan-month-menu.png",
+        "design/images/plan-loading.png",
+        "design/images/plan-deficit-desktop.png",
+        "design/images/plan-deficit-mobile.png"
+      ]
+    },
+    {
+      "id": "P-plan-day",
+      "desktop": "design/images/plan-day-desktop.png",
+      "mobile": "design/images/plan-day-mobile.png",
+      "states": [
+        "design/images/plan-day-item-menu.png",
+        "design/images/plan-day-category.png"
+      ]
+    },
+    {
+      "id": "P-plan-change",
+      "desktop": "design/images/plan-change-desktop.png",
+      "mobile": "design/images/plan-change-mobile.png",
+      "states": [
+        "design/images/plan-change-bubble-frame.png",
+        "design/images/plan-change-bubble-reduced.png",
+        "design/images/plan-change-bubble-mobile-frame.png",
+        "design/images/plan-change-preview-desktop.png",
+        "design/images/plan-change-preview-mobile.png",
+        "design/images/plan-change-tradeoff-desktop.png",
+        "design/images/plan-change-tradeoff-mobile.png",
+        "design/images/plan-change-clarify.png",
+        "design/images/plan-change-fail.png"
+      ]
+    },
+    {
+      "id": "P-plan-offers",
+      "desktop": "design/images/plan-offers-desktop.png",
+      "mobile": "design/images/plan-offers-mobile.png",
+      "states": []
+    },
+    {
+      "id": "P-projections",
+      "desktop": "design/images/projections-desktop.png",
+      "mobile": "design/images/projections-mobile.png",
+      "states": [
+        "design/images/projections-empty-desktop.png",
+        "design/images/projections-empty-mobile.png"
+      ]
+    },
+    {
+      "id": "P-settings",
+      "desktop": "design/images/settings-desktop.png",
+      "mobile": "design/images/settings-mobile.png",
+      "states": [
+        "design/images/settings-recurrence-menu.png",
+        "design/images/settings-reset-dialog-desktop.png",
+        "design/images/settings-reset-dialog-mobile.png"
+      ]
+    }
+  ]
+}

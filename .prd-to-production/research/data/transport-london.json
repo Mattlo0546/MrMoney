@@ -1,0 +1,77 @@
+{
+  "meta": {"topic":"London student transport costs","checked":"2026-10-31","currency":"GBP","notes":"Official tfl.gov.uk fares pages returned 404 to fetcher; most fares come from secondary sources quoting the March 2026 TfL fare decision. Verify before shipping."},
+  "tfl": {
+    "tube_payg_adult": {
+      "peak_definition":"Mon-Fri excl. public holidays, 06:30-09:30 and 16:00-19:00",
+      "zones_1_2": {"peak_single":{"amount_gbp":3.60,"conditions":"Zone 1 included, from 1 Mar 2026","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "offpeak_single":{"amount_gbp":3.10,"conditions":"Zone 1 included","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "daily_cap":{"amount_gbp":8.90,"conditions":"04:30-04:29 window; frozen to Mar 2027","source_url":"https://railway-news.com/tfl-tube-and-rail-fares-to-rise-from-march-2026/","checked":"2026-10-31","confidence":"high"},
+                    "weekly_cap":{"amount_gbp":44.70,"conditions":"Mon-Sun","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"high"}},
+      "zones_1_3": {"peak_single":{"amount_gbp":3.90,"conditions":"Zone 1 included","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "offpeak_single":{"amount_gbp":3.30,"conditions":"Zone 1 included","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "daily_cap":{"amount_gbp":10.50,"conditions":"","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "weekly_cap":{"amount_gbp":52.50,"conditions":"Mon-Sun","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"}},
+      "zones_1_4": {"peak_single":{"amount_gbp":4.80,"conditions":"Zone 1 included","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "offpeak_single":{"amount_gbp":3.60,"conditions":"Zone 1 included","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "daily_cap":{"amount_gbp":12.80,"conditions":"","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"},
+                    "weekly_cap":{"amount_gbp":64.20,"conditions":"Mon-Sun","source_url":"https://tubenotifications.co.uk/insights/tube-fares","checked":"2026-10-31","confidence":"medium"}}
+    },
+    "bus_tram": {
+      "single_current":{"amount_gbp":1.75,"conditions":"Frozen at least until July 2026; one source (London Assembly schedule dated 2 Jul 2026, via search summary) says rises to 1.85 from 1 Nov 2026 - unverified, conflicting","source_url":"https://tfl-newsroom.prgloo.com/news/tfl-reminds-customers-of-changes-to-tube-and-rail-fares-from-1-march-while-bus-and-tram-fares-frozen-until-july-2026","checked":"2026-10-31","confidence":"low"},
+      "single_possible_from_2026_11_01":{"amount_gbp":1.85,"conditions":"UNVERIFIED possible rise","source_url":"https://www.london.gov.uk/media/111830/download","checked":"2026-10-31","confidence":"low"},
+      "daily_cap":{"amount_gbp":5.25,"conditions":"New cap after Nov rise not found","source_url":"https://www.london.gov.uk/media/111830/download","checked":"2026-10-31","confidence":"medium"},
+      "hopper":{"amount_gbp":1.75,"conditions":"Unlimited bus/tram journeys within 1 hour of first touch-in, for the price of one fare (same caveat on Nov rise)","source_url":"https://railway-news.com/tfl-tube-and-rail-fares-to-rise-from-march-2026/","checked":"2026-10-31","confidence":"medium"}
+    },
+    "travelcards": {
+      "weekly_zones_1_2":{"amount_gbp":44.70,"conditions":"7-day, any start day, frozen Mar 2026-Mar 2027; equals weekly PAYG cap","source_url":"https://www.london.gov.uk/media/111830/download","checked":"2026-10-31","confidence":"medium"},
+      "monthly_zones_1_2":{"amount_gbp":null,"conditions":"Not found in sources; do not hardcode","source_url":"https://tfl.gov.uk/fares","checked":"2026-10-31","confidence":"none"},
+      "student_oyster_discount_on_travelcards":"30% off adult Travelcards and Bus&Tram passes (so ~31.29 per week Z1-2 if base 44.70; derived)"
+    },
+    "student_oyster_18plus": {
+      "discount":{"amount_gbp":null,"conditions":"30% off adult Travelcards and Bus & Tram season passes only. PAYG fares NOT discounted.","source_url":"https://tfl.gov.uk/fares/free-and-discounted-travel/18-plus-student-oyster-photocard","checked":"2026-10-31","confidence":"high"},
+      "fee":{"amount_gbp":22.00,"conditions":"Admin fee, card payment","source_url":"https://tfl.gov.uk/fares/free-and-discounted-travel/18-plus-student-oyster-photocard","checked":"2026-10-31","confidence":"high"},
+      "eligibility":{"summary":"18+, live in a London borough during term time, enrolled at a school/college/university registered on the TfL scheme (or mandatory London placement 14+ weeks). Institution outside Greater London may qualify if student lives in London and travels regularly. Full-time (15+ structured hours/week, 14+ weeks) or listed exceptions. Needs a TfL-registered institution; not a London institution strictly. Card expires when course ends.","source_url":"https://tfl.gov.uk/fares/free-and-discounted-travel/18-plus-student-oyster-photocard","checked":"2026-10-31","confidence":"high"}
+    },
+    "railcard_on_oyster":{"summary":"16-25 or 26-30 Railcard can be added to a registered Oyster for 1/3 off off-peak PAYG fares and (per TfL student page) daily caps; set at a station/Oyster ticket shop. Combinable with 18+ Student Oyster.","source_url":"https://www.railcard.co.uk/16-25-railcard/","checked":"2026-10-31","confidence":"medium"},
+    "contactless_vs_oyster":{"summary":"Same PAYG fares and caps. Oyster needed for photocard/Travelcard discounts and Railcard loading; contactless needs the same card/device for each tap to cap correctly; contactless works on all modes with no top-up; Oyster has refundable £7 deposit style card cost (unverified).","source_url":"https://tfl.gov.uk/fares","checked":"2026-10-31","confidence":"low"}
+  },
+  "railcards": {
+    "16_25":{"one_year":{"amount_gbp":35,"conditions":"1/3 off most rail fares; mature students 26+ eligible (full-time, 15h/wk). Not valid on season tickets/Travelcards. GBP12 min fare Mon-Fri before ~10am (not Jul/Aug, weekends, Advance)","source_url":"https://www.railcard.co.uk/16-25-railcard/","checked":"2026-10-31","confidence":"high"},
+             "three_year":{"amount_gbp":80,"conditions":"Buy up to day before 24th birthday","source_url":"https://www.railcard.co.uk/16-25-railcard/","checked":"2026-10-31","confidence":"high"}},
+    "26_30":{"one_year":{"amount_gbp":35,"conditions":"1/3 off; online only; no season tickets; price rose from 30 in Mar 2025","source_url":"https://www.savethestudent.org/student-discounts/26-30-railcard.html","checked":"2026-10-31","confidence":"medium"}},
+    "bank_perk":{"summary":"No Santander/HSBC student-account railcard perk found (searched); not confirmed to exist. Do not claim.","source_url":"","checked":"2026-10-31","confidence":"low"}
+  },
+  "micromobility": {
+    "santander_cycles":{
+      "first_30min_pedal":{"amount_gbp":1.65,"conditions":"Per ride, pedal bike; extra 30 min 1.65","source_url":"https://londondrum.com/transport/hire-cycles.php","checked":"2026-10-31","confidence":"medium"},
+      "ebike_extra_30min":{"amount_gbp":3.30,"conditions":"E-bike each additional 30 min","source_url":"https://micromobilitybiz.com/santander-cycles-and-tfl-to-introduce-1400-e-bikes-and-new-day-pass/","checked":"2026-10-31","confidence":"low"},
+      "day_pass":{"amount_gbp":3.00,"conditions":"Unlimited 60-min rides (from 3)","source_url":"https://londondrum.com/transport/hire-cycles.php","checked":"2026-10-31","confidence":"medium"},
+      "monthly":{"amount_gbp":20,"conditions":"Unlimited 60-min rides","source_url":"https://electricdrives.tv/?p=27596","checked":"2026-10-31","confidence":"medium"},
+      "annual":{"amount_gbp":120,"conditions":"Unlimited 60-min rides; Cycling UK members 25% off; no dedicated student deal found","source_url":"https://www.cyclinguk.org/member-benefits/santander-cycles-annual-pass","checked":"2026-10-31","confidence":"medium"}
+    },
+    "lime":{"per_minute":{"amount_gbp":0.31,"conditions":"E-bike, London, plus ~1.00 unlock; Greenmoov says 0.29; rates vary by borough/time; passes exist via Lime subscription","source_url":"https://www.cityam.com/?p=2380662","checked":"2026-10-31","confidence":"low"}},
+    "forest":{"per_minute":{"amount_gbp":0.29,"conditions":"Plus 1.00 unlock; dynamic discounts","source_url":"https://www.cityam.com/?p=2380662","checked":"2026-10-31","confidence":"low"}},
+    "dott":{"per_minute":{"amount_gbp":0.22,"conditions":"Aggregator figure, undated, plus ~1 unlock; operating status in 2026 London borough trials not confirmed","source_url":"https://visaeta.uk/lt/?p=5665","checked":"2026-10-31","confidence":"low"}},
+    "voi":{"per_minute":{"amount_gbp":0.24,"conditions":"Aggregator figure, undated; Voi Hackney ebike cap 1.75/30 min; Voi was operating in Hackney","source_url":"https://news.hackney.gov.uk/news/dockless-cycle-hire-is-about-to-become-the-same-price-as-a-bus-fare-in-hackney","checked":"2026-10-31","confidence":"low"}}
+  },
+  "coaches": {
+    "national_express_ypc":{"amount_gbp":12.50,"conditions":"Per year (or 30 for 3 yrs per Save the Student); 1/3 off standard/flexible fares; ages 16-26 or full-time students; not on Restricted fares; 10 promo + 2.50 post seen on renewal","source_url":"https://nationalexpress.com/en/offers/young-persons-coachcard-renewal","checked":"2026-10-31","confidence":"medium"},
+    "megabus":{"amount_gbp":null,"conditions":"No student card; YPC not valid; 10% off with TOTUM; fares vary, GBP1 booking fee on promo fares","source_url":"https://www.savethestudent.org/save-money/travel/cheap-coach-travel.html","checked":"2026-10-31","confidence":"low"}
+  },
+  "tfl_unified_api":{
+    "url":"https://api.tfl.gov.uk",
+    "free":"Public TfL open data under transport data terms; free key via portal (no pricing shown)",
+    "registration":"Optional but recommended; register at api-portal.tfl.gov.uk, subscribe to plan in Products, use app_key query param (app_id no longer needed)",
+    "rate_limits":"Portal mentions a '500 requests' data plan; third parties conflict (500/min with key vs ~500/day anonymous). Unverified.",
+    "offers":["Journey planner (/Journey/JourneyResults)","Line status/disruptions (/Line/.../Status)","Fares (/Stopstop/.. Fares via Journey/StopPoint fares endpoints)","Arrivals, StopPoint, BikePoint (Santander), Road status","Swagger: https://api.tfl.gov.uk/swagger/docs/v1"],
+    "source_url":"https://api-portal.tfl.gov.uk/",
+    "checked":"2026-10-31","confidence":"medium",
+    "mcp_servers":[{"name":"daanrongen/tfl-mcp","note":"community, ~80 tools, MIT, npx @daanrongen/tfl-mcp","url":"https://mcpservers.org/servers/daanrongen/tfl-mcp"},{"name":"VJagiasi/tfl-mcp","note":"community, MIT, not official","url":"https://github.com/VJagiasi/tfl-mcp"}],
+    "citymapper_mcp":"Not searched/confirmed"
+  },
+  "suggested_default_daily_budget_zone_1_2":{
+    "amount_gbp":6.38,
+    "basis":"Weekly Z1-2 student Travelcard ~31.29 (44.70 x 0.70) / 7 = 4.47 if student photocard; PAYG: ~8.90 cap on heavy days. Default 6.40/day = ~44.70/week (PAYG weekly cap) as safe ceiling; lower option 4.50/day with 18+ Student Oyster Travelcard (derived, verify).",
+    "confidence":"medium"
+  }
+}

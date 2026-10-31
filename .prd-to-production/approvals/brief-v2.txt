@@ -1,0 +1,1 @@
+Approve PRD v2. Ya let's gemini image generation. here's the API key: [REDACTED — stored in .env.local, not in the repo] (use nano banana 2.1)

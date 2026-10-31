@@ -1,0 +1,7 @@
+Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+
+A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+
+Subject: A front door of a UK terraced house, seen straight on, with a single key hanging on a small hook beside it and a doormat below.
+Ochre accent only on: the key on the hook.
+[style reference: savings-a1.png]

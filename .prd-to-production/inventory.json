@@ -1,0 +1,139 @@
+{
+  "brief_revision": "v2",
+  "requirement_ids": [
+    "R-onboard",
+    "R-sketches",
+    "R-demo",
+    "R-summary",
+    "R-calendar",
+    "R-day",
+    "R-nl",
+    "R-actual",
+    "R-preview",
+    "R-feedback",
+    "R-undo",
+    "R-tradeoff",
+    "R-protect",
+    "R-engine",
+    "R-projections",
+    "R-offers",
+    "R-persist",
+    "R-data",
+    "R-ux",
+    "R-deliver"
+  ],
+  "screens": [
+    {
+      "id": "P-onboarding",
+      "route": "/onboarding",
+      "tab": null,
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-onboard",
+        "R-sketches",
+        "R-demo",
+        "R-ux",
+        "R-persist"
+      ]
+    },
+    {
+      "id": "P-plan",
+      "route": "/plan",
+      "tab": null,
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-summary",
+        "R-calendar",
+        "R-nl",
+        "R-feedback",
+        "R-demo",
+        "R-protect",
+        "R-ux",
+        "R-persist"
+      ]
+    },
+    {
+      "id": "P-plan-day",
+      "route": "/plan",
+      "tab": "day",
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-day",
+        "R-calendar",
+        "R-actual",
+        "R-ux",
+        "R-persist",
+        "R-feedback",
+        "R-undo"
+      ]
+    },
+    {
+      "id": "P-plan-change",
+      "route": "/plan",
+      "tab": "change",
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-nl",
+        "R-actual",
+        "R-preview",
+        "R-feedback",
+        "R-undo",
+        "R-tradeoff",
+        "R-protect",
+        "R-ux",
+        "R-persist"
+      ]
+    },
+    {
+      "id": "P-plan-offers",
+      "route": "/plan",
+      "tab": "offers",
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-offers",
+        "R-ux",
+        "R-persist"
+      ]
+    },
+    {
+      "id": "P-projections",
+      "route": "/projections",
+      "tab": null,
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-projections",
+        "R-ux",
+        "R-persist",
+        "R-engine"
+      ]
+    },
+    {
+      "id": "P-settings",
+      "route": "/settings",
+      "tab": null,
+      "roles": [
+        "student"
+      ],
+      "requirements": [
+        "R-onboard",
+        "R-protect",
+        "R-persist",
+        "R-projections",
+        "R-ux",
+        "R-engine"
+      ]
+    }
+  ]
+}

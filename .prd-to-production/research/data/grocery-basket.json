@@ -1,0 +1,1000 @@
+{
+ "task": "grocery-basket",
+ "checked": "2026-10-31",
+ "price_label": "indicative",
+ "limitations": "Aldi prices from public aldi.co.uk search/product pages fetched 2026-10-31 (Aldi states online prices may differ in store; one page cached older). Lidl: lidl.co.uk shows no public grocery prices (listings load in the Lidl Plus app; searched 'milk' returned no items; weekly offers pages list only headline savings). Tesco Clubcard and Sainsbury's Nectar member prices: tesco.com and sainsburys.co.uk returned 403, so null. Tesco/Sainsbury's regular prices come from trolley.co.uk. Tofu, soy sauce, and a few items not found at Aldi. Own-brand tier and size differences are noted per item. Use basket_benchmarks for retailer comparison, not these per-item prices.",
+ "items": [
+  {
+   "item": "Milk (whole)",
+   "size": "2 pints / 1.13l",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": 1.2,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/tesco-whole-milk/HJC926"
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.75,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/product/cowbelle-whole-milk-3-6-fat-000000000000416772"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Cowbelle whole 2.272l (4 pints); search snippet showed 1.65, product page fetch showed 1.75 (conflict, 1.75 recorded). Not same size as Tesco 2 pint. Aldi 1.136l British whole 3.7% listed at 1.20 (search snippet) is closest like-for-like to Tesco 2pt 1.20."
+  },
+  {
+   "item": "Bread (white sliced, toastie)",
+   "size": "800g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": 0.75,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/village-bakery-toastie-thick-sliced-white-bread/OZS400"
+    },
+    "Sainsburys": {
+     "regular_gbp": 0.75,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/village-bakery-toastie-thick-sliced-white-bread/OZS400"
+    },
+    "Aldi": {
+     "regular_gbp": 0.75,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=white%20bread"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Tesco/Sainsbury's prices from 'supermarket alternatives' on the Aldi product page; Aldi item out of stock there. | Aldi: Village Bakery White Toastie Sliced Loaf 800g; own-brand like-for-like with Tesco/Sainsbury's toastie 800g. Village Bakery medium sliced 800g is 0.55."
+  },
+  {
+   "item": "Eggs free range large",
+   "size": "12",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": 3.4,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/merevale-large-scottish-free-range-eggs/RVC070"
+    },
+    "Aldi": {
+     "regular_gbp": 2.89,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/product/merevale-british-large-free-range-eggs-12-pack-000000000000417009"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Tesco price not shown. | Aldi: Merevale British large free range 12; groceries.aldi.co.uk showed 2.49 for Scottish variant."
+  },
+  {
+   "item": "Eggs",
+   "size": "6",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.79,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/product/merevale-british-large-free-range-eggs-6-pack-000000000000416688"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Large free range 6 pack (range is free range, not barn)."
+  },
+  {
+   "item": "Rice long grain",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.52,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/products/food-cupboard/rice-pasta-noodles/k/1588161416978053008"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Only Tesco 4kg at GBP 4.75 seen (trolley WJC191); no 1kg own-brand price found. | Aldi: Long Grain White Rice 1kg 0.52 on category page (suspiciously low); Easy Cook Long Grain 1kg is 1.25. Not verified against product page."
+  },
+  {
+   "item": "Pasta (spaghetti)",
+   "size": "500g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": 0.28,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/cucina-spaghetti/KHQ725"
+    },
+    "Sainsburys": {
+     "regular_gbp": 1.25,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/cucina-spaghetti/KHQ725"
+    },
+    "Aldi": {
+     "regular_gbp": 0.28,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/product/everyday-essentials-spaghetti-pasta-500g-000000000000306030"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Tesco value-range price; Sainsbury's price is for organic spaghetti (not like-for-like). Aldi page figures unreliable (placeholder GBP 0.00, 'usually 1.50'); search snippet suggested GBP 0.69-0.75 unverified. | Aldi: Everyday Essentials value tier, same tier as Tesco Hearty Food Co 0.28. Cucina Spaghetti 500g listed 0.75 elsewhere."
+  },
+  {
+   "item": "Chicken breast fillets",
+   "size": "~320g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": 2.44,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/sainsburys-british-fresh-chicken-breast-fillets-skinless-boneless/UIS795"
+    },
+    "Aldi": {
+     "regular_gbp": 2.29,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=chicken%20breast"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Ashfields 2 fillets 300g 2.29 (Aldi mid tier); Ashfields 650g 4.69 (~0.72/100g vs Sainsbury's 320g 2.44 ~0.76/100g). Everyday Essentials 1kg 4.25."
+  },
+  {
+   "item": "Onions",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.47,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=onions"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Brown onions 1kg."
+  },
+  {
+   "item": "Bananas",
+   "size": "5-8 pack",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": 0.78,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/natures-pick-bananas/YHM052"
+    },
+    "Sainsburys": {
+     "regular_gbp": 1.39,
+     "member_gbp": null,
+     "source_url": "https://www.trolley.co.uk/product/natures-pick-bananas/YHM052"
+    },
+    "Aldi": {
+     "regular_gbp": 0.78,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=bananas"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Tesco 5 ripe; Sainsbury's 8 Fairtrade (pack sizes differ; ~16p vs ~17p each). | Aldi: Nature's Pick 5 pack 0.78 (loose 0.16 each); matches Tesco ripe 5 pack 0.78."
+  },
+  {
+   "item": "Tinned chopped tomatoes",
+   "size": "400g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.43,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=chopped%20tomatoes"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials 400g; Cucina 0.45."
+  },
+  {
+   "item": "Porridge oats",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.85,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=porridge%20oats"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials 1kg."
+  },
+  {
+   "item": "Instant noodles",
+   "size": "single pack",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.39,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=noodles"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Bramwells Express 100g chicken flavour (single pack)."
+  },
+  {
+   "item": "Tofu",
+   "size": "~290g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "price_label": "indicative",
+   "notes": ""
+  },
+  {
+   "item": "Soy sauce",
+   "size": "150ml",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "price_label": "indicative",
+   "notes": ""
+  },
+  {
+   "item": "Frozen mixed veg",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "low",
+   "price_label": "indicative",
+   "notes": "Aldi: No frozen mixed veg 1kg found; Four Seasons carrot/peas/sweetcorn steam bags 640g 1.69 (not like-for-like), left null."
+  },
+  {
+   "item": "Apples",
+   "size": "6 pack",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.59,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=apples"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: 6 pack Braeburn/Cox/Gala 1.59; Wonky 6 pack 0.99."
+  },
+  {
+   "item": "Cheddar (mature)",
+   "size": "400g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 2.45,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=cheddar"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Emporium British mature 400g."
+  },
+  {
+   "item": "Yoghurt (natural)",
+   "size": "500g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.55,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=natural%20yogurt"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials fat-free natural 500g (fat-free, not full-fat like-for-like)."
+  },
+  {
+   "item": "Vegetable/sunflower oil",
+   "size": "1l",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.45,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=sunflower%20oil"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Solesta sunflower or vegetable oil 1l."
+  },
+  {
+   "item": "Butter / spread",
+   "size": "500g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.85,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=butter"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Cowbelle British salted butter 250g (item size 500g is not matched; Nordpak spreadable 500g is 2.15)."
+  },
+  {
+   "item": "Potatoes",
+   "size": "2.5kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.49,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=potatoes"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials Scottish wonky 2.5kg (Nature's Pick white 2kg 1.32)."
+  },
+  {
+   "item": "Carrots",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.69,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=carrots"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Nature's Pick 1kg."
+  },
+  {
+   "item": "Tea bags",
+   "size": "80",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.39,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=tea%20bags"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Diplomat decaf 80 = 1.39; Diplomat Gold Label 80 = 1.45 (regular black tea 80 count best match)."
+  },
+  {
+   "item": "Plain flour",
+   "size": "1.5kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.7,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=flour"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: The Pantry 1.5kg."
+  },
+  {
+   "item": "Sugar",
+   "size": "1kg",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.09,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=sugar"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Granulated 1kg."
+  },
+  {
+   "item": "Frozen peas",
+   "size": "900g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 1.09,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=frozen%20peas"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Four Seasons garden peas 900g."
+  },
+  {
+   "item": "Baked beans",
+   "size": "410g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.27,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=baked%20beans"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials 410g; Bramwells 0.38."
+  },
+  {
+   "item": "Peanut butter",
+   "size": "340g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.95,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=peanut%20butter"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Grandessa smooth 340g."
+  },
+  {
+   "item": "Canned tuna",
+   "size": "145g",
+   "prices": {
+    "Tesco": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Sainsburys": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    },
+    "Aldi": {
+     "regular_gbp": 0.59,
+     "member_gbp": null,
+     "source_url": "https://www.aldi.co.uk/results?q=tuna"
+    },
+    "Lidl": {
+     "regular_gbp": null,
+     "member_gbp": null,
+     "source_url": null
+    }
+   },
+   "checked": "2026-10-31",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Aldi: Everyday Essentials chunks in brine 145g; The Fishmonger 0.65."
+  }
+ ],
+ "basket_benchmarks": [
+  {
+   "retailer": "Aldi",
+   "total_gbp": 159.48,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "high",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Lidl (Lidl Plus)",
+   "total_gbp": 161.48,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "high",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Lidl",
+   "total_gbp": 161.84,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "high",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Asda",
+   "total_gbp": 186.71,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Tesco (Clubcard)",
+   "total_gbp": 187.71,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Sainsbury's (Nectar)",
+   "total_gbp": 188.95,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Morrisons (More)",
+   "total_gbp": 192.93,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Morrisons",
+   "total_gbp": 193.13,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Tesco",
+   "total_gbp": 193.45,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Sainsbury's",
+   "total_gbp": 195.01,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Ocado",
+   "total_gbp": 208.64,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  },
+  {
+   "retailer": "Waitrose",
+   "total_gbp": 223.38,
+   "items_count": 93,
+   "month": "2026-09",
+   "source_url": "https://www.which.co.uk/reviews/supermarkets/article/supermarket-price-comparison-aPpYp9j1MFin",
+   "confidence": "medium",
+   "price_label": "indicative",
+   "notes": "Which? monthly own-shop list, 93 items; totals not comparable across months. Fetched via Which? table 2026-10-31."
+  }
+ ]
+}
