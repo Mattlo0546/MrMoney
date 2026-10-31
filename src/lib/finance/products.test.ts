@@ -65,6 +65,7 @@ describe('Argon lump-sum allocator & real bank/stock catalog', () => {
         expect(d.rates.sBase).toBeLessThanOrEqual(d.rates.sHigh);
         expect(d.rates.iLow).toBeLessThanOrEqual(d.rates.iBase);
         expect(d.rates.iBase).toBeLessThanOrEqual(d.rates.iHigh);
+        expect(d.rationaleBullets.length).toBe(4);
       }
     }
   });

@@ -96,17 +96,23 @@ export async function POST(req: Request) {
       if (choice.success) {
         const validBanks = choice.data.selectedBankIds.filter((id) => BANK_PRODUCTS.some((b) => b.id === id));
         const validStocks = choice.data.selectedStockIds.filter((id) => STOCK_PRODUCTS.some((s) => s.id === id));
+        const baseDecision = decideArgonAllocation({
+          lumpSumPounds,
+          monthlySurplusPounds,
+          monthlyIncomePounds,
+          riskProfile,
+          selectedBankIds: validBanks.length ? validBanks : undefined,
+          selectedStockIds: validStocks.length ? validStocks : undefined,
+          customSavingsShare: choice.data.savingsShare,
+        });
+        const cleanRationale = choice.data.rationale.trim();
         const decision: ArgonDecision = {
-          ...decideArgonAllocation({
-            lumpSumPounds,
-            monthlySurplusPounds,
-            monthlyIncomePounds,
-            riskProfile,
-            selectedBankIds: validBanks.length ? validBanks : undefined,
-            selectedStockIds: validStocks.length ? validStocks : undefined,
-            customSavingsShare: choice.data.savingsShare,
-          }),
-          rationale: choice.data.rationale.trim(),
+          ...baseDecision,
+          rationale: cleanRationale,
+          rationaleBullets: [
+            ...baseDecision.rationaleBullets.slice(0, 3),
+            `Strategy Rationale: ${cleanRationale}`,
+          ],
           decidedBy: 'gemini-4-argon',
         };
         return NextResponse.json(decision);

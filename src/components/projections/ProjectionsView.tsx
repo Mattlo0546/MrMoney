@@ -13,17 +13,52 @@ import {
   type ArgonDecision,
   type ArgonRiskProfile,
 } from '@/lib/finance/products';
-import { Check, ChartLine, Landmark, Minus, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  Check,
+  ChartLine,
+  Landmark,
+  Minus,
+  Scale,
+  ShieldCheck,
+  SlidersHorizontal,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
 import { Card, Choice, Field, PageFrame, parsePounds } from '@/components/settings/kit';
 import { IconBadge, WithIcon, type ValueKind } from '@/components/ui/Value';
 import { BrandLogo } from './BrandLogos';
 import { ProjectionDiagrams } from './ProjectionDiagrams';
 
 const PERIODS = [3, 6, 12, 24] as const;
-const RISK_OPTIONS: { id: ArgonRiskProfile; label: string }[] = [
-  { id: 'conservative', label: 'Conservative (75/25)' },
-  { id: 'balanced', label: 'Balanced (60/40)' },
-  { id: 'growth', label: 'Growth (45/55)' },
+const RISK_OPTIONS: {
+  id: ArgonRiskProfile;
+  title: string;
+  splitBadge: string;
+  subtitle: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    id: 'conservative',
+    title: 'Conservative',
+    splitBadge: '75/25',
+    subtitle: '75% Bank Cash · 25% Stocks',
+    icon: ShieldCheck,
+  },
+  {
+    id: 'balanced',
+    title: 'Balanced',
+    splitBadge: '60/40',
+    subtitle: '60% Bank Cash · 40% Stocks',
+    icon: Scale,
+  },
+  {
+    id: 'growth',
+    title: 'Growth',
+    splitBadge: '45/55',
+    subtitle: '45% Bank Cash · 55% Stocks',
+    icon: TrendingUp,
+  },
 ];
 const SCEN = [
   { key: 'low', label: 'Low', icon: TrendingDown },
@@ -370,7 +405,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-grad-primary-soft px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-grad-primary text-white shadow-glow">
-              <Sparkles aria-hidden="true" size={20} />
+              <Scale aria-hidden="true" size={20} strokeWidth={2.2} />
             </span>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -393,13 +428,13 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
             data-testid="argon-decide-btn"
             className="inline-flex min-h-10 items-center gap-2 rounded-full bg-grad-primary px-4 py-2 text-xs font-extrabold shadow-glow transition-transform hover:scale-[1.02] disabled:opacity-60"
           >
-            <Sparkles aria-hidden="true" size={14} />
+            <SlidersHorizontal aria-hidden="true" size={14} strokeWidth={2.3} />
             {argonBusy ? 'Argon is deciding…' : 'Ask Argon to Optimise Split'}
           </button>
         </div>
 
         <div className="space-y-4 p-5 sm:p-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field
               id="lumpSum"
               icon="total"
@@ -423,14 +458,61 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
               onChange={(e) => applyArgonReallocation({ monthlySurplus: e.target.value })}
               hint="Added monthly across your chosen products."
             />
-            <div className="sm:col-span-2 lg:col-span-1">
-              <Choice
-                label="Argon allocation strategy"
-                cols={3}
-                value={v.riskProfile}
-                onPick={(r) => applyArgonReallocation({ riskProfile: r as ArgonRiskProfile })}
-                options={RISK_OPTIONS.map((o) => ({ id: o.id, label: o.label }))}
-              />
+          </div>
+
+          {/* Spacious Argon Allocation Strategy Tabs (Conservative / Balanced / Growth) */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-bold text-text">Argon allocation strategy</span>
+              <span className="text-xs font-semibold text-muted">Savings / Investing split</span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Argon allocation strategy"
+              data-testid="argon-strategy-tabs"
+              className="grid grid-cols-1 gap-2 rounded-2xl border border-line bg-surface-2/70 p-1.5 sm:grid-cols-3"
+            >
+              {RISK_OPTIONS.map((opt) => {
+                const active = v.riskProfile === opt.id;
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    data-testid={`risk-tab-${opt.id}`}
+                    onClick={() => applyArgonReallocation({ riskProfile: opt.id })}
+                    className={`flex flex-col justify-between gap-1 rounded-xl px-3.5 py-2.5 text-left transition-all active:scale-[0.99] ${
+                      active
+                        ? 'bg-grad-primary text-white shadow-glow'
+                        : 'border border-transparent bg-surface/80 text-text hover:border-line hover:bg-surface'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-extrabold">
+                        <Icon
+                          aria-hidden="true"
+                          size={16}
+                          strokeWidth={2.3}
+                          className={active ? 'text-white' : 'text-accent'}
+                        />
+                        {opt.title}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-extrabold tabular-nums ${
+                          active ? 'bg-white/20 text-white' : 'bg-surface-2 text-muted'
+                        }`}
+                      >
+                        {opt.splitBadge}
+                      </span>
+                    </div>
+                    <span className={`text-[11px] font-medium ${active ? 'text-white/85' : 'text-muted'}`}>
+                      {opt.subtitle}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -469,10 +551,38 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
             </div>
           </div>
 
-          {/* Argon Rationale Callout */}
-          <div className="rounded-2xl border border-line bg-surface-2/80 px-4 py-3 text-xs leading-relaxed text-muted sm:text-sm">
-            <span className="font-extrabold text-text">Argon Decision: </span>
-            {decision.rationale}
+          {/* Argon Decision — Concise Bullet-Point Breakdown */}
+          <div
+            data-testid="argon-decision-summary"
+            className="rounded-2xl border border-line bg-surface-2/80 px-4 py-3.5 sm:px-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-text sm:text-[13px]">
+                Argon Decision Breakdown
+              </p>
+              <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 font-mono text-[11px] font-bold text-muted">
+                {decision.savingsSharePercent}% Cash · {decision.investmentsSharePercent}% Equities
+              </span>
+            </div>
+            <ul className="mt-2.5 space-y-1.5 text-xs leading-relaxed text-muted sm:text-[13px]">
+              {decision.rationaleBullets.map((bullet, idx) => {
+                const colonIdx = bullet.indexOf(':');
+                const lead = colonIdx > 0 ? bullet.slice(0, colonIdx + 1) : '';
+                const rest = colonIdx > 0 ? bullet.slice(colonIdx + 1) : bullet;
+                return (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                    />
+                    <span>
+                      {lead && <strong className="font-bold text-text">{lead}</strong>}
+                      {rest}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </section>

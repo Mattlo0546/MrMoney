@@ -370,6 +370,7 @@ export interface ArgonDecision {
   bankAllocations: BankAllocationItem[];
   stockAllocations: StockAllocationItem[];
   rationale: string;
+  rationaleBullets: string[];
   decidedBy: 'argon-engine' | 'gemini-4-argon';
 }
 
@@ -561,10 +562,33 @@ export function decideArgonAllocation(input: ArgonDecisionInput): ArgonDecision 
     iHigh: weightedStockRate((s) => s.returnHigh),
   };
 
-  const topBankNames = bankAllocations.map((b) => `${b.product.provider} (${b.product.aerBase.toFixed(2)}% AER)`).join(', ');
-  const topStockNames = stockAllocations.map((s) => `${s.product.provider} ${s.product.ticker}`).join(', ');
+  const bankSummaryParts = bankAllocations.map((b) => {
+    const amt =
+      b.lumpSumPounds > 0
+        ? `£${b.lumpSumPounds.toLocaleString('en-GB')}${b.monthlyPounds > 0 ? ` + £${b.monthlyPounds}/mo` : ''}`
+        : `+£${b.monthlyPounds}/mo`;
+    return `${b.product.provider} (${amt} @ ${b.product.aerBase.toFixed(2)}% AER)`;
+  });
+  const stockSummaryParts = stockAllocations.map((s) => {
+    const amt = `£${s.lumpSumPounds.toLocaleString('en-GB')}${s.monthlyPounds > 0 ? ` + £${s.monthlyPounds}/mo` : ''}`;
+    return `${s.product.provider} ${s.product.ticker} (${amt} @ ${s.product.returnBase.toFixed(1)}% base)`;
+  });
 
-  const rationale = `Argon allocated your £${lumpSumPounds.toLocaleString('en-GB')} lump sum into £${savingsNowPounds.toLocaleString('en-GB')} (${savingsSharePercent}%) instant-access & ISA cash savings across ${topBankNames} at a blended ${rates.sBase.toFixed(2)}% AER, and £${invNowPounds.toLocaleString('en-GB')} (${investmentsSharePercent}%) into low-cost equities across ${topStockNames} at a blended ${rates.iBase.toFixed(2)}% base annual return.`;
+  const strategyNote =
+    riskProfile === 'conservative'
+      ? 'Prioritises capital preservation with 75% in FSCS-protected UK cash and 25% in global index trackers.'
+      : riskProfile === 'growth'
+        ? 'Tilts toward long-term compounding (55% equities) while keeping a 45% instant-access cash buffer.'
+        : 'Balances liquid emergency savings (60% FSCS-protected cash) with tax-free ISA equity growth (40%).';
+
+  const rationaleBullets = [
+    `Capital Split: £${savingsNowPounds.toLocaleString('en-GB')} (${savingsSharePercent}%) to UK bank savings and £${invNowPounds.toLocaleString('en-GB')} (${investmentsSharePercent}%) to stock/ETF investments (+£${savingsAddPounds}/mo savings, +£${invAddPounds}/mo investing).`,
+    `Bank Delivery (${rates.sBase.toFixed(2)}% blended AER): ${bankSummaryParts.join(' · ')}.`,
+    `Equity Delivery (${rates.iBase.toFixed(2)}% base return): ${stockSummaryParts.join(' · ')}.`,
+    `Strategy Rationale: ${strategyNote}`,
+  ];
+
+  const rationale = rationaleBullets.join(' ');
 
   return {
     lumpSumPounds,
@@ -583,6 +607,7 @@ export function decideArgonAllocation(input: ArgonDecisionInput): ArgonDecision 
     bankAllocations,
     stockAllocations,
     rationale,
+    rationaleBullets,
     decidedBy: 'argon-engine',
   };
 }
