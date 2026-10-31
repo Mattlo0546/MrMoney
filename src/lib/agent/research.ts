@@ -6,20 +6,23 @@
  */
 import { z } from 'zod';
 import { CuratedOfferSource, type Offer, type OfferCategory } from '@/lib/offers';
-import { GeminiError, generateContent, visibleText, type GroundingMetadata } from './gemini';
+import { generateContent, visibleText, type GroundingMetadata } from './gemini';
 import { RESEARCH_LABEL, SAMPLE_LABEL, type ResearchArgs, type ResearchItem, type ResearchResult, type ResearchTopic } from './types';
 
 /**
- * Benchmark 2026-10-31 (2 runs x 2 queries each, google_search grounding; see README.md):
+ * Benchmark 2026-10-31 (2 runs x 2 queries: "best UK easy-access savings rates today", "UK student discounts on food in London"; google_search grounding):
  *   gemini-4-argon   mean 15.8s (12.2–22.0)  best quality: top rate (Cahoot 5.00%), detailed conditions, on-topic
  *   gemini-3.5-flash mean 16.4s (10.8–22.5)  good, but drifted into cash ISAs for an easy-access query
  *   gemini-3.8-flash mean 20.5s (16.9–25.7)  good quality, slowest
- * => argon primary; 3.5-flash only if argon errors (not on timeout: the 30s research budget is spent).
+ * Live smoke runs later showed argon tails of 24–25s+, so the search is HEDGED: argon starts first; if it has not
+ * answered after HEDGE_AFTER_MS (or fails), gemini-3.5-flash starts in parallel and the first grounded answer wins.
+ * Both share a hard deadline of RESEARCH_DEADLINE_MS, keeping research within the ~30s budget (R-chat-ux).
  */
 export const RESEARCH_MODEL = 'gemini-4-argon';
 export const RESEARCH_FALLBACK_MODEL = 'gemini-3.5-flash';
 export const EXTRACT_MODEL = 'gemini-3.5-flash-lite';
-export const RESEARCH_TIMEOUT_MS = 25_000;
+export const HEDGE_AFTER_MS = 12_000;
+export const RESEARCH_DEADLINE_MS = 26_000;
 export const EXTRACT_TIMEOUT_MS = 6_000;
 export const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_ITEMS = 6;
@@ -48,6 +51,8 @@ export interface ResearchDeps {
   now?: () => Date;
   today: string;
   model?: string;
+  /** Start the fallback model after this many ms (default HEDGE_AFTER_MS). */
+  hedgeAfterMs?: number;
   /** Called when falling back so the caller can log. */
   onFallback?: (reason: string) => void;
 }
@@ -150,7 +155,7 @@ export function citeItems(extracted: z.infer<typeof ExtractedSchema>['items'], g
 
 // ------------------------------------------------------------------ live search
 
-async function groundedSearch(args: ResearchArgs, deps: ResearchDeps & { apiKey: string }, model: string) {
+async function groundedSearch(args: ResearchArgs, deps: ResearchDeps & { apiKey: string }, model: string, timeoutMs: number) {
   const sys = [
     `You research current UK personal-finance facts for a student budgeting app. Today is ${deps.today}. Use Google Search.`,
     `Focus: ${TOPIC_HINT[args.topic]}`,
@@ -158,7 +163,7 @@ async function groundedSearch(args: ResearchArgs, deps: ResearchDeps & { apiKey:
   ].join('\n');
   const q = args.city ? `${args.query} (city: ${args.city}, UK)` : `${args.query} (UK)`;
   const res = await generateContent({
-    apiKey: deps.apiKey, model, fetchImpl: deps.fetchImpl, timeoutMs: RESEARCH_TIMEOUT_MS,
+    apiKey: deps.apiKey, model, fetchImpl: deps.fetchImpl, timeoutMs,
     body: { systemInstruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text: q }] }], tools: [{ google_search: {} }] },
   });
   const cand = res.candidates?.[0];
@@ -205,6 +210,39 @@ export async function sampleFallback(args: ResearchArgs, now: Date): Promise<Res
   };
 }
 
+// ------------------------------------------------------------------ hedging
+
+type Grounded = Awaited<ReturnType<typeof groundedSearch>> & { model: string };
+
+/** Primary first; the fallback model starts after `hedgeAfterMs` or as soon as the primary fails. First success wins. */
+function hedgedSearch(args: ResearchArgs, d: ResearchDeps & { apiKey: string }, primary: string, hedgeAfterMs: number): Promise<Grounded> {
+  const started = Date.now();
+  const run = (model: string) => groundedSearch(args, d, model, Math.max(1000, RESEARCH_DEADLINE_MS - (Date.now() - started))).then((g) => ({ ...g, model }));
+  if (primary === RESEARCH_FALLBACK_MODEL) return run(primary);
+  return new Promise<Grounded>((resolve, reject) => {
+    let failures = 0;
+    let hedged = false;
+    const fail = (e: unknown) => {
+      failures++;
+      if (failures === 2) reject(e);
+      else startHedge();
+    };
+    const win = (g: Grounded) => {
+      clearTimeout(timer);
+      resolve(g);
+    };
+    function startHedge() {
+      if (hedged) return;
+      hedged = true;
+      clearTimeout(timer);
+      run(RESEARCH_FALLBACK_MODEL).then(win, fail);
+    }
+    // Callbacks run asynchronously, so `timer` is initialised before startHedge/win can read it.
+    const timer = setTimeout(startHedge, hedgeAfterMs);
+    run(primary).then(win, fail);
+  });
+}
+
 // ------------------------------------------------------------------ entry
 
 export async function runResearch(args: ResearchArgs, deps: ResearchDeps): Promise<ResearchResult> {
@@ -221,15 +259,7 @@ export async function runResearch(args: ResearchArgs, deps: ResearchDeps): Promi
   const d = { ...deps, apiKey };
   const primary = deps.model ?? RESEARCH_MODEL;
   try {
-    let g: Awaited<ReturnType<typeof groundedSearch>>;
-    let model = primary;
-    try {
-      g = await groundedSearch(args, d, primary);
-    } catch (e) {
-      if (primary === RESEARCH_FALLBACK_MODEL || (e instanceof GeminiError && e.timeout)) throw e;
-      model = RESEARCH_FALLBACK_MODEL;
-      g = await groundedSearch(args, d, model);
-    }
+    const { model, ...g } = await hedgedSearch(args, d, primary, deps.hedgeAfterMs ?? HEDGE_AFTER_MS);
     const items = citeItems(await extract(g.text, g.gm, d), g.gm, g.text);
     if (!items.length) throw new Error('No cited items');
     const id = refId();

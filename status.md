@@ -14,7 +14,7 @@ _Updated by the orchestrator at every step. Newest entry first._
 ## Agents
 | Agent | Role | Task | State |
 |---|---|---|---|
-| agent-backend (Opus) | Execution | /api/chat with gemini-4-argon function calling + research tool (Google Search grounding) → `src/lib/agent/` | 🔄 running |
+| agent-backend (Opus) | Execution | /api/chat with gemini-4-argon + research (grounding) | ✅ done: 48 tests; live setup in 9.6s; research 41s cold / 9s cached |
 | chat-ui (Opus) | Execution | Chat-first UI: setup interview, chat panel with cards, mobile Chat/Calendar toggle → `src/components/chat/` | 🔄 running |
 | fix-calendar (Sonnet) | Execution | QA Q1, Q3, Q4, Q7, Q8, Q10–Q12, Q16, Q17 | ✅ done: committed |
 | fix-composer (Sonnet) | Execution | QA Q5, Q6, Q13 + fidelity | ✅ done: Undo was below the fold, now a sticky footer; cards reusable for chat |
@@ -44,6 +44,7 @@ _Updated by the orchestrator at every step. Newest entry first._
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: Agent backend done. Argon latency is variable (3–25s per call); research is hedged with 3.5-flash after 12s. Every figure in replies comes from the engine.
 - 2026-10-31: Shell, settings and projections fixes plus deliverables committed. The e2e journey is to be rewritten for chat.
 - 2026-10-31: User pivot: talk to the app. PRD amended to v3 (R-chat, R-research, R-chat-ux) and approved. Measured Argon function calling ~10s, search grounding ~28s. Contract: `.prd-to-production/chat-contract.md`. Running fix agents told to skip or adapt onboarding and composer work.
 - 2026-10-31: Engine fixes committed (162 tests). QA round 1: 20 defects. 4 fix and deliverable agents launched.

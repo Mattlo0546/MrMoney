@@ -6,7 +6,7 @@ import { researchForModel, runResearch, type ResearchDeps } from './research';
 import { decodeState, encodeState, type ModelState, type PendingCall } from './state';
 import { functionDeclarations } from './tools';
 import {
-  AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, MAX_LOOP_STEPS, ResearchArgsSchema,
+  AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, CONFIRM_TOOLS, MAX_LOOP_STEPS, ResearchArgsSchema,
   type Card, type ChatMessage, type ChatRequest, type ChatResponse, type ClientToolCall, type ClientToolName, type ResearchResult,
 } from './types';
 
@@ -21,9 +21,16 @@ export interface LoopDeps {
   timeoutMs?: number;
   research?: (args: z.infer<typeof ResearchArgsSchema>, deps: ResearchDeps) => Promise<ResearchResult>;
   onStatus?: StatusFn;
+  /** Timeout for the model step that follows a research call (default POST_RESEARCH_TIMEOUT_MS). */
+  postResearchTimeoutMs?: number;
+  /** Delay before the single retry on 429/5xx (default 600ms). */
+  retryDelayMs?: number;
   /** Optional thinkingConfig for the chat model (default: model default). */
   thinkingConfig?: Record<string, unknown>;
 }
+
+/** The summary step after research gets less time so the whole research turn stays near the ~30s budget. */
+export const POST_RESEARCH_TIMEOUT_MS = 12_000;
 
 let cardSeq = 0;
 const cardId = (p: string) => `${p}-${Date.now().toString(36)}-${(cardSeq++).toString(36)}`;
@@ -102,6 +109,8 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
     step = 0;
   }
 
+  const continuedAfterClientSuccess = !!req.toolResults?.length && req.toolResults.every((r) => r.ok);
+  const firstStep = step + 1;
   const tools = [{ functionDeclarations: functionDeclarations() }];
   const sys = systemPrompt(req.context);
 
@@ -113,14 +122,24 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
     deps.onStatus?.({ phase: 'thinking', label: 'Thinking…', step });
     let parts: GeminiPart[];
     try {
-      const res = await generateContent({
-        apiKey, model: deps.model ?? CHAT_MODEL, fetchImpl: deps.fetchImpl, timeoutMs: deps.timeoutMs ?? CHAT_TIMEOUT_MS,
+      const baseTimeout = deps.timeoutMs ?? CHAT_TIMEOUT_MS;
+      const timeoutMs = cards.some((c) => c.type === 'research_results') ? Math.min(baseTimeout, deps.postResearchTimeoutMs ?? POST_RESEARCH_TIMEOUT_MS) : baseTimeout;
+      const call = () => generateContent({
+        apiKey, model: deps.model ?? CHAT_MODEL, fetchImpl: deps.fetchImpl, timeoutMs,
         body: {
           systemInstruction: { parts: [{ text: sys }] },
           contents,
           tools,
           generationConfig: { temperature: 1, ...(deps.thinkingConfig ? { thinkingConfig: deps.thinkingConfig } : {}) },
         },
+      });
+      // One retry for transient HTTP errors only (not timeouts: the latency budget is spent).
+      const res = await call().catch(async (e: unknown) => {
+        if (e instanceof GeminiError && e.status !== undefined && (e.status === 429 || e.status >= 500)) {
+          await new Promise((r) => setTimeout(r, deps.retryDelayMs ?? 600));
+          return call();
+        }
+        throw e;
       });
       const cand = res.candidates?.[0];
       parts = (cand?.content?.parts ?? []) as GeminiPart[];
@@ -135,6 +154,14 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
         const text = research.sample
           ? 'Live search isn\'t available right now, so here are some sample offers. Check with the provider before acting.'
           : 'Here\'s what I found. These are live search results, so check with the provider before acting.';
+        return { kind: 'reply', text, cards, phase: 'done' };
+      }
+      // The client already applied its tools successfully: don't turn a slow summary into an error.
+      if (continuedAfterClientSuccess && step === firstStep) {
+        const previewsOnly = req.toolResults!.every((r) => CONFIRM_TOOLS.includes(r.name));
+        const text = previewsOnly
+          ? 'Here\'s the preview. Tap Apply to make the change, or Discard to leave your plan as it is.'
+          : 'Done. Tell me if you want to change anything.';
         return { kind: 'reply', text, cards, phase: 'done' };
       }
       return errorReply(friendlyModelError(e), true, cards);
