@@ -32,7 +32,7 @@ export function TopNav() {
       <div className="mx-auto flex min-h-14 max-w-[1400px] items-center gap-2 px-4 lg:gap-4 lg:px-6">
         <Link href="/" className="group inline-flex min-h-11 shrink-0 items-center gap-2.5 font-display text-lg font-extrabold tracking-tight lg:text-xl">
           <MrMoneyLogo size={36} className="shadow-glow rounded-[10px] transition-transform duration-200 group-hover:scale-105" />
-          <span>Mr<span className="text-grad-primary">Money</span></span>
+          <span className="max-[430px]:sr-only">Mr<span className="text-grad-primary">Money</span></span>
         </Link>
         {hasPlan && (
           <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">
@@ -79,11 +79,11 @@ export function TopNav() {
                   key={l.href}
                   href={l.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full text-sm font-bold ${
+                  className={`inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-[11px] font-bold leading-none sm:flex-row sm:gap-1.5 sm:text-sm ${
                     active ? 'bg-grad-primary shadow-glow' : 'text-muted'
                   }`}
                 >
-                  <l.icon aria-hidden="true" size={15} strokeWidth={2.3} />
+                  <l.icon aria-hidden="true" size={16} strokeWidth={2.3} />
                   {l.label}
                 </Link>
               );

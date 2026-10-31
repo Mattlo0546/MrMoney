@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { addDays, dayOfWeek, daysInMonth } from '@/lib/engine';
 import type { ISODate } from '@/lib/engine';
 import type { PlanData } from './data';
@@ -40,6 +40,7 @@ export function MonthCalendar({
   data: PlanData; today: ISODate; month: string; onMonth: (ym: string) => void;
   selected: ISODate; onSelect: (d: ISODate) => void; preview: PreviewChips; previewDays: Set<ISODate>;
 }) {
+  const sectionRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const focusNext = useRef(false);
   const [cursorRaw, setCursor] = useState<ISODate>(selected);
@@ -50,6 +51,30 @@ export function MonthCalendar({
     const count = Math.ceil(((dayOfWeek(first) + 6) % 7 + daysInMonth(y, m)) / 7);
     return Array.from({ length: count }, (_, w) => Array.from({ length: 7 }, (_, i) => addDays(start, w * 7 + i)));
   }, [first, y, m]);
+
+  useLayoutEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const fit = () => {
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      el.style.height = `${Math.max(360, vh - top)}px`;
+    };
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    if (ro && el.parentElement) {
+      for (const child of Array.from(el.parentElement.children)) {
+        if (child !== el) ro.observe(child);
+      }
+    }
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
+  }, [weeks.length]);
   const months = useMemo(() => {
     const out: string[] = [];
     for (let ym = data.minMonth; ym <= data.maxMonth && out.length < 60; ym = shiftMonth(ym, 1)) out.push(ym);
@@ -98,8 +123,8 @@ export function MonthCalendar({
   };
 
   return (
-    <section aria-label="Month calendar" className="flex min-w-0 flex-1 flex-col rounded-2xl border border-line bg-surface p-3 lg:p-3.5 shadow-soft">
-      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+    <section ref={sectionRef} aria-label="Month calendar" className="flex min-h-0 min-w-0 flex-1 flex-col rounded-2xl border border-line bg-surface p-3 lg:p-3.5 shadow-soft">
+      <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
         <label className="relative mr-1 inline-flex items-center gap-1.5">
           <span aria-hidden="true" className="grid size-8 place-items-center rounded-[10px] bg-grad-primary shadow-glow"><CalendarDays size={16} strokeWidth={2.2} /></span>
           <span className="sr-only">Month</span>
@@ -118,15 +143,15 @@ export function MonthCalendar({
         <button type="button" className="min-h-8 rounded-full border border-line bg-surface px-3 text-xs font-bold shadow-soft hover:bg-surface-2" onClick={() => { onMonth(ymOf(today)); onSelect(today); setCursor(today); }}>Today</button>
         <div className="ml-auto"><Legend /></div>
       </div>
-      <div ref={gridRef} role="grid" aria-label={monthLabel(month)} className="flex flex-col gap-1">
-        <div role="row" className="grid grid-cols-7 gap-1 text-[11px] font-bold uppercase tracking-wide text-muted">
+      <div ref={gridRef} role="grid" aria-label={monthLabel(month)} className="flex min-h-0 flex-1 flex-col gap-1">
+        <div role="row" className="grid shrink-0 grid-cols-7 gap-1 text-[11px] font-bold uppercase tracking-wide text-muted">
           {WEEKDAYS.map((w) => <div key={w} role="columnheader" className="px-1.5">{w}</div>)}
         </div>
         {weeks.map((week) => (
-          <div key={week[0]} role="row" className="grid grid-cols-7 gap-1">
+          <div key={week[0]} role="row" className="grid min-h-0 flex-1 grid-cols-7 gap-1">
             {week.map((d) => {
               const info = data.days.get(d);
-              if (!info) return <div key={d} role="gridcell" aria-hidden className="min-h-[58px] lg:min-h-[62px] rounded-xl border border-line opacity-40" />;
+              if (!info) return <div key={d} role="gridcell" aria-hidden className="h-full min-h-0 rounded-xl border border-line opacity-40" />;
               const chips = chipsFor(info, preview.get(d));
               const isToday = d === today;
               const past = d < today;
@@ -138,7 +163,7 @@ export function MonthCalendar({
               const pv = previewDays.has(d);
               const showTotal = info.inPlan && !past;
               return (
-                <div key={d} role="gridcell" aria-selected={sel} className="min-w-0">
+                <div key={d} role="gridcell" aria-selected={sel} className="flex min-h-0 min-w-0 flex-col">
                   <button
                     type="button"
                     data-day={d}
@@ -147,7 +172,7 @@ export function MonthCalendar({
                     aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${info.savedPence > 0 ? `, discounted by ${money(info.savedPence)}` : ''}${hint.headline ? `, ${hint.buckets.map((b) => BUCKET_LABEL[b]).join(', ')}: ${hint.headline.label}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
                     onClick={() => { setCursor(d); onSelect(d); }}
                     onKeyDown={(e) => onKey(e, d)}
-                    className={`relative flex min-h-[58px] lg:min-h-[62px] w-full flex-col gap-0.5 rounded-xl border p-1.5 text-left transition-colors outline-none ${
+                    className={`relative flex h-full min-h-0 flex-1 w-full flex-col gap-0.5 overflow-hidden rounded-xl border p-1.5 text-left transition-colors outline-none ${
                       pv ? 'border-dashed border-accent-2 bg-accent-soft' : sel ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong hover:bg-surface-2'
                     } ${pv ? 'border-2' : ''} ${past ? 'opacity-55' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
                   >

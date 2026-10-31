@@ -185,7 +185,7 @@ function MoneyInner({ state, today }: { state: EngineState | null; today: string
 
   return (
     <div className="min-h-dvh bg-bg text-text">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-4 px-4 pb-24 pt-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:px-6 lg:pt-6">
+      <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-4 px-4 pb-24 pt-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:px-6 lg:pt-6">
         <div className="flex flex-col gap-4">
           <Card className="overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-2">

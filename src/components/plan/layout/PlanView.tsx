@@ -265,14 +265,14 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
 
   if (desktop) {
     return (
-      <div className="mx-auto flex max-w-[1600px] items-start gap-3.5 px-4 py-3 lg:px-6 lg:py-3.5">
+      <div className="mx-auto flex max-w-[1600px] items-start gap-3.5 px-4 pt-3 pb-0 lg:px-6 lg:pt-3.5">
         <style dangerouslySetInnerHTML={{ __html: ENTER_CSS }} />
         <div ref={rootRef} key={`plan-${enterKey}`} className={`flex min-w-0 flex-1 flex-col gap-3 ${entering ? 'sp-plan-in' : ''}`}>
           {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} todayPlanned={todayPlanned} />}
           {banner}
           <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
         </div>
-        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[68px] flex max-h-[calc(100dvh-80px)] w-[400px] shrink-0 flex-col rounded-2xl border border-line bg-surface p-3.5 shadow-card ${entering ? 'sp-panel-in' : ''}`}>
+        <aside ref={asideFill} aria-label="Assistant" className={`sticky top-[68px] flex w-[400px] shrink-0 flex-col rounded-2xl border border-line bg-surface p-3.5 shadow-card ${entering ? 'sp-panel-in' : ''}`}>
           <div className="mb-2.5">
             <Segmented label="panel" value={tab} onChange={setTab} items={TABS} />
           </div>

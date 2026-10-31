@@ -561,7 +561,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                 Argon Decision Breakdown
               </p>
               <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 font-mono text-[11px] font-bold text-muted">
-                {decision.savingsSharePercent}% Cash · {decision.investmentsSharePercent}% Equities
+                <WithIcon icon="percent" tone="neutral" size={12}>{decision.savingsSharePercent}% Cash · {decision.investmentsSharePercent}% Equities</WithIcon>
               </span>
             </div>
             <ul className="mt-2.5 space-y-1.5 text-xs leading-relaxed text-muted sm:text-[13px]">
@@ -571,10 +571,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                 const rest = colonIdx > 0 ? bullet.slice(colonIdx + 1) : bullet;
                 return (
                   <li key={idx} className="flex items-start gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
-                    />
+                    <IconBadge icon="sparkle" tone="primary" size="xs" className="mt-0.5" />
                     <span>
                       {lead && <strong className="font-bold text-text">{lead}</strong>}
                       {rest}
@@ -763,14 +760,14 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
 
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full bg-pos/15 px-2.5 py-0.5 font-mono text-xs font-extrabold text-pos">
-                      {bank.aerBase.toFixed(2)}% AER
+                      <WithIcon icon="percent" tone="positive" size={12}>{bank.aerBase.toFixed(2)}% AER</WithIcon>
                     </span>
                     <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-muted">
-                      {bank.categoryLabel}
+                      <WithIcon icon="category" tone="neutral" size={11}>{bank.categoryLabel}</WithIcon>
                     </span>
                     {bank.fscsProtected && (
                       <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[10px] font-bold text-muted">
-                        FSCS £85k
+                        <WithIcon icon="reserve" tone="neutral" size={11}>FSCS £85k</WithIcon>
                       </span>
                     )}
                   </div>
@@ -783,12 +780,12 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-pos">Argon Delivers:</span>
                       <span className="font-mono font-extrabold tabular-nums">
-                        £{alloc.lumpSumPounds.toLocaleString('en-GB')} now + £{alloc.monthlyPounds}/mo
+                        <WithIcon icon="allowance" tone="primary" size={13}>£{alloc.lumpSumPounds.toLocaleString('en-GB')} now + £{alloc.monthlyPounds}/mo</WithIcon>
                       </span>
                     </div>
                   ) : (
                     <p className="text-xs font-semibold text-muted">
-                      Available · Low {bank.aerLow}% / Base {bank.aerBase}% / High {bank.aerHigh}%
+                      <WithIcon icon="percent" tone="neutral" size={12}>Available · Low {bank.aerLow}% / Base {bank.aerBase}% / High {bank.aerHigh}%</WithIcon>
                     </p>
                   )}
                 </div>
@@ -851,13 +848,13 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
 
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full bg-accent/15 px-2.5 py-0.5 font-mono text-xs font-extrabold text-accent">
-                      {stock.returnBase.toFixed(1)}% Base / yr
+                      <WithIcon icon="growth" tone="primary" size={12}>{stock.returnBase.toFixed(1)}% Base / yr</WithIcon>
                     </span>
                     <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-muted">
-                      OCF {stock.ocfPercent.toFixed(2)}%
+                      <WithIcon icon="percent" tone="neutral" size={11}>OCF {stock.ocfPercent.toFixed(2)}%</WithIcon>
                     </span>
                     <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[10px] font-bold text-muted">
-                      {stock.categoryLabel}
+                      <WithIcon icon="category" tone="neutral" size={11}>{stock.categoryLabel}</WithIcon>
                     </span>
                   </div>
 
@@ -869,12 +866,12 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-accent">Argon Delivers:</span>
                       <span className="font-mono font-extrabold tabular-nums">
-                        £{alloc.lumpSumPounds.toLocaleString('en-GB')} now + £{alloc.monthlyPounds}/mo
+                        <WithIcon icon="allowance" tone="primary" size={13}>£{alloc.lumpSumPounds.toLocaleString('en-GB')} now + £{alloc.monthlyPounds}/mo</WithIcon>
                       </span>
                     </div>
                   ) : (
                     <p className="text-xs font-semibold text-muted">
-                      Range · Low {stock.returnLow}% / Base {stock.returnBase}% / High {stock.returnHigh}%
+                      <WithIcon icon="percent" tone="neutral" size={12}>Range · Low {stock.returnLow}% / Base {stock.returnBase}% / High {stock.returnHigh}%</WithIcon>
                     </p>
                   )}
                 </div>

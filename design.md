@@ -2,6 +2,14 @@
 
 > **Status:** v2 direction approved (D15, D18). Binding order: `.prd-to-production/ui-contract.md` (tokens, fonts, ownership), then `.prd-to-production/design/spec.md` (behaviour, copy, states, figures), then the mockups (`design/index.md`, 62 images). v1 is archived in `design/v1-rejected/`.
 
+> **v3: white + gradient (user override).** The user asked for a minimalist white app with strong gradient components and an SVG icon at every value. Where this note disagrees with the dark/lime/navy text in §1–2 below, **v3 wins**; the rest of §1–2 is kept as history.
+>
+> - **Page and surfaces:** pure white (`--bg`/`--surface` #FFFFFF), `--surface-2` #F2F3F8, hairline `--line` #E5E7EF, soft `shadow-soft`/`shadow-card`. Text `--text` #0F172A (17.9:1), `--muted` #5B6478 (5.9:1 on white, 5.4:1 on surface-2). Light is the default whatever the OS prefers; `[data-theme="dark"]` is a coherent secondary theme.
+> - **Colour lives in components, as gradient tokens** (`--grad-*`, utilities `bg-grad-primary|hero|positive|warning|negative` plus `-soft` tints): primary indigo→violet #4F46E5→#7C3AED (5.7:1 on its lightest stop, white text) for buttons, hero, active tabs, spent chips, user bubbles; positive emerald→teal #047857→#0F766E (5.5:1) for income, "fits", applied and the "changed" bubble halo; warning amber→orange #B45309→#C2410C (5.0:1) for fixed bills and previews that need a decision; negative rose→red #E11D48→#B91C1C (4.7:1) for shortfalls and destructive actions. Solid text colours `--accent/--pos/--warn/--neg` are all at least 4.5:1 on white. The old `--lime/--coral/--navy/--c-*` tokens are removed.
+> - **Icon rule:** every displayed value (money, date, count, rate, setting) sits next to an SVG icon from `src/components/ui/Value.tsx` (`VALUE_ICONS`, `IconBadge`, `WithIcon`, `Stat`). Hero and tile numbers get a rounded gradient badge; rows, chips and lists get a 12–16px inline icon. Icons are `aria-hidden`; labels and test ids do not change. Axis ticks inside charts and prose sentences are exempt, and table cells rely on their row and column header icons.
+> - **Focus:** `outline` is reset globally, so keyboard focus is a 2px violet box-shadow ring (`--accent-2`, 5.7:1 on white; lavender on dark); text fields show it on their wrapper.
+> - **Semantics table (§3), re-skinned:** planned = dashed grey; spent = indigo gradient; fixed bill = amber gradient with a pin; income = emerald gradient; preview = dashed violet; shortfall = rose triangle; today = indigo gradient badge.
+
 ## 1. Direction: "Bold and bouncy"
 
 Sleek, bold and fun to touch, inspired by modern money apps. We take no names, logos, mascots or screens from them. The voice is supportive and never roasts.

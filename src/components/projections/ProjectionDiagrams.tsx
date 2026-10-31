@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { formatMoney, type ProjectionPoint, type Scenario } from '@/lib/engine';
 import type { ArgonDecision } from '@/lib/finance/products';
+import { WithIcon } from '@/components/ui/Value';
 import { BrandLogo } from './BrandLogos';
 
 interface ProjectionDiagramsProps {
@@ -343,28 +344,28 @@ export function ProjectionDiagrams({ months, scenarios, decision }: ProjectionDi
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-surface-2/70 p-3 text-xs sm:grid-cols-4">
             <div>
               <span className="font-bold text-muted">
-                {activeMonth === 0 ? 'Start (Month 0)' : `Month ${activeMonth} Base`}
+                <WithIcon icon="date" tone="primary" size={12}>{activeMonth === 0 ? 'Start (Month 0)' : `Month ${activeMonth} Base`}</WithIcon>
               </span>
               <p className="mt-0.5 font-mono text-sm font-extrabold text-pos tabular-nums">
-                {formatMoney(ptBase.total.pence)}
+                <WithIcon icon="total" tone="positive" size={14}>{formatMoney(ptBase.total.pence)}</WithIcon>
               </p>
             </div>
             <div>
               <span className="font-bold text-muted">Savings / Invested</span>
               <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">
-                {formatMoney(ptBase.savings.pence)} / {formatMoney(ptBase.investments.pence)}
+                <WithIcon icon="savings" tone="primary" size={14}>{formatMoney(ptBase.savings.pence)} / {formatMoney(ptBase.investments.pence)}</WithIcon>
               </p>
             </div>
             <div>
               <span className="font-bold text-muted">Compound Growth</span>
               <p className="mt-0.5 font-mono text-sm font-bold text-pos tabular-nums">
-                +{formatMoney(ptBase.growth.pence)}
+                <WithIcon icon="growth" tone="positive" size={14}>+{formatMoney(ptBase.growth.pence)}</WithIcon>
               </p>
             </div>
             <div>
               <span className="font-bold text-muted">Low — High Range</span>
               <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">
-                {fmtShortPounds(ptLow?.total.pence ?? ptBase.total.pence)} – {fmtShortPounds(ptHigh?.total.pence ?? ptBase.total.pence)}
+                <WithIcon icon="investments" tone="primary" size={14}>{fmtShortPounds(ptLow?.total.pence ?? ptBase.total.pence)} – {fmtShortPounds(ptHigh?.total.pence ?? ptBase.total.pence)}</WithIcon>
               </p>
             </div>
           </div>
@@ -429,10 +430,10 @@ export function ProjectionDiagrams({ months, scenarios, decision }: ProjectionDi
                       </div>
                     </div>
                     <div className="shrink-0 text-right font-mono text-xs font-extrabold tabular-nums">
-                      <span>£{s.lumpPounds.toLocaleString('en-GB')}</span>
-                      <span className="ml-1.5 text-[11px] font-semibold text-muted">
+                      <WithIcon icon="allowance" tone="primary" size={12} className="justify-end">£{s.lumpPounds.toLocaleString('en-GB')}</WithIcon>
+                      <WithIcon icon="repeat" tone="neutral" size={11} className="ml-1.5 justify-end text-[11px] font-semibold text-muted">
                         +£{s.monthlyPounds}/mo
-                      </span>
+                      </WithIcon>
                     </div>
                   </div>
                   <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface">
@@ -464,11 +465,11 @@ export function ProjectionDiagrams({ months, scenarios, decision }: ProjectionDi
                     <span className="font-bold">
                       {sc.label} Scenario
                     </span>
-                    <span className="font-mono font-extrabold tabular-nums">
-                      {formatMoney(pt.total.pence)}{' '}
-                      <span className="text-[11px] font-semibold text-pos">
+                    <span className="flex items-center gap-2 font-mono font-extrabold tabular-nums">
+                      <WithIcon icon="total" tone="primary" size={13}>{formatMoney(pt.total.pence)}</WithIcon>
+                      <WithIcon icon="growth" tone="positive" size={12} className="text-[11px] font-semibold text-pos">
                         ({pt.growth.pence >= 0 ? '+' : ''}{formatMoney(pt.growth.pence)} growth)
-                      </span>
+                      </WithIcon>
                     </span>
                   </div>
                   <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-2">
