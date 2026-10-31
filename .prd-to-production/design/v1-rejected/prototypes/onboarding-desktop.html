@@ -1,0 +1,28 @@
+<!doctype html><html lang="en-GB" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>StudentPlan · Onboarding</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><style>
+.ob { max-width: 600px; margin: 40px auto 64px; padding: 24px 40px 40px; display: flex; flex-direction: column; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-panel); }
+.ob.mob { margin: 0; border-radius: 0; box-shadow: none; padding: 16px 16px 32px; min-height: calc(100vh - 56px); }
+.ob .sketch { width: 100%; max-width: 440px; height: auto; aspect-ratio: 4/3; align-self: center; margin: -8px 0 -24px; }
+.ob .seg { align-self: flex-start; }
+.ob.mob .sketch { max-width: 300px; margin: -12px 0 -20px; }
+.ob-title { font-size: 30px; margin: 8px 0 24px; text-wrap: balance; }
+.ob.mob .ob-title { font-size: 26px; margin-bottom: 20px; }
+.ob-form { display: flex; flex-direction: column; gap: 16px; }
+.ob-actions { display: flex; gap: 12px; margin-top: 32px; }
+.ob.mob .ob-actions .btn { height: 48px; }
+.ob-actions .btn.primary { min-width: 140px; }
+.ob-prog { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.ob-prog .bar { flex: 1; height: 4px; background: var(--sunk); border-radius: 2px; overflow: hidden; }
+.ob-prog .bar i { display: block; height: 100%; background: var(--ink); }
+.ob-demo { margin-top: 16px; display: flex; justify-content: center; }
+.empty-frame { width: 100%; max-width: 400px; aspect-ratio: 4/3; align-self: center; border: 2px dashed var(--deficit); display: grid; place-items: center; color: var(--deficit); font-weight: 700; }
+</style></head><body class=""><header class="topbar"><a class="wordmark" href="#">StudentPlan</a></header><main class="ob"><div class="ob-prog"><span>1 of 9</span><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="9" aria-valuenow="1"><i style="width:11.1%"></i></div></div><img class="sketch" src="../sketches/funds.webp" alt="" width="640" height="480"><h1 class="title ob-title">How much money do you have?</h1><form class="ob-form" novalidate><div class="f">This money is<div class="seg" role="group"><button aria-pressed="true">A lump sum</button><button aria-pressed="false">A monthly allowance</button></div></div><label class="f">Amount<span class="ctl"><span class="u">£</span><span class="grow">3,900.00</span></span></label></form><div class="ob-actions"><button class="btn"><svg class="i" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m15 18-6-6 6-6" /> </svg>Back</button><span style="flex:1"></span><button class="btn primary">Next</button></div><div class="ob-demo"><button class="btn quiet">Try a demo student</button></div></main><script>
+document.fonts.ready.then(async () => {
+  await Promise.all(["400 16px 'Atkinson Hyperlegible Next'","500 16px 'Atkinson Hyperlegible Next'","700 16px 'Atkinson Hyperlegible Next'","700 26px 'Bricolage Grotesque'"].map(f => document.fonts.load(f)));
+  const imgs = [...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }));
+  await Promise.all(imgs);
+  if (window.__beforeReady) window.__beforeReady();
+  const ok = document.fonts.check("700 16px 'Atkinson Hyperlegible Next'") && document.fonts.check("700 26px 'Bricolage Grotesque'");
+  document.documentElement.dataset.fonts = ok ? "loaded" : "missing";
+  document.documentElement.dataset.ready = "1";
+});
+</script></body></html>

@@ -2,242 +2,497 @@
  {
   "html": "onboarding-desktop",
   "out": "onboarding-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-mobile",
   "out": "onboarding-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-error-desktop",
   "out": "onboarding-error-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-error-mobile",
   "out": "onboarding-error-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-welcome-desktop",
   "out": "onboarding-welcome-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-welcome-mobile",
   "out": "onboarding-welcome-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-last-until",
   "out": "onboarding-step-last-until",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-last-until-mobile",
+  "out": "onboarding-step-last-until-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-job",
   "out": "onboarding-step-job",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-job-mobile",
+  "out": "onboarding-step-job-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-other-income",
   "out": "onboarding-step-other-income",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-other-income-mobile",
+  "out": "onboarding-step-other-income-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-rent",
   "out": "onboarding-step-rent",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-rent-mobile",
+  "out": "onboarding-step-rent-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-reserve",
   "out": "onboarding-step-reserve",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-reserve-mobile",
+  "out": "onboarding-step-reserve-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-savings",
   "out": "onboarding-step-savings",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-savings-mobile",
+  "out": "onboarding-step-savings-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-food-transport",
   "out": "onboarding-step-food-transport",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-food-transport-mobile",
+  "out": "onboarding-step-food-transport-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "onboarding-step-priorities",
   "out": "onboarding-step-priorities",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "onboarding-step-priorities-mobile",
+  "out": "onboarding-step-priorities-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-desktop",
   "out": "plan-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-mobile",
   "out": "plan-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-light-desktop",
+  "out": "plan-light-desktop",
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-light-mobile",
+  "out": "plan-light-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-account-menu",
   "out": "plan-account-menu",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-month-menu",
   "out": "plan-month-menu",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-loading",
   "out": "plan-loading",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-loading-mobile",
+  "out": "plan-loading-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-deficit-desktop",
   "out": "plan-deficit-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-deficit-mobile",
   "out": "plan-deficit-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-day-desktop",
   "out": "plan-day-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-day-mobile",
   "out": "plan-day-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-day-ordinary-mobile",
+  "out": "plan-day-ordinary-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-day-item-menu",
   "out": "plan-day-item-menu",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-day-category",
   "out": "plan-day-category",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-desktop",
   "out": "plan-change-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-mobile",
   "out": "plan-change-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
-  "html": "plan-change-bubble",
+  "html": "plan-change-bubble-frame",
   "out": "plan-change-bubble-frame",
   "mobile": false,
-  "hash": "#t=340"
+  "hash": "#t=340",
+  "reduced": false,
+  "full": true
  },
  {
-  "html": "plan-change-bubble",
+  "html": "plan-change-bubble-reduced",
   "out": "plan-change-bubble-reduced",
   "mobile": false,
-  "hash": "#reduced",
-  "reduced": true
+  "hash": "#t=340",
+  "reduced": true,
+  "full": true
  },
  {
-  "html": "plan-change-bubble-mobile",
+  "html": "plan-change-bubble-mobile-frame",
   "out": "plan-change-bubble-mobile-frame",
   "mobile": true,
-  "hash": "#t=340"
+  "hash": "#t=300",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-preview-desktop",
   "out": "plan-change-preview-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-preview-mobile",
   "out": "plan-change-preview-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-tradeoff-desktop",
   "out": "plan-change-tradeoff-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-tradeoff-mobile",
   "out": "plan-change-tradeoff-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-clarify",
   "out": "plan-change-clarify",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-change-clarify-mobile",
+  "out": "plan-change-clarify-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-change-fail",
   "out": "plan-change-fail",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-change-fail-mobile",
+  "out": "plan-change-fail-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
+ },
+ {
+  "html": "plan-change-income-mobile",
+  "out": "plan-change-income-mobile",
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-offers-desktop",
   "out": "plan-offers-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "plan-offers-mobile",
   "out": "plan-offers-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "projections-desktop",
   "out": "projections-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "projections-mobile",
   "out": "projections-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "projections-empty-desktop",
   "out": "projections-empty-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "projections-empty-mobile",
   "out": "projections-empty-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "settings-desktop",
   "out": "settings-desktop",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "settings-mobile",
   "out": "settings-mobile",
-  "mobile": true
+  "mobile": true,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
   "html": "settings-recurrence-menu",
   "out": "settings-recurrence-menu",
-  "mobile": false
+  "mobile": false,
+  "hash": "",
+  "reduced": false,
+  "full": true
  },
  {
-  "html": "settings-reset-dialog",
+  "html": "settings-reset-dialog-desktop",
   "out": "settings-reset-dialog-desktop",
   "mobile": false,
+  "hash": "",
+  "reduced": false,
   "full": false
  },
  {
   "html": "settings-reset-dialog-mobile",
   "out": "settings-reset-dialog-mobile",
   "mobile": true,
+  "hash": "",
+  "reduced": false,
   "full": false
  }
 ]

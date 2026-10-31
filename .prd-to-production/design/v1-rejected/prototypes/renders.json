@@ -1,0 +1,243 @@
+[
+ {
+  "html": "onboarding-desktop",
+  "out": "onboarding-desktop",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-mobile",
+  "out": "onboarding-mobile",
+  "mobile": true
+ },
+ {
+  "html": "onboarding-error-desktop",
+  "out": "onboarding-error-desktop",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-error-mobile",
+  "out": "onboarding-error-mobile",
+  "mobile": true
+ },
+ {
+  "html": "onboarding-welcome-desktop",
+  "out": "onboarding-welcome-desktop",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-welcome-mobile",
+  "out": "onboarding-welcome-mobile",
+  "mobile": true
+ },
+ {
+  "html": "onboarding-step-last-until",
+  "out": "onboarding-step-last-until",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-job",
+  "out": "onboarding-step-job",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-other-income",
+  "out": "onboarding-step-other-income",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-rent",
+  "out": "onboarding-step-rent",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-reserve",
+  "out": "onboarding-step-reserve",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-savings",
+  "out": "onboarding-step-savings",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-food-transport",
+  "out": "onboarding-step-food-transport",
+  "mobile": false
+ },
+ {
+  "html": "onboarding-step-priorities",
+  "out": "onboarding-step-priorities",
+  "mobile": false
+ },
+ {
+  "html": "plan-desktop",
+  "out": "plan-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-mobile",
+  "out": "plan-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-account-menu",
+  "out": "plan-account-menu",
+  "mobile": false
+ },
+ {
+  "html": "plan-month-menu",
+  "out": "plan-month-menu",
+  "mobile": false
+ },
+ {
+  "html": "plan-loading",
+  "out": "plan-loading",
+  "mobile": false
+ },
+ {
+  "html": "plan-deficit-desktop",
+  "out": "plan-deficit-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-deficit-mobile",
+  "out": "plan-deficit-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-day-desktop",
+  "out": "plan-day-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-day-mobile",
+  "out": "plan-day-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-day-item-menu",
+  "out": "plan-day-item-menu",
+  "mobile": false
+ },
+ {
+  "html": "plan-day-category",
+  "out": "plan-day-category",
+  "mobile": false
+ },
+ {
+  "html": "plan-change-desktop",
+  "out": "plan-change-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-change-mobile",
+  "out": "plan-change-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-change-bubble",
+  "out": "plan-change-bubble-frame",
+  "mobile": false,
+  "hash": "#t=340"
+ },
+ {
+  "html": "plan-change-bubble",
+  "out": "plan-change-bubble-reduced",
+  "mobile": false,
+  "hash": "#reduced",
+  "reduced": true
+ },
+ {
+  "html": "plan-change-bubble-mobile",
+  "out": "plan-change-bubble-mobile-frame",
+  "mobile": true,
+  "hash": "#t=340"
+ },
+ {
+  "html": "plan-change-preview-desktop",
+  "out": "plan-change-preview-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-change-preview-mobile",
+  "out": "plan-change-preview-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-change-tradeoff-desktop",
+  "out": "plan-change-tradeoff-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-change-tradeoff-mobile",
+  "out": "plan-change-tradeoff-mobile",
+  "mobile": true
+ },
+ {
+  "html": "plan-change-clarify",
+  "out": "plan-change-clarify",
+  "mobile": false
+ },
+ {
+  "html": "plan-change-fail",
+  "out": "plan-change-fail",
+  "mobile": false
+ },
+ {
+  "html": "plan-offers-desktop",
+  "out": "plan-offers-desktop",
+  "mobile": false
+ },
+ {
+  "html": "plan-offers-mobile",
+  "out": "plan-offers-mobile",
+  "mobile": true
+ },
+ {
+  "html": "projections-desktop",
+  "out": "projections-desktop",
+  "mobile": false
+ },
+ {
+  "html": "projections-mobile",
+  "out": "projections-mobile",
+  "mobile": true
+ },
+ {
+  "html": "projections-empty-desktop",
+  "out": "projections-empty-desktop",
+  "mobile": false
+ },
+ {
+  "html": "projections-empty-mobile",
+  "out": "projections-empty-mobile",
+  "mobile": true
+ },
+ {
+  "html": "settings-desktop",
+  "out": "settings-desktop",
+  "mobile": false
+ },
+ {
+  "html": "settings-mobile",
+  "out": "settings-mobile",
+  "mobile": true
+ },
+ {
+  "html": "settings-recurrence-menu",
+  "out": "settings-recurrence-menu",
+  "mobile": false
+ },
+ {
+  "html": "settings-reset-dialog",
+  "out": "settings-reset-dialog-desktop",
+  "mobile": false,
+  "full": false
+ },
+ {
+  "html": "settings-reset-dialog-mobile",
+  "out": "settings-reset-dialog-mobile",
+  "mobile": true,
+  "full": false
+ }
+]

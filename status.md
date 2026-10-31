@@ -3,17 +3,25 @@
 _Updated by the orchestrator at every step. Newest entry first._
 
 ## Now
-- **Phase:** 2, mockups v2 in parallel with the non-UI build: engine, parser, store and offers (D13).
+- **Phase:** 3, the BUILD (user go-ahead, D18). Dev server at **http://localhost:3210** (port 3000 belongs to northstar).
 - **Gates:**
-  - Brief: ✅ approved (v2).
-  - Design: 🔁 redo. Mockups v1 rejected; new Cleo-inspired direction (D15).
-  - Build: 🔒 locked.
-- **Branch:** `prd/studentplan`. Last commit `071acf5` (local; engine excluded, still in progress).
+  - Brief: ✅ approved.
+  - Design: ✅ approved (D18; v2 mockups complete, recorded in the workflow).
+  - Build: 🔄 in progress.
+- **Branch:** `prd/studentplan`, last commit `6417111` (local).
+- **Shared UI contract:** `.prd-to-production/ui-contract.md`.
 
 ## Agents
 | Agent | Role | Task | State |
 |---|---|---|---|
-| designer-v2 (Opus) | Design | Mockups v2, Cleo-inspired, all 7 screens + states → `.prd-to-production/design/` (v1 moved to `v1-rejected/`) | 🔄 running |
+| shell-ui (Sonnet) | Execution | Tokens, fonts, nav, UI primitives, illustrations, ReUI dropdowns | ✅ done: typecheck, lint and build pass; ReUI -1/-5/-8 installed; -8 used for the app menu |
+| onboarding-ui (Sonnet) | Execution | 10-step onboarding with illustrations + demo shortcut | 🔄 running |
+| calendar-ui (Sonnet) | Execution | /plan: summary, calendar/agenda, day detail, bubble, panels | ✅ code done (not browser-verified; it tested the wrong port) → QA |
+| composer-ui (Sonnet) | Execution | Composer, Change panel (preview/apply/trade-off/undo), Offers panel | 🔄 running |
+| pages-ui (Sonnet) | Execution | /projections and /settings | 🔄 running |
+| engine-fix (Opus) | Execution | D16 (groceries floor, borrow from the week) and the review fixes (explanations, earmarks, trade-offs, idempotency) | 🔄 running |
+| engine-reviewer (Opus) | Review | Independent engine review | ✅ done: core safe; 15 findings → engine-fix |
+| designer-v2 (Opus) | Design | Mockups v2, Cleo-inspired, all 7 screens + states | ✅ done: 62 images; design check passed; approval recorded (D18) |
 | parser-dev (Sonnet) | Execution | DemoParser + GeminiParser (`gemini-3.8-flash`) + `/api/parse` → `src/lib/parser/` | ✅ done: 52 tests; live Gemini smoke OK. Fix queued (D17). |
 | store-dev (Sonnet) | Execution | localStorage store, preview/apply/undo, highlight state → `src/lib/store/` | ✅ done: 12 tests pass; typecheck and lint exit 0 |
 | offers-dev (Sonnet) | Execution | Curated sample offers + matching → `src/lib/offers/` | ✅ done: 11 sample offers, 9 tests pass, lint clean |
@@ -25,10 +33,12 @@ _Updated by the orchestrator at every step. Newest entry first._
 | mockup-designer | Design / build | `design/spec.md`, prototypes, desktop+mobile PNGs for 7 screens, contact sheet | ✅ done: 47 PNGs, design check passed |
 | scaffolder (Sonnet) | Execution | Next.js + TS + Tailwind + Vitest + Playwright scaffold | ✅ done: Next 16.4, React 19.3; install/typecheck/lint/build/test all exit 0 |
 | engine-dev (Opus) | Execution | Deterministic budget engine + invariant tests (`src/lib/engine`) | ✅ done: 75 tests; demo figures asserted (£25.84/day, £34.27 shortfall) |
-| engine-reviewer (Opus) | Review | Independent review of the engine against the PRD and invariants | 🔄 running |
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: All 5 routes return 200 on :3210; repo typecheck has 0 errors. Calendar done; browser QA pending.
+- 2026-10-31: Moved StudentPlan to port 3210; port 3000 is the user's northstar app. Fixed the /api/parse 500 by removing `runtime` (incompatible with cacheComponents). Gemini latency is ~7s; to optimise. Shell UI done.
+- 2026-10-31: User said "build it". 6 agents launched in parallel: 5 UI and 1 engine fix. The engine review verdict is safe to build on.
 - 2026-10-31: Parser done and committed. Decisions D16 (groceries floor, borrow from the week) and D17 ("need to spend" = expense). Engine change waits for the reviewer so all fixes are batched.
 - 2026-10-31: Engine, store and offers verified by the orchestrator: 96 tests pass, typecheck and lint exit 0. Committed. Independent engine review started.
 - 2026-10-31: Store done. Engine follow-ups to consider: an edit-entry intent, an undo diff, exporting the `UndoStack` type. The store works around all three today.

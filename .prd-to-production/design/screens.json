@@ -1,5 +1,5 @@
 {
-  "revision": "v1",
+  "revision": "v2",
   "viewports": {
     "desktop": {
       "width": 1440,
@@ -23,13 +23,21 @@
         "design/images/onboarding-welcome-desktop.png",
         "design/images/onboarding-welcome-mobile.png",
         "design/images/onboarding-step-last-until.png",
+        "design/images/onboarding-step-last-until-mobile.png",
         "design/images/onboarding-step-job.png",
+        "design/images/onboarding-step-job-mobile.png",
         "design/images/onboarding-step-other-income.png",
+        "design/images/onboarding-step-other-income-mobile.png",
         "design/images/onboarding-step-rent.png",
+        "design/images/onboarding-step-rent-mobile.png",
         "design/images/onboarding-step-reserve.png",
+        "design/images/onboarding-step-reserve-mobile.png",
         "design/images/onboarding-step-savings.png",
+        "design/images/onboarding-step-savings-mobile.png",
         "design/images/onboarding-step-food-transport.png",
-        "design/images/onboarding-step-priorities.png"
+        "design/images/onboarding-step-food-transport-mobile.png",
+        "design/images/onboarding-step-priorities.png",
+        "design/images/onboarding-step-priorities-mobile.png"
       ]
     },
     {
@@ -37,9 +45,12 @@
       "desktop": "design/images/plan-desktop.png",
       "mobile": "design/images/plan-mobile.png",
       "states": [
+        "design/images/plan-light-desktop.png",
+        "design/images/plan-light-mobile.png",
         "design/images/plan-account-menu.png",
         "design/images/plan-month-menu.png",
         "design/images/plan-loading.png",
+        "design/images/plan-loading-mobile.png",
         "design/images/plan-deficit-desktop.png",
         "design/images/plan-deficit-mobile.png"
       ]
@@ -49,6 +60,7 @@
       "desktop": "design/images/plan-day-desktop.png",
       "mobile": "design/images/plan-day-mobile.png",
       "states": [
+        "design/images/plan-day-ordinary-mobile.png",
         "design/images/plan-day-item-menu.png",
         "design/images/plan-day-category.png"
       ]
@@ -66,7 +78,10 @@
         "design/images/plan-change-tradeoff-desktop.png",
         "design/images/plan-change-tradeoff-mobile.png",
         "design/images/plan-change-clarify.png",
-        "design/images/plan-change-fail.png"
+        "design/images/plan-change-clarify-mobile.png",
+        "design/images/plan-change-fail.png",
+        "design/images/plan-change-fail-mobile.png",
+        "design/images/plan-change-income-mobile.png"
       ]
     },
     {

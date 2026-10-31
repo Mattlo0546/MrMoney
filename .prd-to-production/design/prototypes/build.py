@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Generate StudentPlan static design prototypes (design artifacts only).
+"""Generate StudentPlan v2 design prototypes (design artifacts only, not production code).
 
-Usage: python3 build.py <path-to-lucide-static/icons>
-All figures come from the demo fixture in brief open decision 4 and are computed
-here in integer pence, so every screen shows the same, mutually consistent numbers.
+Usage: python3 build.py <path-to-lucide-static@0.460.0/icons>
+Figures mirror src/lib/engine (demo-journey.test.ts) and are computed here in integer pence.
+Money uses the engine's formatMoney: "£35", "£25.84", "£3,900" (no ".00").
 """
 import datetime as dt
 import html
+import json
 import os
 import re
 import sys
@@ -16,6 +17,7 @@ ICONS = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("LUCIDE_ICONS", "")
 D = dt.date
 TODAY = D(2026, 11, 10)
 END = D(2027, 1, 31)
+RENDERS = []
 
 
 def icon(name, cls="i"):
@@ -27,10 +29,10 @@ def icon(name, cls="i"):
     return re.sub(r"\s+", " ", svg)
 
 
-def gbp(p, sign=False):
-    neg = p < 0
-    p = abs(p)
-    s = f"£{p // 100:,}.{p % 100:02d}"
+def m(p, sign=False):
+    """Engine formatMoney; sign=True prefixes a real minus or plus."""
+    neg, a = p < 0, abs(p)
+    s = f"£{a // 100:,}" + ("" if a % 100 == 0 else f".{a % 100:02d}")
     if sign:
         return ("−" if neg else "+") + s
     return ("−" if neg else "") + s
@@ -40,533 +42,555 @@ def esc(s):
     return html.escape(s, quote=True)
 
 
-def dlabel(d, year=False):
+def dl(d, year=False):
     s = f"{d.strftime('%a')} {d.day} {d.strftime('%b')}"
     return s + (f" {d.year}" if year else "")
 
 
-# ---------------------------------------------------------------- engine (fixture)
-CATS = ["Groceries", "Transport", "Eating out", "Shopping"]
+# ------------------------------------------------------------------ fixture model (engine mirror)
+CATS = [("groceries", "Groceries", "shopping-basket"), ("transport", "Transport", "bus"),
+        ("eating", "Eating out", "utensils"), ("shopping", "Shopping", "shopping-bag")]
+AFTER_S1 = {"s1", "bubble", "dinner_pv", "dinner", "concert_pv", "deficit", "s4"}
 
 
-def base_flex(d):
-    v = {"Groceries": 900, "Transport": 520, "Eating out": 550, "Shopping": 614}
-    if d >= D(2027, 1, 4):  # 28 remainder pence go to the last 28 days
-        v["Shopping"] += 1
+def cats(state, d):
+    v = {"groceries": 900, "transport": 520, "eating": 550, "shopping": 614}
+    if d >= D(2027, 1, 4):  # 28 remainder pence: +1p on the last 28 days, to groceries (largest remainder)
+        v["groceries"] += 1
+    if state in AFTER_S1 and d > TODAY:
+        v["shopping"] -= 12 if d >= D(2027, 1, 18) else 11
+    if state in ("dinner_pv", "dinner", "concert_pv", "s4") and d == D(2026, 11, 11):
+        v.update(eating=2000, shopping=0)  # D16 (provisional): groceries/transport untouched; £8.47 borrowed from later shopping
+    if state == "concert_pv":
+        if d == D(2026, 11, 14):
+            v = {k: 0 for k in v}
+        if D(2026, 11, 15) <= d <= D(2026, 11, 30):
+            v["shopping"] -= 215 if d >= D(2026, 11, 28) else 214
+    if state == "deficit" and d > TODAY:
+        v = {k: 0 for k in v}
+    if state in AFTER_S1 and d == TODAY:
+        v = {k: 0 for k in v}
     return v
 
 
-def commitments(d):
-    out = []
-    if d.day == 1 and TODAY <= d <= END:
-        out.append(("Rent", 62000))
-    if d.day == 15 and TODAY <= d <= END:
-        out.append(("Utilities", 5500))
-    return out
-
-
-def day_model(state, d):
-    """Return dict(kind, items[], total, actual_total, planned_total, short)."""
-    m = {"items": [], "short": 0, "kind": "plan", "actual": 0, "flex": 0, "commit": 0}
+def day(state, d):
+    """Return a dict describing one calendar day."""
+    r = {"d": d, "chips": [], "kind": "plan", "total": 0, "spent": 0, "pv": False, "zero": False}
     if d < TODAY:
-        m["kind"] = "before"
+        r["kind"] = "past"
         if d == D(2026, 11, 1):
-            m["items"].append(dict(t="cx", label="Rent", amt=62000))
-            m["actual"] = 62000
-        return m
+            r["chips"].append(("spent", "Rent", 62000, "pin"))
+        return r
     if d > END:
-        m["kind"] = "outside"
-        return m
-    flex = base_flex(d)
-    changed = set()
-    if state in ("s1", "dinner", "concert", "deficit", "bubble"):
-        if d > TODAY:
-            flex["Shopping"] -= 12 if d >= D(2027, 1, 18) else 11
-            changed.add("Shopping")
-    pv = set()
-    if state in ("dinner", "concert") and d == D(2026, 11, 11):
-        flex.update({"Eating out": 2000, "Shopping": 0, "Groceries": 53})
-        if state == "dinner":
-            pv |= {"Eating out", "Shopping", "Groceries"}
-    extra = []
-    if state == "concert":
-        if d == D(2026, 11, 14):
-            flex = {k: 0 for k in flex}
-            extra.append(dict(t="pv", label="Concert", amt=6000))
-        if D(2026, 11, 15) <= d <= D(2026, 11, 28):
-            flex["Eating out"] -= 244 if d <= D(2026, 11, 17) else 245
-            pv.add("Eating out")
-    if state == "deficit" and d > TODAY:
-        flex = {k: 0 for k in flex}
-        if d == D(2027, 1, 1):
-            m["short"] = 8500
-        if d == D(2027, 1, 15):
-            m["short"] = 5500
-    for lab, amt in commitments(d):
-        m["items"].append(dict(t="c", label=lab, amt=amt))
+        r["kind"] = "out"
+        return r
+    c = cats(state, d)
+    if d.day == 1:
+        r["chips"].append(("bill", "Rent", 62000, "pin"))
+    if d.day == 15:
+        r["chips"].append(("bill", "Utilities", 5500, "pin"))
     if d == D(2026, 12, 18):
-        m["items"].append(dict(t="inc", label="Family transfer", amt=30000))
-    if d == TODAY and state in ("s1", "dinner", "concert", "deficit", "bubble"):
-        m["items"].append(dict(t="x", label="Shower filter", amt=3500, cat="Household"))
+        r["chips"].append(("inc", "Transfer", 30000, None))
+    if d == TODAY and state in AFTER_S1:
+        r["chips"].append(("spent", "Shower filter", 3500, None))
+        r["spent"] += 3500
         if state == "deficit":
-            m["items"].append(dict(t="x", label="Tuition deposit", amt=240000, cat="Education"))
-    m["items"] += extra
-    for k in CATS:
-        if flex[k] > 0:
-            t = "pv" if k in pv else "p"
-            m["items"].append(dict(t=t, label=k, amt=flex[k], changed=(k in changed and state == "bubble")))
-    m["flex"] = sum(flex.values()) + sum(e["amt"] for e in extra)
-    m["actual"] = sum(i["amt"] for i in m["items"] if i["t"] in ("x", "cx"))
-    m["commit"] = sum(i["amt"] for i in m["items"] if i["t"] == "c")
-    m["changed"] = state == "bubble" and d >= TODAY
-    return m
+            r["chips"].append(("spent", "Tuition", 240000, None))
+            r["spent"] += 240000
+    if d == D(2026, 11, 11) and state in ("dinner_pv", "dinner", "concert_pv", "s4"):
+        r["chips"].append(("pv" if state == "dinner_pv" else "buy", "Dinner", 2000, None))
+        r["pv"] = state == "dinner_pv"
+    extra = 0
+    if state == "concert_pv" and d == D(2026, 11, 14):
+        r["chips"].append(("pv", "Concert", 6000, None))
+        r["pv"] = True
+        extra = 6000
+    if state == "concert_pv" and D(2026, 11, 15) <= d <= D(2026, 11, 30):
+        r["pv"] = True
+    if state == "deficit" and d == D(2027, 1, 1):
+        r["chips"].append(("short", "Short", 8500, "triangle-alert"))
+    if state == "deficit" and d == D(2027, 1, 15):
+        r["chips"].append(("short", "Short", 5500, "triangle-alert"))
+    r["cats"] = c
+    r["total"] = sum(c.values()) + extra
+    r["zero"] = r["total"] == 0 and not r["spent"]
+    return r
 
 
-def summary(state):
-    if state == "initial":
-        return dict(funds=390000, commit=140500, reserve=50000, savings=15000, flex=214500, today=2584, spent=0)
-    if state == "deficit":
-        return dict(funds=146500, commit=140500, reserve=50000, savings=0, flex=0, today=0, spent=243500, short=14000)
-    return dict(funds=386500, commit=140500, reserve=50000, savings=15000, flex=211000, today=0, spent=3500)
+SUMMARY = {
+    "s0": dict(funds=390000, bills=140500, reserve=50000, savings=15000, flex=214500, left=2584, spent=0),
+    "s1": dict(funds=386500, bills=140500, reserve=50000, savings=15000, flex=211000, left=0, spent=3500),
+    "s4": dict(funds=406500, bills=140500, reserve=50000, savings=15000, flex=231000, left=0, spent=3500),
+    "deficit": dict(funds=146500, bills=140500, reserve=50000, savings=0, flex=0, left=0, spent=243500),
+}
 
 
-# ---------------------------------------------------------------- shared chrome
+def summ(state):
+    return SUMMARY.get(state, SUMMARY["s0" if state == "s0" else "s1"])
+
+
+# ------------------------------------------------------------------ chrome
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-         '<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap" rel="stylesheet">')
+         '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">')
 READY = """<script>
+const FACES = ["500 16px 'Plus Jakarta Sans'","600 16px 'Plus Jakarta Sans'","700 16px 'Plus Jakarta Sans'","800 16px 'Plus Jakarta Sans'","700 40px 'Bricolage Grotesque'","800 40px 'Bricolage Grotesque'"];
+function frame(t) {
+  document.querySelectorAll('.bub').forEach(el => {
+    const L = t - Math.min((+el.dataset.i) * 40, 400);
+    const v = el.querySelector('.v'), cell = el.closest('.chg'), fl = cell && cell.querySelector('.flash');
+    let s = 1;
+    if (L >= 0 && L < 760) s = 1 + (cell && cell.classList.contains("arow") ? 0.03 : 0.075) * Math.exp(-L / 230) * Math.sin(Math.PI * L / 260);
+    if (cell) cell.style.transform = `scale(${s.toFixed(3)})`;
+    if (fl) fl.style.opacity = L < 0 ? 0 : L < 180 ? (L / 180).toFixed(2) : L < 760 ? (1 - (L - 180) / 580).toFixed(2) : 0;
+    el.querySelectorAll('.dotp').forEach((d, j) => {
+      const u = (L - 80 - j * 50) / 600, ang = [-50, -75, -30][j] * Math.PI / 180, dist = [30, 36, 24][j];
+      d.style.opacity = (u > 0 && u < 1) ? (1 - u).toFixed(2) : 0;
+      d.style.transform = `translate(${(Math.cos(ang) * dist * u).toFixed(1)}px, ${(Math.sin(ang) * dist * u).toFixed(1)}px) scale(${(1 - 0.5 * Math.max(0, u)).toFixed(2)})`;
+    });
+    if (v && el.dataset.from) {
+      const a = +el.dataset.from, b = +el.dataset.to;
+      const k = L < 180 ? 0 : L >= 500 ? 1 : (L - 180) / 320;
+      const p = Math.round(a + (b - a) * k), pn = Math.abs(p);
+      v.textContent = '£' + Math.floor(pn / 100).toLocaleString('en-GB') + (pn % 100 ? '.' + String(pn % 100).padStart(2, '0') : '');
+    }
+  });
+}
 document.fonts.ready.then(async () => {
-  await Promise.all(["400 16px 'Atkinson Hyperlegible Next'","500 16px 'Atkinson Hyperlegible Next'","700 16px 'Atkinson Hyperlegible Next'","700 26px 'Bricolage Grotesque'"].map(f => document.fonts.load(f)));
-  const imgs = [...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }));
-  await Promise.all(imgs);
-  if (window.__beforeReady) window.__beforeReady();
-  const ok = document.fonts.check("700 16px 'Atkinson Hyperlegible Next'") && document.fonts.check("700 26px 'Bricolage Grotesque'");
-  document.documentElement.dataset.fonts = ok ? "loaded" : "missing";
-  document.documentElement.dataset.ready = "1";
+  await Promise.all(FACES.map(f => document.fonts.load(f)));
+  await Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })));
+  const ok = FACES.every(f => document.fonts.check(f));
+  document.documentElement.dataset.fonts = ok ? 'loaded' : 'missing';
+  const h = location.hash.match(/t=(\\d+)/);
+  if (h && !matchMedia('(prefers-reduced-motion: reduce)').matches) frame(+h[1]);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('rm');
+  document.documentElement.dataset.ready = '1';
 });
 </script>"""
 
 
-def page(title, body, cls="", extra_head="", width=None):
-    w = f' style="width:{width}px"' if width else ""
-    return (f'<!doctype html><html lang="en-GB" data-theme="light"><head><meta charset="utf-8">'
-            f'<meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)}</title>{FONTS}'
-            f'<link rel="stylesheet" href="styles.css">{extra_head}</head><body class="{cls}"{w}>{body}{READY}</body></html>')
+def page(name, body, mobile=False, theme="dark", hash="", reduced=False, full=True, title="StudentPlan"):
+    doc = (f'<!doctype html><html lang="en-GB" data-theme="{theme}"><head><meta charset="utf-8">'
+           f'<meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(title)}</title>{FONTS}'
+           f'<link rel="stylesheet" href="styles.css">{READY}</head><body>{body}</body></html>')
+    with open(os.path.join(HERE, name + ".html"), "w") as f:
+        f.write(doc)
+    RENDERS.append({"html": name, "out": name if not hash else name + ("-reduced" if reduced else ""), "mobile": mobile, "hash": hash, "reduced": reduced, "full": full})
 
 
-def topbar(active="plan", demo=True, menu_open=False):
-    nav = "".join(f'<a href="#"{" aria-current=\"page\"" if k == active else ""}>{lab}</a>'
-                  for k, lab in [("plan", "Plan"), ("projections", "Projections"), ("settings", "Settings")])
-    demo_tag = '<span class="demo-tag"><span class="dot"></span>Demo · Tue 10 Nov 2026</span>' if demo else ""
-    return (f'<header class="topbar"><a class="wordmark" href="#">StudentPlan</a><nav class="nav" aria-label="Main">{nav}</nav>'
-            f'<span class="spacer"></span>{demo_tag}<button class="icon-btn" aria-label="App menu" aria-haspopup="menu" aria-expanded="{str(menu_open).lower()}">{icon("ellipsis")}</button></header>')
+def brand():
+    return f'<div class="brand"><span class="mark">{icon("calendar-days")}</span>StudentPlan</div>'
 
 
-def mhead(active="plan", demo=True):
-    demo_tag = '<span class="demo-tag"><span class="dot"></span>Demo · 10 Nov</span>' if demo else ""
-    nav = "".join(f'<a href="#"{" aria-current=\"page\"" if k == active else ""}>{lab}</a>'
-                  for k, lab in [("plan", "Plan"), ("projections", "Projections"), ("settings", "Settings")])
-    return (f'<header class="mhead"><a class="wordmark" href="#">StudentPlan</a><span class="spacer"></span>{demo_tag}'
-            f'<button class="icon-btn ghost" aria-label="App menu">{icon("ellipsis")}</button></header><nav class="mnav" aria-label="Main">{nav}</nav>')
+def topbar(active="plan", demo=True, menu=False):
+    links = "".join(f'<a href="#"{" aria-current=page" if k == active else ""}>{t}</a>' for k, t in (("plan", "Plan"), ("projections", "Projections"), ("settings", "Settings")))
+    return (f'<header class="top">{brand()}<nav class="nav" aria-label="Main">{links}</nav><span class="sp"></span>'
+            f'{"<span class=demo>Demo · Tue 10 Nov 2026</span>" if demo else ""}'
+            f'<button class="ibtn{" focus" if menu else ""}" aria-label="App menu" aria-haspopup="menu" aria-expanded="{str(menu).lower()}">{icon("ellipsis")}</button></header>')
 
 
-def summary_html(state, mobile=False):
-    s = summary(state)
-    figs = [
-        ("Funds left", gbp(s["funds"]), '<span class="sub income">+£300.00 on 18 Dec</span>', ""),
-        ("For commitments", gbp(s["commit"]), "", ""),
-        ("Minimum reserve", gbp(s["reserve"]), "", ""),
-        ("Planned savings", gbp(s["savings"]), '<span class="sub">of £150.00 goal</span>' if state == "deficit" else "", ""),
-        ("Flexible left", gbp(s["flex"]), "", ""),
-        ("Today", gbp(s["today"]), f'<span class="sub">{gbp(s["spent"])} spent</span>' if s["spent"] else '<span class="sub">left to spend</span>' if False else "", "today"),
-    ]
-    out = []
-    for lab, val, sub, c in figs:
-        out.append(f'<div class="fig {c}"><span class="lbl">{lab}</span><span class="val money">{val}</span>{sub}</div>')
+def mtop(active="plan", demo=True):
+    links = "".join(f'<a href="#"{" aria-current=page" if k == active else ""}>{t}</a>' for k, t in (("plan", "Plan"), ("projections", "Projections"), ("settings", "Settings")))
+    return (f'<header class="mtop">{brand()}<span class="sp"></span>{"<span class=demo>Demo · 10 Nov</span>" if demo else ""}'
+            f'<button class="ibtn" aria-label="App menu">{icon("ellipsis")}</button></header><nav class="mnav" aria-label="Main">{links}</nav>')
+
+
+# ------------------------------------------------------------------ summary
+def hero(state, mobile=False):
+    s = summ(state)
     if state == "deficit":
-        out[4] = ('<div class="fig deficit"><span class="lbl">Flexible left</span><span class="val money">£0.00</span>'
-                  '<span class="sub short">£140.00 short</span></div>')
-        # keep Today last
-        out[4], out[5] = out[5], out[4]
-    cls = "msum" if mobile else "summary"
-    return f'<section class="{cls}" aria-label="Summary">{"".join(out)}</section>'
+        return (f'<section class="hero def" aria-label="Today"><div class="k"><span>Left today</span><span class="tag coral">{icon("triangle-alert", "i xs")}Plan £290 short</span></div>'
+                f'<div class="big num">{m(0)}</div><div class="foot"><span>Flexible left</span><b>{m(0)}</b></div></section>')
+    left = f'<div class="big num">{m(s["left"])}</div>'
+    k = f'<div class="k"><span>Left today</span><span>{"£35 spent" if s["spent"] else "Tue 10 Nov"}</span></div>'
+    return f'<section class="hero" aria-label="Today">{k}{left}<div class="foot"><span>Flexible left</span><b>{m(s["flex"])}</b></div></section>'
 
 
-def chip(it, compact=True):
-    t = it["t"]
-    pin = icon("pin") if t in ("c", "cx") else ""
-    cls = {"p": "chip p", "x": "chip x", "c": "chip c", "cx": "chip c x", "inc": "chip inc", "pv": "chip pv"}[t]
-    amt = ("+" if t == "inc" else "") + gbp(it["amt"])
-    bub = ' data-bubble="chip"' if it.get("changed") or (t == "x" and it.get("bub")) else ""
-    data = ""
-    if it.get("changed"):
-        data = f' data-from="{it["amt"] + 11}" data-to="{it["amt"]}"'
-    title = {"p": "planned", "x": "spent", "cx": "paid", "c": "fixed", "inc": "income", "pv": "preview"}[t]
-    return (f'<span class="{cls}"{bub}{data} title="{title}">{pin}<span class="l">{esc(it["label"])}</span>'
-            f'<span class="a money">{amt}</span><span class="sr"> {title}</span></span>')
+def tiles(state):
+    s = summ(state)
+    sav = (f'<div class="tile"><span class="lbl">Savings</span><span class="v num">{m(s["savings"])}</span>'
+           + ('<span class="d c">of £150 goal</span>' if state == "deficit" else "") + '</div>')
+    return ('<div class="tiles">'
+            f'<div class="tile"><span class="lbl">Funds left</span><span class="v num">{m(s["funds"])}</span><span class="d">+£300 on 18 Dec</span></div>'
+            f'<div class="tile"><span class="lbl">{icon("pin", "i xs")}For bills</span><span class="v num">{m(s["bills"])}</span></div>'
+            f'<div class="tile"><span class="lbl">{icon("lock", "i xs")}Reserve</span><span class="v num">{m(s["reserve"])}</span></div>'
+            f'{sav}</div>')
 
 
-def cell_total(m, state):
-    if m["kind"] != "plan":
-        if m["actual"]:
-            return f'<span class="total actual money">{gbp(m["actual"])}</span>'
-        return ""
-    planned = m["flex"] + m["commit"]
-    if m["actual"]:
-        bub = ' data-bubble="total"' if m.get("changed") else ""
-        return (f'<span class="total actual money"{bub}>{gbp(m["actual"])}<span class="of">of {gbp(planned)}</span></span>')
-    bub = f' data-bubble="total" data-from="{planned + 11}" data-to="{planned}"' if m.get("changed") else ""
-    z = " zero" if planned == 0 else ""
-    return f'<span class="total money{z}"{bub}>{gbp(planned)}</span>'
+# ------------------------------------------------------------------ calendar
+def chip(c, big=False):
+    kind, label, amt, ic = c
+    word = {"bill": "bill", "spent": "spent", "inc": "income", "buy": "planned purchase", "pv": "preview", "short": "short"}[kind]
+    a = m(amt, sign=True) if kind == "inc" else m(amt)
+    i = icon(ic, "i xs") if ic else ""
+    return f'<span class="chip {kind}">{i}<span class="l">{esc(label)}</span><span class="a">{a}</span><span class="sr"> {word}</span></span>'
 
 
-def cell(d, month, state, selected=None, preview_days=()):
-    m = day_model(state, d)
-    cls = ["cell"]
-    if m["kind"] == "before":
-        cls.append("before")
-    if m["kind"] == "outside":
-        cls.append("outside")
+def cell_html(state, d, month, sel=None, bub_i=None, maxchips=2):
+    r = day(state, d)
+    cls = ["day"]
+    if r["kind"] != "plan":
+        cls.append(r["kind"])
     if d.month != month:
-        cls.append("other")
+        cls.append("om")
     if d == TODAY:
         cls.append("today")
-    if selected == d:
-        cls.append("selected")
-    if d in preview_days:
-        cls.append("preview")
-    items = m["items"]
-    if d == TODAY and state == "bubble":
-        for it in items:
-            if it["t"] == "x":
-                it["bub"] = True
-    shown = items if len(items) <= 4 else items[:3]
-    rest = [] if len(items) <= 4 else items[3:]
-    chips = "".join(chip(i) for i in shown)
-    if rest:
-        mb = ' data-bubble="chip"' if any(i.get("changed") for i in rest) else ""
-        chips += f'<span class="chip more"{mb}><span class="l">+{len(rest)}</span><span class="a money">{gbp(sum(i["amt"] for i in rest))}</span></span>'
-    short = ""
-    if m["short"]:
-        short = f'<span class="short-mark">{icon("triangle-alert")}Short {gbp(m["short"])}</span>'
-    aria = dlabel(d)
-    return (f'<div class="{" ".join(cls)}" role="gridcell" aria-label="{aria}"{" aria-current=\"date\"" if d == TODAY else ""}>'
-            f'<div class="head"><span class="num">{d.day}</span>{cell_total(m, state)}</div>'
-            f'<div class="chips">{chips}</div>{short}</div>')
+    if sel == d:
+        cls.append("sel")
+    if r["pv"]:
+        cls.append("pvd")
+    if r["zero"] and r["kind"] == "plan":
+        cls.append("zero")
+    chips = r["chips"]
+    shown = chips if len(chips) <= maxchips else chips[:maxchips - 1]
+    ch = "".join(chip(c) for c in shown)
+    if len(chips) > len(shown):
+        ch += f'<span class="chip more">+{len(chips) - len(shown)}</span>'
+    tot = ""
+    if r["kind"] == "plan":
+        if r["spent"]:
+            val, small = r["spent"], ''
+        else:
+            val, small = r["total"], ""
+        inner = f'<span class="v">{m(val)}</span>'
+        if bub_i is not None:
+            frm = 2584 if d < D(2027, 1, 4) else 2585
+            inner = (f'<span class="bub" data-i="{bub_i}" data-from="{frm}" data-to="{val}">'
+                     f'<span class="dotp" style="width:8px;height:8px;left:100%;top:-2px"></span><span class="dotp" style="width:6px;height:6px;left:92%;top:-6px"></span>'
+                     f'<span class="dotp" style="width:5px;height:5px;left:104%;top:6px"></span>{inner}</span>')
+            cls.append("chg")
+        tot = f'<div class="tot num">{inner}{small}</div>'
+    flash = '<span class="flash"></span>' if bub_i is not None else ""
+    lab = dl(d)
+    if r["kind"] == "plan":
+        lab += f", planned {m(r['total'])}" + (f", spent {m(r['spent'])}" if r["spent"] else "")
+    return f'<div class="{" ".join(cls)}" role="gridcell" aria-label="{esc(lab)}">{flash}<span class="n">{d.day}</span>{"<div class=chips>" + ch + "</div>" if ch else ""}{tot}</div>'
 
 
-def calendar(state, year=2026, month=11, selected=TODAY, preview_days=(), month_menu=False):
-    first = D(year, month, 1)
+def month_days(y, mo):
+    first = D(y, mo, 1)
     start = first - dt.timedelta(days=first.weekday())
-    nxt = D(year + (month == 12), month % 12 + 1, 1)
+    nxt = D(y + (mo == 12), mo % 12 + 1, 1)
     last = nxt - dt.timedelta(days=1)
     end = last + dt.timedelta(days=6 - last.weekday())
-    cells = []
-    d = start
+    out, d = [], start
     while d <= end:
-        cells.append(cell(d, month, state, selected, preview_days))
+        out.append(d)
         d += dt.timedelta(days=1)
-    wds = "".join(f'<div class="wd">{w}</div>' for w in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
-    mname = first.strftime("%B %Y")
-    menu = ""
+    return out
+
+
+def calendar(state, y=2026, mo=11, sel=TODAY, bubble=False, month_menu=False, mobile=False):
+    days = month_days(y, mo)
+    rows = len(days) // 7
+    cells, bi = [], 0
+    for d in days:
+        b = None
+        if bubble and TODAY <= d <= END:
+            b, bi = bi, bi + 1
+        cells.append(cell_html(state, d, mo, sel, b, maxchips=2 if rows >= 6 else 3))
+    name = D(y, mo, 1).strftime("%B")
+    mm = ""
     if month_menu:
-        opts = [("November 2026", True), ("December 2026", False), ("January 2027", False)]
-        items = "".join(f'<div class="mi{" sel" if s else ""}{" hi" if i == 1 else ""}" role="menuitemradio" aria-checked="{str(s).lower()}">{o}'
-                        f'{"<span class=chk>" + icon("check") + "</span>" if s else ""}</div>' for i, (o, s) in enumerate(opts))
-        menu = f'<div class="menu" role="menu" aria-label="Jump to month" style="left:0;top:44px;min-width:240px" data-reui="c-dropdown-menu-1">{items}</div>'
-    key = ('<div class="key" aria-label="Key"><span class="k"><i class="p"></i>Planned</span><span class="k"><i class="a"></i>Spent</span>'
-           f'<span class="k"><i class="c"></i>Fixed</span></div>')
-    return (f'<div class="monthbar" style="position:relative"><button class="month-trigger" aria-haspopup="menu" aria-expanded="{str(month_menu).lower()}">{mname}{icon("chevron-down")}</button>{menu}'
-            f'<button class="icon-btn ghost" aria-label="Previous month">{icon("chevron-left")}</button>'
-            f'<button class="icon-btn ghost" aria-label="Next month">{icon("chevron-right")}</button>'
-            f'<button class="btn sm">Today</button><span class="spacer"></span>{key}</div>'
-            f'<div class="cal" role="grid" aria-label="{mname}">{wds}{"".join(cells)}</div>')
+        opts = [("November", "2026", True), ("December", "2026", False), ("January", "2027", False)]
+        mm = ('<div class="menu" role="menu" aria-label="Jump to month" data-reui="c-dropdown-menu-1" style="left:0;top:56px;width:240px">'
+              + "".join(f'<div class="mi{" hi" if n == "December" else ""}" role="menuitemradio" aria-checked="{str(c).lower()}">{n} {yy}{"<span class=chk>" + icon("check") + "</span>" if c else ""}</div>' for n, yy, c in opts) + '</div>')
+    legend = ('<div class="legend" aria-label="Key">' + chip(("bill", "Bill", 0, "pin")).replace("£0", "") + chip(("spent", "Spent", 0, None)).replace("£0", "")
+              + chip(("inc", "Income", 0, None)).replace("+£0", "") + chip(("pv", "Preview", 0, None)).replace("£0", "") + '</div>')
+    wk = "".join(f"<span>{w}</span>" for w in ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+    return (f'<section class="cal" aria-label="Calendar"><div class="mbar"><button class="mtrig{" focus" if month_menu else ""}" aria-haspopup="menu" aria-expanded="{str(month_menu).lower()}">{name} <span class="yr">{y}</span>{icon("chevron-down")}</button>'
+            f'<button class="ibtn" aria-label="Previous month">{icon("chevron-left")}</button><button class="ibtn" aria-label="Next month">{icon("chevron-right")}</button>'
+            f'<button class="btn sm">Today</button>{legend}{mm}</div><div class="wk">{wk}</div><div class="grid" role="grid">{"".join(cells)}</div></section>')
 
 
-# ---------------------------------------------------------------- panel content
-def composer(text=None, busy=False):
-    if text:
-        f = f'<span class="field">{esc(text)}</span>'
-    else:
-        f = '<span class="field ph">Tell me what changed…</span>'
-    btn = (f'<button class="send" disabled aria-label="Reading">{icon("loader-circle")}</button>' if busy
-           else f'<button class="send" aria-label="Send">{icon("arrow-up")}</button>')
-    return f'<div class="composer"><label class="sr" for="nl">Tell me what changed</label><div class="input{" busy" if busy else ""}">{f}{btn}</div></div>'
+# ------------------------------------------------------------------ panel content
+def composer(text=None, busy=False, sugg=False):
+    s = ""
+    if sugg and not text:
+        s = '<div class="sugg"><button>I spent £…</button><button>Can I spend £…</button><button>I received £…</button></div>'
+    if busy:
+        return (f'<div class="composer"><div class="cin busy" aria-busy="true"><span class="t">{esc(text)}</span>'
+                f'<span class="send" role="button" aria-disabled="true" aria-label="Reading">{icon("loader-circle")}</span></div>{s}</div>')
+    t = f'<span class="t">{esc(text)}</span>' if text else '<span class="t ph">Tell me what changed…</span>'
+    return f'<div class="composer"><div class="cin" role="textbox" aria-label="Tell me what changed">{t}<button class="send" aria-label="Send">{icon("arrow-up")}</button></div>{s}</div>'
 
 
-def tabs(sel, badge=False):
+def ptabs(sel, dot=False):
     out = []
-    for k, lab in [("day", "Day"), ("change", "Change"), ("offers", "Offers")]:
-        b = '<span class="badge" aria-hidden="true"></span>' if (k == "change" and badge and sel != "change") else ""
-        out.append(f'<button role="tab" aria-selected="{str(k == sel).lower()}">{lab}{b}</button>')
-    return f'<div class="tabs" role="tablist">{"".join(out)}</div>'
+    for k, t in (("day", "Day"), ("change", "Change"), ("offers", "Offers")):
+        d = '<span class="dot" aria-hidden="true"></span>' if dot and k == "change" and sel != "change" else ""
+        out.append(f'<button role="tab" aria-selected="{str(k == sel).lower()}">{t}{d}</button>')
+    return f'<div class="ptabs" role="tablist">{"".join(out)}</div>'
 
 
-def stepper(amt, mobile=False):
-    return (f'<span class="stepper"><button aria-label="Decrease">{icon("minus")}</button><span class="v money">{gbp(amt)}</span>'
-            f'<button aria-label="Increase">{icon("plus")}</button></span>')
+def stepper(p, minus_ok=True):
+    return (f'<div class="step"><button aria-label="Decrease"{"" if minus_ok else " aria-disabled=true"}>{icon("minus", "i sm")}</button>'
+            f'<span class="amt num">{m(p)}</span><button aria-label="Increase">{icon("plus", "i sm")}</button></div>')
 
 
-def day_tab(state, d, item_menu=False, add_form=False):
-    m = day_model(state, d)
-    planned_items = [i for i in m["items"] if i["t"] in ("p", "pv")]
-    flex_all = base_flex(d)
-    if state in ("s1",) and d > TODAY:
-        flex_all["Shopping"] -= 11
-    planned = m["flex"]
-    spent = m["actual"]
-    left = max(planned - spent, 0)
-    tag = '<span class="tag today">Today</span>' if d == TODAY else ""
-    trio = (f'<div class="trio"><div><div class="lbl">Planned</div><div class="val p money">{gbp(planned)}</div></div>'
-            f'<div><div class="lbl">Spent</div><div class="val x money">{gbp(spent)}</div></div>'
-            f'<div><div class="lbl">Left</div><div class="val money">{gbp(left)}</div></div></div>')
-    rows = []
-    for c in [i for i in m["items"] if i["t"] == "c"]:
-        rows.append(f'<div class="row"><span class="mk c"></span><span class="name">{c["label"]}<small>Fixed · monthly</small></span><span class="amt money">{gbp(c["amt"])}</span></div>')
-    for i, it in enumerate(planned_items):
-        menu = ""
-        more = f'<button class="icon-btn ghost" aria-label="{it["label"]} actions" aria-haspopup="menu" aria-expanded="{str(item_menu and it["label"] == "Eating out").lower()}" style="width:32px;height:32px">{icon("ellipsis")}</button>'
-        if item_menu and it["label"] == "Eating out":
-            dates = [D(2026, 11, 12), D(2026, 11, 13), D(2026, 11, 14), D(2026, 11, 15)]
-            sub = "".join(f'<div class="mi{" hi" if x == D(2026, 11, 14) else ""}" role="menuitem">{dlabel(x)}</div>' for x in dates)
-            sub += '<div class="sep"></div><div class="mi" role="menuitem">' + icon("calendar-days") + 'Pick a date…</div>'
-            menu = (f'<div class="menu" role="menu" aria-label="Eating out actions" style="right:0;top:40px;width:232px" data-reui="c-dropdown-menu-5">'
-                    f'<div class="mi" role="menuitem">{icon("pencil")}Edit amount</div>'
-                    f'<div class="mi hi" role="menuitem" aria-haspopup="menu" aria-expanded="true">{icon("calendar-arrow-down")}Move to<span class="sub">{icon("chevron-right")}</span></div>'
-                    f'<div class="mi" role="menuitem">{icon("minus")}Set to £0.00</div></div>'
-                    f'<div class="menu" role="menu" aria-label="Move to" style="right:236px;top:80px;width:180px">{sub}</div>')
-        rows.append(f'<div class="row" style="position:relative"><span class="mk p"></span><span class="name">{it["label"]}</span>{stepper(it["amt"])}{more}{menu}</div>')
-    zero = [k for k in CATS if k not in [p["label"] for p in planned_items]]
-    for k in zero:
-        rows.append(f'<div class="row"><span class="mk p"></span><span class="name">{k}</span>{stepper(0)}<span style="width:32px"></span></div>')
-    srows = []
-    for it in [i for i in m["items"] if i["t"] == "x"]:
-        srows.append(f'<div class="row"><span class="mk x"></span><span class="name">{esc(it["label"])}</span>'
-                     f'<button class="catbtn" aria-haspopup="menu">{it["cat"]}{icon("chevron-down")}</button>'
-                     f'<span class="amt x money">{gbp(it["amt"])}</span><button class="icon-btn ghost" aria-label="{esc(it["label"])} actions" style="width:32px;height:32px">{icon("ellipsis")}</button></div>')
-    over = ""
-    if spent > planned and m["kind"] == "plan" and state != "deficit":
-        over = f'<p class="note">{icon("info")}<span>{gbp(spent - planned)} over today’s plan, taken from shopping on later days.</span></p>'
-    form = ""
-    if add_form:
-        cats = ["Groceries", "Transport", "Eating out", "Shopping", "Household", "Going out", "Books", "Other"]
-        items = "".join(f'<div class="mi{" sel" if c == "Household" else ""}{" hi" if c == "Going out" else ""}" role="menuitemradio" aria-checked="{str(c == "Household").lower()}">{c}'
-                        f'{"<span class=chk>" + icon("check") + "</span>" if c == "Household" else ""}</div>' for c in cats)
-        form = (f'<div style="border:1px solid var(--rule);border-radius:12px;padding:12px;margin-top:12px;position:relative">'
-                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-                f'<label class="f">Amount<span class="ctl"><span class="u">£</span><span class="grow">35.00</span></span></label>'
-                f'<div class="f">Category<button class="ctl" style="justify-content:space-between" aria-haspopup="menu" aria-expanded="true"><span>Household</span>{icon("chevron-down")}</button></div>'
-                f'<label class="f" style="grid-column:1/-1">What<span class="ctl">Shower filter</span></label></div>'
-                f'<div class="actions"><button class="btn">Cancel</button><button class="btn primary">Record expense</button></div>'
-                f'<div class="menu" role="menu" aria-label="Category" style="right:12px;top:84px;width:200px" data-reui="c-dropdown-menu-1">{items}</div></div>')
-        srows = []
-    spent_list = "".join(srows) if srows else ('' if add_form else '<p class="note" style="margin-top:4px">Nothing recorded yet.</p>')
-    add_btn = "" if add_form else f'<div class="actions"><button class="btn">{icon("plus")}Record expense</button></div>'
-    return (f'<div class="tabpanel" role="tabpanel"><div class="dayhead"><h3>{dlabel(d)}</h3>{tag}</div>{trio}'
-            f'<div class="listhead"><h4>Planned</h4><span class="sum money">{gbp(planned + m["commit"])}</span></div>{"".join(rows)}'
-            f'<div class="listhead"><h4>Spent</h4><span class="sum money">{gbp(spent)}</span></div>{spent_list}{over}{form}{add_btn}</div>')
+def item_menu():
+    sub = ["Fri 13 Nov", "Sat 14 Nov", "Sun 15 Nov", "Mon 16 Nov", "Pick a date…"]
+    subm = ('<div class="menu" role="menu" aria-label="Move to" style="left:calc(100% + 6px);top:44px;width:190px">'
+            + "".join(f'<div class="mi{" hi" if s == "Sat 14 Nov" else ""}" role="menuitem">{s}</div>' for s in sub) + '</div>')
+    return ('<div class="menu" role="menu" aria-label="Groceries actions" data-reui="c-dropdown-menu-5" style="right:0;top:54px;width:210px">'
+            f'<div class="mi" role="menuitem">{icon("pencil", "i sm")}Edit amount</div>'
+            f'<div class="mi hi" role="menuitem" aria-haspopup="menu" aria-expanded="true">{icon("calendar-days", "i sm")}Move to<span class="sub">{icon("chevron-right", "i sm")}</span></div>'
+            f'<div class="mi" role="menuitem">{icon("x", "i sm")}Set to £0</div>{subm}</div>')
 
 
-PROTECT = (f'<div class="protect">{{lock}}<span><b>Unchanged:</b> rent £620.00, utilities £55.00, minimum reserve £500.00, savings goal £150.00.</span></div>')
+def day_tab(state, d, menu=False, form=False):
+    r = day(state, d)
+    planned = 2584 if (d == TODAY) else r["total"]
+    spent = r["spent"]
+    leftv = max(0, planned - spent) if d != TODAY or state == "s0" else (2584 if state == "s0" else 0)
+    tag = '<span class="tag lime">Today</span>' if d == TODAY else ""
+    trio = (f'<div class="trio"><div><span class="lbl">Planned</span><span class="v num">{m(planned)}</span></div>'
+            f'<div><span class="lbl">Spent</span><span class="v num spent">{m(spent)}</span></div>'
+            f'<div><span class="lbl">Left</span><span class="v num">{m(leftv)}</span></div></div>')
+    note = ""
+    if d == TODAY and state in AFTER_S1:
+        note = f'<p class="note" style="margin:0">{icon("info", "i sm")}£9.16 over today’s plan, taken from shopping on later days.</p>'
+    prow = []
+    for k, n, ic in CATS:
+        v = r["cats"][k]
+        mn = item_menu() if (menu and k == "groceries") else ""
+        prow.append(f'<div class="irow pl"><span class="ic">{icon(ic)}</span><span class="nm">{n}</span>{stepper(v, v > 0)}'
+                    f'<button class="ibtn sm ghost{" focus" if mn else ""}" aria-label="{n} actions" aria-haspopup="menu">{icon("ellipsis")}</button>{mn}</div>')
+    srows = ""
+    if d == TODAY and state in AFTER_S1:
+        srows = (f'<div class="irow"><span class="ic sp">{icon("receipt")}</span><span class="nm">Shower filter<br><span class="catbtn" aria-haspopup="menu">Household{icon("chevron-down", "i xs")}</span></span>'
+                 f'<span class="amt num sp">{m(3500)}</span><button class="ibtn sm ghost" aria-label="Shower filter actions">{icon("ellipsis")}</button></div>')
+    else:
+        srows = '<div class="empty">Nothing recorded yet.</div>'
+    rec = f'<button class="btn sm" style="align-self:flex-start">{icon("plus", "i sm")}Record expense</button>'
+    if form:
+        cm = ('<div class="menu" role="menu" aria-label="Category" data-reui="c-dropdown-menu-1" style="left:0;top:86px;width:100%">'
+              + "".join(f'<div class="mi{" hi" if c == "Going out" else ""}" role="menuitemradio" aria-checked="{str(c == "Household").lower()}">{c}{"<span class=chk>" + icon("check") + "</span>" if c == "Household" else ""}</div>'
+                        for c in ("Groceries", "Transport", "Eating out", "Shopping", "Household", "Going out", "Books", "Other")) + '</div>')
+        rec = (f'<div class="reply" style="border-radius:22px;gap:12px"><div class="g2"><label class="f">Amount<span class="ctl"><span class="u">£</span><span class="grow">12</span></span></label>'
+               f'<div class="f" style="position:relative">Category<button class="ctl focus" style="justify-content:space-between" aria-haspopup="menu" aria-expanded="true"><span>Household</span>{icon("chevron-down")}</button>{cm}</div></div>'
+               f'<label class="f">What<span class="ctl"><span class="grow">Bin bags</span></span></label>'
+               f'<div class="acts"><button class="btn sm">Cancel</button><button class="btn sm primary">Record expense</button></div></div>')
+    plan_sum = m(sum(r["cats"].values()))
+    return (f'<div class="dhead"><h2 class="h2">{dl(d)}</h2>{tag}</div>{trio}{note}'
+            f'<div class="sechead"><span class="h3">Spent</span><b class="num">{m(spent)}</b></div>{srows}'
+            f'{rec if form else ""}'
+            f'<div class="sechead"><span class="h3">Planned</span><b class="num">{plan_sum}</b></div>{"".join(prow)}'
+            f'{"" if form else rec}')
 
 
-def protect():
-    return PROTECT.replace("{lock}", icon("pin"))
+def src(gem=True):
+    return (f'<span class="tag line src">{icon("sparkles", "i xs")}Read by Gemini</span>' if gem
+            else '<span class="tag line src" title="Read by the built-in demo parser, not AI">Demo parsing</span>')
 
 
-def src_tag(demo=False):
-    return '<span class="tag sample src">Demo parsing</span>' if demo else '<span class="tag ok src">Read by Gemini</span>'
+def prot(names=(("Rent", 62000), ("Utilities", 5500), ("Reserve", 50000), ("Savings goal", 15000))):
+    return ('<div class="prot"><span class="lbl">' + icon("lock", "i xs") + 'Unchanged</span>'
+            + "".join(f'<span class="tag">{n} {m(a)}</span>' for n, a in names) + '</div>')
 
 
-def change_s1():
-    rows = [
-        ("Shower filter", "Spent · Tue 10 Nov", "—", "£35.00"),
-        ("Today left", "Tue 10 Nov", "£25.84", "£0.00"),
-        ("Shopping a day", "Wed 11 Nov – Sun 3 Jan", "£6.14", "£6.03"),
-        ("Shopping a day", "Mon 4 – Sun 17 Jan", "£6.15", "£6.04"),
-        ("Shopping a day", "Mon 18 – Sun 31 Jan", "£6.15", "£6.03"),
-        ("Flexible left", "Until Sun 31 Jan", "£2,145.00", "£2,110.00"),
-    ]
-    return diff_table(rows)
+def diff(rows):
+    out = []
+    for nm, sub, before, after, up in rows:
+        b = f'<s>{before}</s>{icon("arrow-up", "i xs") if False else "→"}' if before else ""
+        out.append(f'<div class="r"><span class="nm">{nm}{"<small>" + sub + "</small>" if sub else ""}</span><span class="ba">{b}<b class="{"up" if up else ""}">{after}</b></span></div>')
+    return f'<div class="diff">{"".join(out)}</div>'
 
 
-def diff_table(rows):
-    body = "".join(f'<tr><td>{a}<small>{b}</small></td><td class="n before{" same" if c in ("—",) else ""} money">{c}</td><td class="n after money">{d}</td></tr>' for a, b, c, d in rows)
-    return f'<table class="diff"><thead><tr><th>Item</th><th class="n">Before</th><th class="n">After</th></tr></thead><tbody>{body}</tbody></table>'
+S1_TXT = ("Added your £35 expense (household, 10 Nov). That day's allowance covered £25.84; the other £9.16 comes from later days. "
+          "Shopping decreased by £9.16 across 11 Nov – 31 Jan. Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.")
+S2_TXT = ("Set aside £20 for Dinner (eating out) on 11 Nov. Eating out and shopping that day cover £11.53; the other £8.47 is borrowed from later shopping. "
+          "Groceries and transport are unchanged. Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.")
+S4_TXT = ("Added £200 of income. Groceries increased by £69.62, transport by £40.18, eating out by £42.64 and shopping by £47.56 across 11 Nov – 31 Jan. "
+          "Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.")
+DEF_TXT = ("Added your £2,400 expense (tuition, 10 Nov). All £2,400 comes from later days. Groceries decreased by £738.28, transport by £426.40, "
+           "eating out by £451 and shopping by £494.32 across 11 Nov – 31 Jan. Your plan is now £290 short; see the deficit details. "
+           "Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.")
 
 
 def change_tab(kind):
     if kind == "s1":
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You said <q>I spent £35 on a shower filter today</q></p>'
-                f'<div class="intent"><span class="tag ink">Expense</span><span class="what money">£35.00 · Household · Tue 10 Nov</span>{src_tag()}</div>'
-                f'<p class="explain" aria-live="polite">Added your £35.00 expense. Today’s £25.84 covers most of it; the other <b>£9.16 comes from shopping</b>, 11p a day from Wed 11 Nov (12p from 18 Jan).</p>'
-                f'{change_s1()}{protect()}<div class="actions"><button class="btn">{icon("undo-2")}Undo</button></div></div>')
-    if kind == "dinner":
-        rows = [("Eating out", "Wed 11 Nov", "£5.50", "£20.00"), ("Shopping", "Wed 11 Nov", "£6.03", "£0.00"),
-                ("Groceries", "Wed 11 Nov", "£9.00", "£0.53"), ("Day total", "Wed 11 Nov", "£25.73", "£25.73")]
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You asked <q>Can I spend £20 on dinner tomorrow?</q></p>'
-                f'<div class="intent"><span class="tag preview">Preview · not applied</span>{src_tag()}</div>'
-                f'<p class="explain"><b>Yes, it fits.</b> Wed 11 Nov has £25.73. Dinner raises eating out to £20.00; shopping (£6.03) and groceries (£8.47) cover the £14.50.</p>'
-                f'{diff_table(rows).replace("<td class=\"n before money\">£25.73</td>", "<td class=\"n before same money\">£25.73</td>")}{protect()}'
-                f'<div class="actions"><button class="btn">Discard</button><button class="btn primary">{icon("check")}Apply change</button></div></div>')
-    if kind == "concert":
-        opts = [
-            ("Eating out", "Sun 15 – Sat 28 Nov · 14 days", "−£2.44 to £2.45 a day", True),
-            ("Shopping", "Sun 15 – Mon 30 Nov · 16 days", "−£2.14 to £2.15 a day", False),
-            ("All flexible spending", "Sun 15 Nov – Sun 31 Jan · 78 days", "−£0.43 to £0.44 a day", False),
-        ]
-        o = "".join(f'<div class="opt{" on" if on else ""}" role="radio" aria-checked="{str(on).lower()}"><span class="radio"></span><span><span class="t">{t}</span><br><span class="d">{dd}</span><br><span class="r money">{r}</span></span></div>' for t, dd, r, on in opts)
-        rows = [("Concert ticket", "Planned · Sat 14 Nov", "—", "£60.00"), ("Other spending", "Sat 14 Nov", "£25.73", "£0.00"),
-                ("Eating out a day", "Sun 15 – Sat 28 Nov", "£5.50", "£3.05–£3.06")]
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You asked <q>Can I spend £60 on a concert ticket on Saturday?</q></p>'
-                f'<div class="intent"><span class="tag short">{icon("triangle-alert")}£34.27 short</span>{src_tag()}</div>'
-                f'<p class="shortline">Sat 14 Nov has £25.73, so a £60.00 ticket is <span class="amt money">£34.27</span> more than the day allows.</p>'
-                f'<fieldset role="radiogroup"><legend>Cover £34.27 from</legend>{o}</fieldset>'
-                f'<div class="listhead"><h4>Preview</h4><span class="tag preview">Not applied</span></div>{diff_table(rows)}{protect()}'
-                f'<div class="actions"><button class="btn">Discard</button><button class="btn primary">{icon("check")}Apply change</button></div></div>')
+        return ('<div class="chat"><div class="ub">I need to spend £35 on a replacement shower filter today</div><div class="reply" aria-live="polite">'
+                f'<div class="row1"><span class="tag blue">Expense</span><span class="parsed">£35 · Household · Tue 10 Nov</span>{src()}</div>'
+                f'<p>{S1_TXT}</p>'
+                + diff([("Today", "Tue 10 Nov", "£25.84", "£0 left", False),
+                        ("Shopping", "11 Nov – 31 Jan · 82 days", "", "−£9.16", False),
+                        ("Daily allowance", "from Wed 11 Nov", "£25.84", "£25.73", False)])
+                + prot() + f'<div class="acts"><button class="btn sm">{icon("undo-2", "i sm")}Undo</button></div></div></div>')
+    if kind == "s2":
+        return ('<div class="chat"><div class="ub">Can I spend £20 on dinner tomorrow?</div><div class="reply">'
+                f'<div class="row1"><span class="tag pv">Preview · not applied</span>{src()}</div>'
+                '<div class="verdict ok">Yes, it fits.</div><span class="tag lime" style="align-self:flex-start;height:32px;font-size:14px">Fits — borrows £8.47 from later shopping</span><span class="parsed">£20 · Eating out · Wed 11 Nov</span>'
+                f'<p>{S2_TXT}</p>'
+                + diff([("Eating out", "Wed 11 Nov", "£5.50", "£20", True), ("Shopping", "Wed 11 Nov", "£6.03", "£0", False),
+                        ("Shopping", "Later days", "", "−£8.47", False), ("Groceries and transport", "Wed 11 Nov", "", "£14.20 same", False)])
+                + '<div class="acts"><button class="btn sm">Discard</button><button class="btn sm primary">Apply change</button></div></div></div>')
+    if kind == "s3":
+        opts = [("Shopping, 15 Nov – 30 Nov", "16 days · −£2.14 to −£2.15 a day", True),
+                ("Eating out, 15 Nov – 28 Nov", "14 days · −£2.44 to −£2.45 a day", False),
+                ("All flexible spending, 15 Nov – 31 Jan", "78 days · −£0.43 to −£0.44 a day", False)]
+        o = "".join(f'<label class="opt{" on" if on else ""}" style="grid-template-columns:24px minmax(0,1fr)"><span class="rd" role="radio" aria-checked="{str(on).lower()}"></span><span><b>{t}</b><small>{s}</small></span></label>' for t, s, on in opts)
+        return ('<div class="chat"><div class="ub">Can I spend £60 on a concert ticket on Saturday?</div><div class="reply">'
+                f'<div class="row1"><span class="tag pv">Preview · not applied</span>{src()}</div>'
+                '<div class="verdict short">£34.27 short</div>'
+                '<p>Sat 14 Nov has £25.73, so a £60 ticket is £34.27 more than the day allows.</p>'
+                f'<fieldset class="opts" role="radiogroup"><legend>Cover £34.27 from</legend>{o}</fieldset>'
+                + diff([("Concert", "Sat 14 Nov", "", "£60", True), ("Shopping", "15 – 30 Nov", "£6.03", "£3.89", False), ("Flexible left", "", "", "£2,110 same", False)])
+                + '<div class="acts"><button class="btn sm">Discard</button><button class="btn sm primary">Apply change</button></div></div></div>')
     if kind == "clarify":
-        ch = "".join(f'<button class="choice">{c}</button>' for c in ["Sat 14 Nov", "Sun 15 Nov", "£15.00 each day"])
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You said <q>Keep £30 available for the weekend</q></p>'
-                f'<div class="intent"><span class="tag">Hold money</span><span class="what money">£30.00</span>{src_tag()}</div>'
-                f'<p class="ask">Which day should keep £30.00?</p><div class="choices">{ch}</div>'
-                f'<div class="actions"><button class="btn quiet" style="flex:none">Cancel</button></div></div>')
+        return ('<div class="chat"><div class="ub">Keep £30 for the weekend</div><div class="reply">'
+                f'<div class="row1"><span class="tag blue">Hold money</span>{src()}</div>'
+                '<div class="verdict" style="font-size:22px">Which day should keep £30?</div>'
+                '<div class="clar"><button>Sat 14 Nov</button><button>Sun 15 Nov</button><button>£15 each day</button></div>'
+                '<div class="acts"><button class="btn sm ghost" style="flex:none">Cancel</button></div></div></div>')
     if kind == "fail":
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You said <q>sort out my money for the trip thing</q></p>'
-                f'<div class="intent"><span class="tag">Not understood</span>{src_tag(demo=True)}</div>'
-                f'<p class="err" role="alert">{icon("triangle-alert")}<span>I couldn’t turn that into a change. Your plan hasn’t changed.</span></p>'
-                f'<p class="note" style="margin-top:8px">Try: “I spent £12 on groceries today” or “Can I spend £20 on Friday?”</p>'
-                f'<div class="actions"><button class="btn" style="flex:none">Edit sentence</button></div></div>')
+        return ('<div class="chat"><div class="ub">sort out the thing from before</div><div class="reply" role="alert">'
+                f'<div class="row1"><span class="tag line">Not understood</span>{src(False)}</div>'
+                '<p style="font-weight:800;font-size:17px">I couldn’t turn that into a change. Your plan hasn’t changed.</p>'
+                '<p class="muted" style="font-weight:600">Try: “I spent £12 on groceries today” or “Can I spend £20 on Friday?”</p>'
+                f'<div class="acts"><button class="btn sm" style="flex:none">{icon("pencil", "i sm")}Edit sentence</button></div></div></div>')
     if kind == "loading":
-        return (f'<div class="tabpanel" role="tabpanel" aria-busy="true"><p class="said">You asked <q>Can I spend £20 on dinner tomorrow?</q></p>'
-                f'<p class="status" role="status">{icon("loader-circle")}Reading your change…</p>'
-                f'<div class="skel" style="width:92%"></div><div class="skel" style="width:78%"></div><div class="skel" style="width:85%"></div>'
-                f'<div class="skel" style="width:60%;height:40px;margin-top:20px"></div></div>')
+        return ('<div class="chat" aria-busy="true"><div class="ub">I need to spend £35 on a replacement shower filter today</div><div class="reply">'
+                '<div class="row1"><span class="typing" aria-hidden="true"><i></i><i></i><i></i></span><span class="parsed" role="status">Reading your change…</span></div>'
+                '<div class="skel" style="width:92%"></div><div class="skel" style="width:78%"></div><div class="skel" style="width:85%"></div><div class="skel" style="width:40%"></div></div></div>')
+    if kind == "s4":
+        return ('<div class="chat"><div class="ub">I received an extra £200</div><div class="reply" aria-live="polite">'
+                f'<div class="row1"><span class="tag lime">Income</span><span class="parsed">£200 · Tue 10 Nov</span>{src()}</div>'
+                '<div class="verdict ok">+£200</div>'
+                f'<p>{S4_TXT}</p>'
+                + diff([("Funds left", "", "£3,865", "£4,065", True), ("Flexible left", "", "£2,110", "£2,310", True),
+                        ("Each day", "11 – 18 Nov", "", "+£2.43", True), ("Each day", "19 Nov – 31 Jan", "", "+£2.44", True)])
+                + prot() + f'<div class="acts"><button class="btn sm">{icon("undo-2", "i sm")}Undo</button></div></div></div>')
     if kind == "deficit":
-        rows = [("Tuition deposit", "Spent · Tue 10 Nov", "—", "£2,400.00"), ("Flexible a day", "Wed 11 Nov – Sun 31 Jan", "£25.73", "£0.00"),
-                ("Planned savings", "Goal by 31 Jan", "£150.00", "£0.00"), ("Short for rent", "Fri 1 Jan · £620.00 due", "—", "£85.00"),
-                ("Short for utilities", "Fri 15 Jan · £55.00 due", "—", "£55.00")]
-        return (f'<div class="tabpanel" role="tabpanel"><p class="said">You said <q>I paid £2,400 for my tuition deposit today</q></p>'
-                f'<div class="intent"><span class="tag ink">Expense</span><span class="what money">£2,400.00 · Education · Tue 10 Nov</span>{src_tag()}</div>'
-                f'<p class="shortline">Recorded. You now need <span class="amt money">£140.00</span> more to pay rent on Fri 1 Jan (£85.00 short) and utilities on Fri 15 Jan (£55.00 short) while keeping your £500.00 reserve.</p>'
-                f'{diff_table(rows)}'
-                f'<div class="protect">{icon("pin")}<span><b>Not touched:</b> your £500.00 minimum reserve. Flexible spending is £0.00 a day until you add income or change the plan.</span></div>'
-                f'<div class="actions"><button class="btn">{icon("plus")}Add income</button><button class="btn">Edit reserve</button></div>'
-                f'<div class="actions" style="margin-top:8px"><button class="btn">{icon("undo-2")}Undo</button></div></div>')
+        reasons = [("Savings goal", "Your £150 savings goal can't be funded: bills, your reserve and what you've spent need £290 more than you have."),
+                   ("Fri 1 Jan", "Rent (£620) on 1 Jan leaves you £85 below your £500 reserve."),
+                   ("Fri 15 Jan", "Utilities (£55) on 15 Jan leaves you £55 below your £500 reserve.")]
+        rl = "".join(f'<div class="r"><span class="nm">{a}<small style="color:var(--text);font-weight:600;font-size:13.5px">{b}</small></span></div>' for a, b in reasons)
+        return ('<div class="chat"><div class="ub">I paid £2,400 for my tuition deposit today</div><div class="reply" aria-live="polite">'
+                f'<div class="row1"><span class="tag blue">Expense</span><span class="parsed">£2,400 · Tuition · Tue 10 Nov</span></div>'
+                '<div class="verdict short">£290 short</div>'
+                f'<p>{DEF_TXT}</p><div class="diff" style="box-shadow:inset 0 0 0 2px var(--coral)">{rl}</div>'
+                + prot((("Reserve", 50000), ("Rent", 62000), ("Utilities", 5500)))
+                + f'<div class="acts"><button class="btn sm primary">{icon("plus", "i sm")}Add income</button><button class="btn sm">Edit reserve</button><button class="btn sm" style="flex:none" aria-label="Undo">{icon("undo-2", "i sm")}</button></div></div></div>')
     raise ValueError(kind)
 
 
 OFFERS = [
-    ("16-25 Railcard", "1/3 off most rail fares", "Transport", "Aged 16–25, or full-time student 26+", "£35.00 a year. £12 minimum fare Mon–Fri before 10am. Not for season tickets."),
+    ("16-25 Railcard", "1/3 off most rail fares", "Transport", "Aged 16–25, or full-time student 26+", "£35 a year. £12 minimum fare Mon–Fri before 10am. Not for season tickets."),
     ("itsu", "15% off food", "Eating out", "Register the itsu app with a university email", "Food only. Scan the app barcode in store."),
-    ("LEON", "15% off orders in app or kiosk", "Eating out", "Verified student (Student Beans)", "£6.00 minimum. Selected restaurants. Not on delivery apps."),
+    ("LEON", "15% off in app or kiosk", "Eating out", "Verified student (Student Beans)", "£6 minimum. Selected restaurants. Not on delivery apps."),
     ("Tesco Clubcard", "Clubcard Prices on selected groceries", "Groceries", "Anyone; free to join", "Scan the card or app at checkout."),
 ]
 
 
-def offers_tab():
+def offers_tab(n=4):
     rows = "".join(
-        f'<div class="offer"><div class="top"><span class="nm">{n}</span><span class="tag sample">Sample</span></div><div class="deal">{deal}</div>'
-        f'<dl><dt>Matches</dt><dd>{cat}</dd><dt>Eligibility</dt><dd>{el}</dd><dt>Conditions</dt><dd>{cond}</dd></dl>'
-        f'<button class="btn sm">Use on a planned purchase</button></div>' for n, deal, cat, el, cond in OFFERS)
-    return (f'<div class="tabpanel" role="tabpanel"><div class="listhead" style="margin-top:0"><h4>Sample offers</h4><span class="sum" style="font-weight:500">Checked 31 Oct 2026</span></div>{rows}</div>')
+        f'<article class="offer"><div class="top1"><span class="nm">{a}</span><span class="tag line">Sample</span></div><div class="deal">{b}</div>'
+        f'<dl><dt>Matches</dt><dd>{c}</dd><dt>Eligibility</dt><dd>{d}</dd><dt>Conditions</dt><dd>{e}</dd></dl>'
+        f'<button class="btn sm" style="align-self:flex-start">{icon("tag", "i sm")}Use on a planned purchase</button></article>' for a, b, c, d, e in OFFERS[:n])
+    return f'<div class="sechead" style="margin:0"><span class="h3">Sample offers</span><span class="lbl">Checked 31 Oct 2026</span></div>{rows}'
 
 
-def plan_desktop(state, tab, tabhtml, text=None, busy=False, month=(2026, 11), selected=TODAY, preview_days=(), menu=None, cls="", badge=False, extra_body=""):
-    acct = ""
-    if menu == "account":
-        acct = (f'<div class="menu" role="menu" aria-label="App menu" style="right:24px;top:52px;width:280px" data-reui="c-dropdown-menu-8">'
-                f'<div class="lab">Demo</div>'
-                f'<div class="mi" role="menuitemcheckbox" aria-checked="true">{icon("calendar-days")}Demo student<span class="switch" aria-hidden="true"></span></div>'
-                f'<div class="mi" role="menuitem" aria-disabled="true" style="color:var(--muted)">{icon("info")}Demo date: Tue 10 Nov 2026</div>'
-                f'<div class="sep"></div><div class="lab">App</div>'
-                f'<div class="mi hi" role="menuitem" aria-haspopup="menu" aria-expanded="true">{icon("sun-moon")}Theme<span class="sub">{icon("chevron-right")}</span></div>'
-                f'<div class="mi" role="menuitem">{icon("settings")}Settings</div>'
-                f'<div class="mi" role="menuitem">{icon("download")}Export plan (JSON)</div>'
-                f'<div class="sep"></div><div class="mi danger" role="menuitem">{icon("rotate-ccw")}Reset StudentPlan…</div></div>'
-                f'<div class="menu" role="menu" aria-label="Theme" style="right:308px;top:196px;width:170px">'
-                f'<div class="mi sel" role="menuitemradio" aria-checked="true"><span class="rd on"></span>Light</div>'
-                f'<div class="mi" role="menuitemradio" aria-checked="false"><span class="rd"></span>Dark</div>'
-                f'<div class="mi hi" role="menuitemradio" aria-checked="false"><span class="rd"></span>Match device</div></div>')
-    y, mo = month
-    body = (f'<div style="position:relative">{topbar("plan", True, menu == "account")}{acct}</div><main class="app {cls}"><div>{summary_html(state)}'
-            f'{calendar(state, y, mo, selected, preview_days, month_menu=(menu == "month"))}</div>'
-            f'<aside class="panel" aria-label="Changes">{composer(text, busy)}{tabs(tab, badge)}{tabhtml}</aside></main>{extra_body}')
-    return body
+def panel(tab, body, text=None, busy=False, dot=False, sugg=False):
+    return (f'<aside class="panel" aria-label="Plan panel">{composer(text, busy, sugg)}{ptabs(tab, dot)}<div class="pbody" role="tabpanel">{body}</div></aside>')
 
 
-# ---------------------------------------------------------------- mobile plan
-def agenda(state, start=TODAY, end=D(2026, 11, 30), preview_days=()):
-    out = []
-    d = start
-    wk = None
+def app_menu():
+    sub = ('<div class="menu" role="menu" aria-label="Theme" style="right:calc(100% + 6px);top:120px;width:200px">'
+           + "".join(f'<div class="mi{" hi" if t == "Dark" else ""}" role="menuitemradio" aria-checked="{str(t == "Dark").lower()}">{icon(ic, "i sm")}{t}{"<span class=chk>" + icon("check") + "</span>" if t == "Dark" else ""}</div>'
+                     for t, ic in (("Dark", "moon"), ("Light", "sun"), ("Match device", "monitor"))) + '</div>')
+    return ('<div class="menu" role="menu" aria-label="App menu" data-reui="c-dropdown-menu-8" style="right:24px;top:66px;width:280px">'
+            '<div class="grp">Demo</div>'
+            '<div class="mi" role="menuitemcheckbox" aria-checked="true">Demo student<span class="sw" aria-hidden="true"></span></div>'
+            '<div class="mi dis" role="menuitem" aria-disabled="true">Demo date · Tue 10 Nov 2026</div><hr>'
+            '<div class="grp">App</div>'
+            f'<div class="mi hi" role="menuitem" aria-haspopup="menu" aria-expanded="true">{icon("sun-moon", "i sm")}Theme<span class="sub">{icon("chevron-right", "i sm")}</span></div>'
+            f'<div class="mi" role="menuitem">{icon("settings", "i sm")}Settings</div>'
+            f'<div class="mi" role="menuitem">{icon("download", "i sm")}Export plan (JSON)</div><hr>'
+            f'<div class="mi danger" role="menuitem">{icon("rotate-ccw", "i sm")}Reset StudentPlan…</div>{sub}</div>')
+
+
+def plan_desktop(name, state, tab, body, text=None, busy=False, month=(2026, 11), sel=TODAY, bubble=False, month_menu=False, menu=False, dot=False, sugg=False, theme="dark", hashes=()):
+    main = (f'<main><div class="heroRow">{hero(state)}{tiles(state)}</div>'
+            f'{calendar(state, *month, sel=sel, bubble=bubble, month_menu=month_menu)}</main>')
+    body_html = (f'<div style="position:relative">{topbar("plan", menu=menu)}{app_menu() if menu else ""}'
+                 f'<div class="plan">{main}{panel(tab, body, text, busy, dot, sugg)}</div></div>')
+    if hashes:
+        for h, red in hashes:
+            page(name, body_html, hash=h, reduced=red, theme=theme)
+    else:
+        page(name, body_html, theme=theme)
+
+
+# ------------------------------------------------------------------ mobile plan
+def agenda(state, start, end, sel=None, bubble=False):
+    out, d, bi, wk = [], start, 0, None
     while d <= end:
-        ws = d - dt.timedelta(days=d.weekday())
-        if ws != wk:
-            we = ws + dt.timedelta(days=6)
-            label = f"{ws.day} – {we.day} {we.strftime('%b')}" if ws.month == we.month else f"{ws.day} {ws.strftime('%b')} – {we.day} {we.strftime('%b')}"
-            out.append(f'<div class="wk">{label}</div>')
-            wk = ws
-        m = day_model(state, d)
-        chips = "".join(chip(i) for i in m["items"])
-        short = f'<span class="short-mark" style="margin-top:6px">{icon("triangle-alert")}Short {gbp(m["short"])}</span>' if m["short"] else ""
-        cls = "arow" + (" today" if d == TODAY else "") + (" preview" if d in preview_days else "")
-        out.append(f'<div class="{cls}"><div class="adate"><div class="w">{d.strftime("%a")}</div><div class="d">{d.day}</div></div>'
-                   f'<div class="abody">{cell_total(m, state)}<div class="chips">{chips}</div>{short}</div></div>')
+        mon = d - dt.timedelta(days=d.weekday())
+        if mon != wk:
+            wk = mon
+            sun = mon + dt.timedelta(days=6)
+            out.append(f'<h3 class="wkh">{mon.day} {mon.strftime("%b") if mon.month != sun.month else ""} – {sun.day} {sun.strftime("%b")}</h3>'.replace("  ", " "))
+        r = day(state, d)
+        cls = ["arow"]
+        if d == TODAY:
+            cls.append("today")
+        if r["pv"]:
+            cls.append("pvd")
+        if r["zero"]:
+            cls.append("zero")
+        val = r["spent"] or r["total"]
+        small = f'<small>of {m(2584)}</small>' if r["spent"] else ""
+        inner = f'<span class="v">{m(val)}</span>'
+        flash = ""
+        if bubble and d >= TODAY:
+            frm = 2584 if d < D(2027, 1, 4) else 2585
+            inner = (f'<span class="bub" data-i="{bi}" data-from="{frm}" data-to="{val}">'
+                     f'<span class="dotp" style="width:9px;height:9px;left:100%;top:-4px"></span><span class="dotp" style="width:6px;height:6px;left:94%;top:-8px"></span>'
+                     f'<span class="dotp" style="width:5px;height:5px;left:104%;top:4px"></span>{inner}</span>')
+            cls.append("chg")
+            flash = '<span class="flash"></span>'
+            bi += 1
+        ch = "".join(chip(c) for c in r["chips"])
+        mid = f'<div class="chips">{ch}</div>' if ch else ""
+        lab = f'{dl(d)}, planned {m(r["total"])}' + (f', spent {m(r["spent"])}' if r["spent"] else "")
+        out.append(f'<button class="{" ".join(cls)}" aria-label="{esc(lab)}" style="text-align:left">{flash}<span class="dt"><small>{d.strftime("%a")}</small><b>{d.day}</b></span>'
+                   f'<span class="mid">{mid}</span><span class="tot num" style="grid-column:3">{inner}{small}</span></button>')
         d += dt.timedelta(days=1)
-    return f'<div class="agenda">{"".join(out)}</div>'
+    return f'<div class="ag" role="list">{"".join(out)}</div>'
 
 
-def dock():
-    return (f'<div class="dock"><label class="sr" for="nlm">Tell me what changed</label><div class="input"><span class="field ph">Tell me what changed…</span>'
-            f'<button class="send" aria-label="Send">{icon("arrow-up")}</button></div></div>')
+def mhero(state):
+    return f'<div class="mpad">{hero(state, True)}{tiles(state)}</div>'
 
 
-def plan_mobile(state, month_label="November 2026", start=TODAY, end=D(2026, 11, 22), preview_days=()):
-    return (f'<div class="m">{mhead()}{summary_html(state, True)}<div class="mmonth"><button class="month-trigger">{month_label}{icon("chevron-down")}</button><span class="spacer"></span>'
-            f'<button class="icon-btn ghost" aria-label="Previous month">{icon("chevron-left")}</button><button class="icon-btn ghost" aria-label="Next month">{icon("chevron-right")}</button></div>'
-            f'{agenda(state, start, end, preview_days)}{dock()}</div>')
+def dock(text=None):
+    t = f'<span class="t">{esc(text)}</span>' if text else '<span class="t ph">Tell me what changed…</span>'
+    return f'<div class="dock"><div class="cin" role="button" aria-label="Tell me what changed">{t}<span class="send">{icon("arrow-up")}</span></div></div>'
 
 
-def sheet_mobile(tab, tabhtml, text=None, busy=False, badge=False):
-    return (f'<div class="m"><div class="scrim">{mhead()}</div><div class="scrim" style="height:0"></div>'
-            f'<section class="sheet" role="dialog" aria-label="Plan changes"><div class="grab"></div>'
-            f'<div class="sheethead"><span class="spacer"></span><button class="icon-btn ghost" aria-label="Close">{icon("x")}</button></div>'
-            f'{composer(text, busy)}{tabs(tab, badge)}{tabhtml}</section></div>')
+def mbar(label="November", yr="2026"):
+    return (f'<div class="mbar"><button class="mtrig" aria-haspopup="menu">{label} <span class="yr">{yr}</span>{icon("chevron-down")}</button><span style="flex:1"></span>'
+            f'<button class="ibtn" aria-label="Previous month">{icon("chevron-left")}</button><button class="ibtn" aria-label="Next month">{icon("chevron-right")}</button></div>')
 
 
-# ---------------------------------------------------------------- bubble script
-BUBBLE_JS = """<script>
-(() => {
-  const RISE = 180, COUNT = 320, SETTLE = 260, STEP = 40, CAP = 400, CHIP_LAG = 60;
-  const expo = p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
-  const fmt = p => '£' + (p / 100).toFixed(2);
-  const cells = [...document.querySelectorAll('.cal .cell, .agenda .arow')].filter(c => c.querySelector('[data-bubble]'));
-  const els = [];
-  cells.forEach((c, i) => {
-    const delay = Math.min(i * STEP, CAP);
-    c.querySelectorAll('[data-bubble]').forEach(el => els.push({ el, delay: delay + (el.dataset.bubble === 'chip' ? CHIP_LAG : 0) }));
-  });
-  function at(t) {
-    for (const { el, delay } of els) {
-      const l = t - delay; let lift = 0, sc = 1, ho = 0, hs = .8, k = 1;
-      if (l <= 0) { k = 0; }
-      else if (l < RISE) { const e = expo(l / RISE); lift = -2 * e; sc = 1 + .06 * e; ho = .55 * e; hs = .8 + .35 * e; k = 0; }
-      else if (l < RISE + COUNT) { lift = -2; sc = 1.06; ho = .55; hs = 1.15; k = (l - RISE) / COUNT; }
-      else if (l < RISE + COUNT + SETTLE) { const e = expo((l - RISE - COUNT) / SETTLE); lift = -2 * (1 - e); sc = 1 + .06 * (1 - e); ho = .55 * (1 - e); hs = 1.15; k = 1; }
-      el.style.setProperty('--lift', lift + 'px'); el.style.setProperty('--sc', sc); el.style.setProperty('--halo-o', ho); el.style.setProperty('--halo-s', hs);
-      if (el.dataset.from) { const a = el.querySelector('.a') || el; const v = Math.round(+el.dataset.from + (el.dataset.to - el.dataset.from) * k); a.textContent = fmt(v); }
-    }
-  }
-  const m = location.hash.match(/t=(\\d+)/);
-  window.__beforeReady = () => {
-    if (location.hash.includes('reduced')) { document.body.classList.add('reduced'); return; }
-    if (m) { at(+m[1]); return; }
-    if (location.hash.includes('play')) { const t0 = performance.now(); const f = n => { at(n - t0); if (n - t0 < CAP + CHIP_LAG + RISE + COUNT + SETTLE + 50) requestAnimationFrame(f); }; requestAnimationFrame(f); }
-  };
-})();
-</script>"""
+def plan_mobile(name, state, start=TODAY, end=D(2026, 11, 22), bubble=False, theme="dark", hashes=(), month=("November", "2026"), extra=""):
+    body = (f'<div class="m">{mtop()}{mhero(state)}<div class="mpad">{extra}{mbar(*month)}{agenda(state, start, end, bubble=bubble)}</div>{dock()}</div>')
+    if hashes:
+        for h, red in hashes:
+            page(name, body, mobile=True, hash=h, reduced=red, theme=theme)
+    else:
+        page(name, body, mobile=True, theme=theme)
 
 
-# ---------------------------------------------------------------- onboarding
+def sheet_mobile(name, state, tab, body, text=None, busy=False, dot=False, sugg=False, behind_end=D(2026, 11, 14)):
+    behind = f'{mtop()}{mhero(state)}<div class="mpad">{mbar()}{agenda(state, TODAY, behind_end)}</div>'
+    sh = (f'<div class="scrim"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="Plan">'
+          f'<div class="grab" aria-hidden="true"></div><div class="shead">{ptabs(tab, dot)}<button class="ibtn" aria-label="Close">{icon("x")}</button></div>'
+          f'<div class="pbody" role="tabpanel">{body}</div>{composer(text, busy, sugg)}</section>')
+    page(name, f'<div class="m" style="padding-bottom:0">{behind}{sh}</div>', mobile=True)
+
+
+# ------------------------------------------------------------------ onboarding
 STEPS = [
     ("funds", "How much money do you have?"),
     ("last-until", "When does it need to last until?"),
@@ -580,356 +604,277 @@ STEPS = [
 ]
 
 
-def ob_fields(slug, error=False):
+def money_f(lbl, v, big=False):
+    return f'<label class="f">{lbl}<span class="ctl{" big" if big else ""}"><span class="u">£</span><span class="grow">{v}</span></span></label>'
+
+
+def text_f(lbl, v, ic=None, ph=False):
+    return f'<label class="f">{lbl}<span class="ctl"><span class="grow{" ph" if ph else ""}">{v}</span>{icon(ic) if ic else ""}</span></label>'
+
+
+def ob_fields(slug, error=False, mobile=False):
+    g2 = 'class="g2"'
     if slug == "funds":
-        amt = ('<label class="f">Amount<span class="ctl invalid"><span class="u">£</span><span class="grow ph"></span></span>'
-               f'<span class="msg" role="alert">{icon("triangle-alert")}Enter an amount above £0</span></label>') if error else \
-              '<label class="f">Amount<span class="ctl"><span class="u">£</span><span class="grow">3,900.00</span></span></label>'
+        amt = (f'<label class="f">Amount<span class="ctl big invalid" aria-invalid="true"><span class="u">£</span><span class="grow"></span></span>'
+               f'<span class="err" role="alert">{icon("triangle-alert")}Enter an amount above £0</span></label>') if error else money_f("Amount", "3,900", True)
         return ('<div class="f">This money is<div class="seg" role="group"><button aria-pressed="true">A lump sum</button><button aria-pressed="false">A monthly allowance</button></div></div>' + amt)
     if slug == "last-until":
-        return f'<label class="f">Last until<span class="ctl"><span class="grow">31 Jan 2027</span>{icon("calendar-days")}</span></label><p class="note" style="margin:0">83 days from Tue 10 Nov 2026</p>'
+        return text_f("Last until", "31 Jan 2027", "calendar-days") + '<span class="tag lime" style="align-self:flex-start;height:34px;font-size:14px">83 days from Tue 10 Nov 2026</span>'
     if slug == "job":
         return ('<div class="f">Job<div class="seg" role="group"><button aria-pressed="false">Yes</button><button aria-pressed="true">No</button></div></div>')
     if slug == "other-income":
-        return ('<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="f">From<span class="ctl">Family transfer</span></label>'
-                '<label class="f">Amount<span class="ctl"><span class="u">£</span>300.00</span></label>'
-                f'<label class="f">Date<span class="ctl"><span class="grow">18 Dec 2026</span>{icon("calendar-days")}</span></label>'
-                f'<div class="f">&nbsp;<span class="check" style="height:44px"><span class="box on">{icon("check")}</span>Confirmed</span></div></div>'
-                f'<button class="btn quiet" style="align-self:flex-start">{icon("plus")}Add income</button>')
+        return (f'<div {g2}>{text_f("From", "Family transfer")}{money_f("Amount", "300")}{text_f("Date", "18 Dec 2026", "calendar-days")}'
+                f'<div class="f">&nbsp;<span class="check" style="height:56px"><span class="box on">{icon("check", "i sm")}</span>Confirmed</span></div></div>'
+                f'<button class="btn sm" style="align-self:flex-start">{icon("plus", "i sm")}Add income</button>')
+
+    def rec(r):
+        return f'<div class="f">Repeats<button class="ctl" style="justify-content:space-between" aria-haspopup="menu"><span>{r}</span>{icon("chevron-down")}</button></div>'
     if slug == "rent":
-        r = lambda n, a, due, rec: (f'<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px"><label class="f">Name<span class="ctl">{n}</span></label>'
-                                    f'<label class="f">Amount<span class="ctl"><span class="u">£</span>{a}</span></label><label class="f">Due<span class="ctl">{due}</span></label>'
-                                    f'<div class="f">Repeats<button class="ctl" style="justify-content:space-between" aria-haspopup="menu"><span>{rec}</span>{icon("chevron-down")}</button></div></div>')
-        return r("Rent", "620.00", "1st", "Monthly") + r("Utilities", "55.00", "15th", "Monthly") + f'<button class="btn quiet" style="align-self:flex-start">{icon("plus")}Add commitment</button>'
+        def row(n, a, due):
+            if mobile:
+                return f'<div class="reply" style="border-radius:22px;background:var(--s1)">{text_f("Name", n)}<div class="g2">{money_f("Amount", a)}{text_f("Due", due)}</div>{rec("Monthly")}</div>'
+            return f'<div style="display:grid;grid-template-columns:1.2fr 1fr .8fr 1.2fr;gap:10px">{text_f("Name", n)}{money_f("Amount", a)}{text_f("Due", due)}{rec("Monthly")}</div>'
+        return row("Rent", "620", "1st") + row("Utilities", "55", "15th") + f'<button class="btn sm" style="align-self:flex-start">{icon("plus", "i sm")}Add commitment</button>'
     if slug == "reserve":
-        return '<label class="f">Minimum to keep<span class="ctl"><span class="u">£</span>500.00</span></label>'
+        return money_f("Minimum to keep", "500", True)
     if slug == "savings":
-        return ('<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="f">Save by 31 Jan<span class="ctl"><span class="u">£</span>150.00</span></label>'
-                '<label class="f">Savings now<span class="ctl"><span class="u">£</span>200.00</span></label>'
-                '<label class="f">Investments now<span class="ctl"><span class="u">£</span>0.00</span></label></div>')
+        return f'{money_f("Save by 31 Jan", "150", True)}<div {g2}>{money_f("Savings now", "200")}{money_f("Investments now", "0")}</div>'
     if slug == "food-transport":
-        return ('<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="f">Groceries a week<span class="ctl"><span class="u">£</span>63.00</span></label>'
-                '<label class="f">Transport a week<span class="ctl"><span class="u">£</span>36.40</span></label>'
-                '<label class="f">Eating out a week<span class="ctl"><span class="u">£</span>38.50</span></label>'
-                '<label class="f">Shopping a week<span class="ctl"><span class="u">£</span>42.98</span></label></div>')
+        return (f'<div {g2}>{money_f("Groceries a week", "63")}{money_f("Transport a week", "36.40")}'
+                f'{money_f("Eating out a week", "38.50")}{money_f("Shopping a week", "42.98")}</div>')
     if slug == "priorities":
-        pr = ["Transport", "Groceries", "Eating out", "Shopping"]
-        rows = "".join(f'<div class="row" style="border:1px solid var(--rule);border-radius:10px;padding:0 6px 0 12px;margin-bottom:6px"><b style="width:18px">{i + 1}</b><span class="name">{p}</span>'
-                       f'<button class="icon-btn ghost" aria-label="Move {p} up">{icon("chevron-up")}</button></div>' for i, p in enumerate(pr))
-        return (f'<div class="f">Protect first<div>{rows}</div></div>'
-                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="f">City (optional)<span class="ctl">London</span></label>'
-                '<label class="f">Diet (optional)<span class="ctl ph"><span class="ph">None</span></span></label></div>')
+        pr = [("Transport", "bus"), ("Groceries", "shopping-basket"), ("Eating out", "utensils"), ("Shopping", "shopping-bag")]
+        rows = "".join(f'<div class="irow" style="background:var(--s1)"><span class="ic" style="background:{"var(--lime);color:var(--on-lime)" if i == 0 else "var(--s3)"};font:700 16px var(--display)">{i + 1}</span>'
+                       f'<span class="nm">{p}</span><button class="ibtn sm ghost" aria-label="Move {p} up">{icon("chevron-up")}</button>'
+                       f'<button class="ibtn sm ghost" aria-label="Move {p} down">{icon("chevron-down")}</button></div>' for i, (p, ic) in enumerate(pr))
+        return (f'<div class="f">Protect first<div style="display:flex;flex-direction:column;gap:8px">{rows}</div></div>'
+                f'<div {g2}>{text_f("City (optional)", "London")}{text_f("Diet (optional)", "None", ph=True)}</div>')
     return ""
 
 
-def onboarding(slug, mobile=False, error=False):
-    if slug == "welcome":
-        inner = (f'<img class="sketch" src="../sketches/welcome.webp" alt="" width="640" height="480">'
-                 f'<h1 class="title ob-title">Know what you can spend today.</h1>'
-                 f'<div class="ob-actions"><button class="btn primary">Set up my plan</button><button class="btn">Try a demo student</button></div>')
-        prog = ""
-    else:
-        idx = [s for s, _ in STEPS].index(slug)
-        q = STEPS[idx][1]
-        prog = (f'<div class="ob-prog"><span>{idx + 1} of {len(STEPS)}</span><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="{len(STEPS)}" aria-valuenow="{idx + 1}">'
-                f'<i style="width:{(idx + 1) / len(STEPS) * 100:.1f}%"></i></div></div>')
-        inner = (f'<img class="sketch" src="../sketches/{slug}.webp" alt="" width="640" height="480"><h1 class="title ob-title">{q}</h1>'
-                 f'<form class="ob-form" novalidate>{ob_fields(slug, error)}</form>'
-                 f'<div class="ob-actions"><button class="btn">{icon("chevron-left")}Back</button><span style="flex:1"></span>'
-                 f'<button class="btn primary">{"Create my plan" if slug == "priorities" else "Next"}</button></div>')
-        if slug == "funds":
-            inner += '<div class="ob-demo"><button class="btn quiet">Try a demo student</button></div>'
-    head = (f'<header class="{"mhead" if mobile else "topbar"}"><a class="wordmark" href="#">StudentPlan</a></header>')
-    return f'{head}<main class="ob{" mob" if mobile else ""}">{prog}{inner}</main>'
+def progress(n):
+    segs = "".join(f'<span style="flex:1;height:8px;border-radius:99px;background:{"var(--lime)" if i < n else "var(--s3)"}"></span>' for i in range(9))
+    return f'<div style="display:flex;gap:5px;flex:1" role="progressbar" aria-valuemin="1" aria-valuemax="9" aria-valuenow="{n}" aria-label="Step {n} of 9">{segs}</div>'
 
 
-OB_CSS = """<style>
-.ob { max-width: 600px; margin: 40px auto 64px; padding: 24px 40px 40px; display: flex; flex-direction: column; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-panel); }
-.ob.mob { margin: 0; border-radius: 0; box-shadow: none; padding: 16px 16px 32px; min-height: calc(100vh - 56px); }
-.ob .sketch { width: 100%; max-width: 440px; height: auto; aspect-ratio: 4/3; align-self: center; margin: -8px 0 -24px; }
-.ob .seg { align-self: flex-start; }
-.ob.mob .sketch { max-width: 300px; margin: -12px 0 -20px; }
-.ob-title { font-size: 30px; margin: 8px 0 24px; text-wrap: balance; }
-.ob.mob .ob-title { font-size: 26px; margin-bottom: 20px; }
-.ob-form { display: flex; flex-direction: column; gap: 16px; }
-.ob-actions { display: flex; gap: 12px; margin-top: 32px; }
-.ob.mob .ob-actions .btn { height: 48px; }
-.ob-actions .btn.primary { min-width: 140px; }
-.ob-prog { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: var(--muted); }
-.ob-prog .bar { flex: 1; height: 4px; background: var(--sunk); border-radius: 2px; overflow: hidden; }
-.ob-prog .bar i { display: block; height: 100%; background: var(--ink); }
-.ob-demo { margin-top: 16px; display: flex; justify-content: center; }
-.empty-frame { width: 100%; max-width: 400px; aspect-ratio: 4/3; align-self: center; border: 2px dashed var(--deficit); display: grid; place-items: center; color: var(--deficit); font-weight: 700; }
-</style>"""
-
-
-def welcome_ctas_fix(h, mobile):
+def onboarding(name, slug, mobile=False, error=False):
+    n = [s for s, _ in STEPS].index(slug) + 1
+    q = dict(STEPS)[slug]
+    fields = ob_fields(slug, error, mobile)
+    img = f'<img src="../sketches/{slug}.webp" alt="" aria-hidden="true">'
+    last = n == 9
+    nxt = "Create my plan" if last else "Next"
+    demo = '<button class="btn ghost sm" style="align-self:flex-start;padding:0 4px;color:var(--blue-text)">Try a demo student</button>'
     if mobile:
-        return h.replace('<div class="ob-actions">', '<div class="ob-actions" style="flex-direction:column">')
-    return h
+        body = (f'<div class="m" style="padding-bottom:120px"><header class="mtop" style="gap:14px"><button class="ibtn" aria-label="Back">{icon("arrow-left")}</button>{progress(n)}'
+                f'<span class="lbl" style="color:var(--text)">{n}/9</span></header>'
+                f'<div class="mpad" style="display:flex;flex-direction:column;gap:20px"><div class="stage" style="height:200px">{img}</div>'
+                f'<h1 class="title" style="font-size:30px">{q}</h1>{fields}{demo}</div>'
+                f'<div class="mcta"><button class="btn primary block">{nxt}{icon("arrow-up", "i sm").replace("arrow-up", "") if False else ""}</button></div></div>')
+        page(name, body, mobile=True)
+        return
+    body = (f'<header class="top">{brand()}<span class="sp"></span><span class="lbl" style="color:var(--text)">Step {n} of 9</span><button class="btn sm">Try a demo student</button></header>'
+            f'<main style="max-width:1200px;margin:0 auto;padding:0 32px 48px;min-height:900px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:56px;align-items:center">'
+            f'<div class="stage" style="aspect-ratio:4/3.4;position:sticky;top:16px">{img}</div>'
+            f'<div style="display:flex;flex-direction:column;gap:24px;padding-top:12px">{progress(n)}<h1 class="title" style="font-size:44px">{q}</h1>{fields}'
+            f'<div style="display:flex;gap:12px;margin-top:8px">{"" if n == 1 else "<button class=btn>Back</button>"}<button class="btn primary" style="min-width:180px">{nxt}</button></div></div></main>')
+    page(name, body)
 
 
-# ---------------------------------------------------------------- projections
-def proj_values():
-    def fv(p, c, a, n=12):
-        b = p
-        for _ in range(n):
-            b = b * (1 + a / 100 / 12) + c
-        return round(b * 100)
-
-    def series(p, c, a, n=12):
-        b, out = p, [p]
-        for _ in range(n):
-            b = b * (1 + a / 100 / 12) + c
-            out.append(b)
-        return out
-    sav = [fv(200, 50, a) for a in (2, 3.5, 4.5)]
-    inv = [fv(0, 20, a) for a in (0, 4, 7)]
-    tot = [s + i for s, i in zip(sav, inv)]
-    ser = [[s + i for s, i in zip(series(200, 50, a), series(0, 20, b))] for a, b in ((2, 0), (3.5, 4), (4.5, 7))]
-    return sav, inv, tot, ser
+def welcome(name, mobile=False):
+    img = '<img src="../sketches/welcome.webp" alt="" aria-hidden="true">'
+    if mobile:
+        body = (f'<div class="m" style="padding-bottom:0;display:flex;flex-direction:column;min-height:844px"><header class="mtop">{brand()}</header>'
+                f'<div class="mpad" style="display:flex;flex-direction:column;gap:24px;flex:1"><div class="stage" style="height:330px">{img}</div>'
+                f'<h1 class="title" style="font-size:38px;line-height:1.08">Know what you can spend today.</h1></div>'
+                f'<div class="mpad" style="display:flex;flex-direction:column;gap:10px;padding-bottom:30px"><button class="btn primary block">Set up my plan</button><button class="btn block">Try a demo student</button></div></div>')
+        page(name, body, mobile=True)
+        return
+    body = (f'<header class="top">{brand()}</header><main style="max-width:1200px;margin:24px auto 0;padding:0 32px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:64px;align-items:center">'
+            f'<div class="stage" style="aspect-ratio:4/3.3">{img}</div><div style="display:flex;flex-direction:column;gap:32px">'
+            f'<h1 class="title" style="font-size:60px;line-height:1.04;letter-spacing:-.045em">Know what you can spend today.</h1>'
+            f'<div style="display:flex;gap:12px"><button class="btn primary" style="height:60px;padding:0 30px;font-size:17px">Set up my plan</button><button class="btn" style="height:60px;padding:0 30px;font-size:17px">Try a demo student</button></div></div></main>')
+    page(name, body)
 
 
-def projections(empty=False, mobile=False):
-    sav, inv, tot, ser = proj_values()
-    seg = "".join(f'<button aria-pressed="{str(p == 12).lower()}">{p} months</button>' for p in (3, 6, 12, 24))
+# ------------------------------------------------------------------ projections
+PROJ = dict(sav=(80957, 81683, 82172), inv=(24000, 24445, 24785), tot=(104957, 106128, 106957), put=104000, growth=(957, 2128, 2957), income=330000)
 
-    def rate(lbl, v):
-        if empty:
-            return f'<label class="f">{lbl}<span class="ctl"><span class="grow"></span><span class="u">%</span></span></label>'
-        return f'<label class="f">{lbl}<span class="ctl"><span class="grow">{v}</span><span class="u">%</span></span></label>'
 
-    def money(lbl, v, ro=False):
-        return f'<label class="f">{lbl}<span class="ctl{" ro" if ro else ""}"><span class="u">£</span><span class="grow">{v}</span></span></label>'
-    g3 = 'style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"'
-    g2 = 'style="display:grid;grid-template-columns:1fr 1fr;gap:8px"'
-    form = (f'<section class="pgroup"><h2 class="h2">Savings</h2><div {g2}>{money("Savings now", "200.00")}{money("Add each month", "0.00" if empty else "50.00")}</div>'
-            f'<div class="f" role="group">Interest a year<div {g3}>{rate("Low", "2.00")}{rate("Base", "3.50")}{rate("High", "4.50")}</div></div></section>'
-            f'<section class="pgroup"><h2 class="h2">Investments</h2><div {g2}>{money("Value now", "0.00")}{money("Add each month", "0.00" if empty else "20.00")}</div>'
-            f'<div class="f" role="group">Return a year<div {g3}>{rate("Low", "0.00")}{rate("Base", "4.00")}{rate("High", "7.00")}</div></div></section>'
-            f'<section class="pgroup"><h2 class="h2">Income</h2><div {g2}>{money("Confirmed, 18 Dec", "300.00", True)}{money("Expected a month", "0.00" if empty else "250.00")}</div></section>')
-    inc = 30000 + (0 if empty else 250 * 12 * 100)
+def projections(name, empty=False, mobile=False):
+    def rate(lbl, vals):
+        cells = "".join(f'<label class="f" style="font-size:13px">{s}<span class="ctl" style="padding:0 12px"><span class="grow{" ph" if empty else ""}">{"" if empty else v}</span><span class="u">%</span></span></label>'
+                        for s, v in zip(("Low", "Base", "High"), vals))
+        return f'<div class="f">{lbl}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">{cells}</div></div>'
+    c0 = "0" if empty else None
+    assume = (f'<section class="cal" style="display:flex;flex-direction:column;gap:16px"><h2 class="h2">Savings</h2><div class="g2">{money_f("Start", "200")}{money_f("Each month", c0 or "50")}</div>{rate("Yearly rate", ("2", "3.5", "4.5"))}</section>'
+              f'<section class="cal" style="display:flex;flex-direction:column;gap:16px"><h2 class="h2">Investments</h2><div class="g2">{money_f("Start", "0")}{money_f("Each month", c0 or "20")}</div>{rate("Yearly return", ("0", "4", "7"))}</section>'
+              f'<section class="cal" style="display:flex;flex-direction:column;gap:16px"><h2 class="h2">Income</h2><div class="g2"><label class="f">Confirmed<span class="ctl ro"><span class="u">£</span><span class="grow">300</span></span></label>{money_f("Expected a month", c0 or "250")}</div></section>')
+    disc = f'<span class="tag" style="background:var(--s2);color:var(--lime-text);height:32px">{icon("info", "i xs")}Projection, not advice or a guarantee</span>'
     if empty:
-        cell3 = lambda: '<td class="n" colspan="3"><span class="muted-cell">Enter rates to see this</span></td>'
-        rows = (f'<tr><th scope="row">Savings</th>{cell3()}</tr><tr><th scope="row">Investments</th>{cell3()}</tr>'
-                f'<tr class="tot"><th scope="row">Savings + investments</th>{cell3()}</tr>'
-                f'<tr><th scope="row">Income received</th><td class="n" colspan="3">{gbp(inc)}</td></tr>')
+        big = f'<div style="font:800 26px/1.2 var(--display);letter-spacing:-.03em;color:var(--muted);margin:6px 0 4px">Enter rates to see this</div>'
+        sc = ""
+        rows = [("Savings", ["Enter rates to see this"] * 1), ("Investments", ["Enter rates to see this"]), ("Income received", [m(30000)] * 3)]
+        tbl = ('<div class="diff" style="padding:6px 16px">'
+               + "".join(f'<div class="r"><span class="nm">{n}</span><span class="ba" style="{"font-family:var(--ui);font-weight:700;color:var(--muted)" if len(v) == 1 else ""}">{" · ".join(v) if len(v) == 1 else v[0]}</span></div>' for n, v in rows) + '</div>')
     else:
-        rows = (f'<tr><th scope="row">Savings</th>{"".join(f"<td class=n>{gbp(v)}</td>" for v in sav)}</tr>'
-                f'<tr><th scope="row">Investments</th>{"".join(f"<td class=n>{gbp(v)}</td>" for v in inv)}</tr>'
-                f'<tr class="tot"><th scope="row">Savings + investments</th>{"".join(f"<td class=n>{gbp(v)}</td>" for v in tot)}</tr>'
-                f'<tr class="sub"><th scope="row">You put in</th><td class="n" colspan="3">£1,040.00</td></tr>'
-                f'<tr class="sub"><th scope="row">Growth</th>{"".join(f"<td class=n>{gbp(v - 104000)}</td>" for v in tot)}</tr>'
-                f'<tr><th scope="row">Income received</th><td class="n" colspan="3">{gbp(inc)}</td></tr>')
-    table = (f'<table class="ptable"><caption class="sr">Projection after 12 months</caption><thead><tr><th></th><th class="n">Low</th><th class="n">Base</th><th class="n">High</th></tr></thead><tbody>{rows}</tbody></table>')
-    chart = ""
-    res = (f'<section class="pres"><div class="pres-head"><h2 class="h2" style="margin:0">After 12 months · 10 Nov 2027</h2></div>'
-           f'<p class="disclaim">{icon("info")}Projection, not advice or a guarantee</p>{table}{chart}</section>')
-    head = (f'<div class="phead"><h1 class="title">Projections</h1><div class="seg" role="group" aria-label="Period">{seg}</div></div>')
+        big = f'<div class="num" style="font:800 64px/1 var(--display);letter-spacing:-.045em;margin:10px 0 4px">{m(PROJ["tot"][1])}</div>'
+        sc = (f'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:{8 if mobile else 10}px">'
+              + "".join(f'<div class="tile" style="background:{"var(--blue);color:var(--on-blue)" if i == 1 else "var(--s2)"};min-height:0;min-width:0;{"padding:12px" if mobile else ""}"><span class="lbl" style="{"color:var(--on-blue)" if i == 1 else ""}">{s}</span><span class="v num" style="font-size:{16 if mobile else 24}px">{m(PROJ["tot"][i])}</span></div>'
+                        for i, s in enumerate(("Low", "Base", "High"))) + '</div>')
+        gt = "84px repeat(3,minmax(0,1fr))" if mobile else "minmax(0,1fr) repeat(3,auto)"
+        hdr = f'<div class="r" style="grid-template-columns:{gt}"><span class="lbl"></span>' + "".join(f'<span class="lbl" style="text-align:right;min-width:{0 if mobile else 110}px">{s}</span>' for s in ("Low", "Base", "High")) + '</div>'
+        rws = [("Savings", PROJ["sav"]), ("Investments", PROJ["inv"]), ("You put in", (PROJ["put"],) * 3), ("Growth", PROJ["growth"]), ("Income received", (PROJ["income"],) * 3)]
+        tbl = ('<div class="diff" style="padding:6px 16px">' + hdr
+               + "".join(f'<div class="r" style="grid-template-columns:{gt}"><span class="nm" style="{"font-size:13px" if mobile else ""}">{n}</span>'
+                         + "".join(f'<span class="ba" style="justify-content:flex-end;min-width:{0 if mobile else 110}px;font-size:{13 if mobile else 15}px">{("+" if n == "Growth" else "") + m(x)}</span>' for x in v) + '</div>' for n, v in rws) + '</div>')
+    res = (f'<section class="cal" style="display:flex;flex-direction:column;gap:16px" aria-live="polite"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 class="h2">After 12 months · 10 Nov 2027</h2></div>{disc}'
+           f'<div><span class="lbl">Savings + investments · Base</span>{big}</div>{sc}{tbl}</section>')
+    seg = '<div class="seg" role="group" aria-label="Period" style="width:{w}">' + "".join(f'<button aria-pressed="{str(p == "12").lower()}">{p}{" months" if not mobile else "m"}</button>' for p in ("3", "6", "12", "24")) + '</div>'
     if mobile:
-        return f'<div class="m">{mhead("projections")}<main class="ppage mob">{head}{res}{form}</main></div>'
-    return f'{topbar("projections")}<main class="ppage">{head}<div class="pgrid"><div class="pform">{form}</div>{res}</div></main>'
+        body = (f'<div class="m" style="padding-bottom:40px">{mtop("projections")}<div class="mpad" style="display:flex;flex-direction:column;gap:14px">'
+                f'<h1 class="title" style="font-size:32px">Projections</h1>{seg.format(w="100%")}{res}{assume}</div></div>')
+        page(name, body, mobile=True)
+        return
+    body = (f'{topbar("projections")}<main style="max-width:1280px;margin:0 auto;padding:12px 24px 48px">'
+            f'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><h1 class="title">Projections</h1>{seg.format(w="460px")}</div>'
+            f'<div style="display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:20px;align-items:start"><div>{res}</div><div style="display:flex;flex-direction:column;gap:16px">{assume}</div></div></main>')
+    page(name, body)
 
 
-def chart_svg(ser, w, h):
-    pad_l, pad_r, pad_t, pad_b = 52, 64, 12, 28
-    lo, hi = 0, 1200
-    X = lambda i: pad_l + (w - pad_l - pad_r) * i / 12
-    Y = lambda v: pad_t + (h - pad_t - pad_b) * (1 - (v - lo) / (hi - lo))
-    grid = "".join(f'<line x1="{pad_l}" x2="{w - pad_r}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="var(--sunk)"/><text x="{pad_l - 8}" y="{Y(v) + 4:.1f}" text-anchor="end" class="ax">£{v:,}</text>' for v in (0, 400, 800, 1200))
-    months = ["Nov", "Feb", "May", "Aug", "Nov"]
-    xt = "".join(f'<text x="{X(i * 3):.1f}" y="{h - 8}" text-anchor="middle" class="ax">{m}</text>' for i, m in enumerate(months))
-    names = ["Low", "Base", "High"]
-    styles = ['stroke="var(--planned)" stroke-dasharray="4 4"', 'stroke="var(--ink)" stroke-width="2.5"', 'stroke="var(--planned)" stroke-dasharray="1 4" stroke-linecap="round"']
-    lines = ""
-    ends = [Y(s[-1]) for s in ser]
-    lab_y = [ends[0] + 14, ends[1] + 1, ends[2] - 12]
-    for s, st, n, ly in zip(ser, styles, names, lab_y):
-        pts = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(s))
-        lines += f'<polyline fill="none" {st} stroke-width="2" points="{pts}"/>'
-        lines += f'<text x="{w - pad_r + 6}" y="{ly + 4:.1f}" class="lab{" b" if n == "Base" else ""}">{n}</text>'
-    return (f'<figure class="pchart"><svg viewBox="0 0 {w} {h}" width="{w}" height="{h}" role="img" aria-label="Savings plus investments by month: low, base and high projections">{grid}{xt}{lines}</svg>'
-            f'<figcaption class="sr">Savings plus investments by month</figcaption></figure>')
-
-
-PROJ_CSS = """<style>
-.ppage { max-width: 1160px; margin: 0 auto; padding: 32px 24px 64px; }
-.ppage.mob { padding: 20px 16px 48px; }
-.phead { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
-.ppage.mob .phead { gap: 16px; }
-.ppage.mob .seg button { padding: 0 10px; font-size: 14px; }
-.pgrid { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 32px; align-items: start; }
-.pgroup { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
-.pgroup .h2 { margin: 0 0 4px; }
-.pres { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-panel); padding: 24px; margin-bottom: 16px; }
-.disclaim { display: flex; gap: 8px; align-items: center; font-size: 14px; font-weight: 700; color: var(--hl-line); margin: 8px 0 16px; }
-.ptable { width: 100%; border-collapse: collapse; font-size: 16px; }
-.ptable th, .ptable td { padding: 12px 0; border-bottom: 1px solid var(--sunk); text-align: left; }
-.ptable thead th { font-size: 13px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--rule); padding: 6px 0; }
-.ptable th[scope=row] { font-weight: 500; }
-.ptable .n { text-align: right; padding-left: 12px; font-weight: 700; white-space: nowrap; }
-.ptable tr.tot th, .ptable tr.tot td { font-weight: 700; border-bottom: 1px solid var(--rule); }
-.ptable td[colspan] { text-align: right; }
-.ptable tr.sub th, .ptable tr.sub td { color: var(--muted); font-weight: 500; }
-.ptable tr.sub td.n { font-weight: 700; }
-.muted-cell { color: var(--muted); font-weight: 500; }
-.pchart { margin: 20px 0 0; }
-.pchart svg { display: block; max-width: 100%; height: auto; }
-.pchart .ax { font-size: 12px; fill: var(--muted); font-family: var(--font); }
-.pchart .lab { font-size: 13px; fill: var(--planned); font-weight: 700; font-family: var(--font); }
-.pchart .lab.b { fill: var(--ink); }
-.ppage.mob .pres { padding: 16px; }
-.ppage.mob .ptable { font-size: 14px; }
-.ppage.mob .pgroup { padding: 16px; }
-</style>"""
-
-
-# ---------------------------------------------------------------- settings
-def settings(mobile=False, recurrence_menu=False, dialog=False):
-    def money(lbl, v):
-        return f'<label class="f">{lbl}<span class="ctl"><span class="u">£</span><span class="grow">{v}</span></span></label>'
-
-    def field(lbl, v, ic=None):
-        return f'<label class="f">{lbl}<span class="ctl"><span class="grow">{v}</span>{icon(ic) if ic else ""}</span></label>'
-    cols = "1fr" if mobile else "1fr 1fr"
-    g = f'style="display:grid;grid-template-columns:{cols};gap:12px"'
-    rec_menu = ""
-    if recurrence_menu:
+# ------------------------------------------------------------------ settings
+def settings(name, mobile=False, rec_menu=False, dialog=False):
+    g = 'class="g2"' if not mobile else 'style="display:flex;flex-direction:column;gap:14px"'
+    rm = ""
+    if rec_menu:
         opts = ["Once", "Weekly", "Every 2 weeks", "Monthly", "Every 3 months"]
-        items = "".join(f'<div class="mi{" sel" if o == "Monthly" else ""}{" hi" if o == "Every 2 weeks" else ""}" role="menuitemradio" aria-checked="{str(o == "Monthly").lower()}">{o}'
-                        f'{"<span class=chk>" + icon("check") + "</span>" if o == "Monthly" else ""}</div>' for o in opts)
-        rec_menu = f'<div class="menu" role="menu" aria-label="Repeats" style="right:0;top:76px;width:200px" data-reui="c-dropdown-menu-1">{items}</div>'
+        rm = ('<div class="menu" role="menu" aria-label="Repeats" data-reui="c-dropdown-menu-1" style="left:0;top:92px;width:220px">'
+              + "".join(f'<div class="mi{" hi" if o == "Every 2 weeks" else ""}" role="menuitemradio" aria-checked="{str(o == "Monthly").lower()}">{o}{"<span class=chk>" + icon("check") + "</span>" if o == "Monthly" else ""}</div>' for o in opts) + '</div>')
 
-    def crow(n, a, due, rec, locked, menu=""):
-        lk = f'<span class="check"><span class="box{" on" if locked else ""}">{icon("check") if locked else ""}</span>Locked</span>'
+    def crow(n, a, due, locked, menu=""):
+        lk = f'<span class="check"><span class="box{" on" if locked else ""}">{icon("check", "i sm") if locked else ""}</span>Locked</span>'
+        rep = f'<div class="f" style="position:relative">Repeats<button class="ctl{" focus" if menu else ""}" style="justify-content:space-between" aria-haspopup="menu" aria-expanded="{str(bool(menu)).lower()}"><span>Monthly</span>{icon("chevron-down")}</button>{menu}</div>'
         if mobile:
-            return (f'<div class="crow"><div {g}>{field("Name", n)}<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">{money("Amount", a)}{field("Due", due)}</div>'
-                    f'<div class="f" style="position:relative">Repeats<button class="ctl" style="justify-content:space-between" aria-haspopup="menu"><span>{rec}</span>{icon("chevron-down")}</button>{menu}</div>{lk}</div></div>')
-        return (f'<div class="crow" style="display:grid;grid-template-columns:1.4fr 1fr .8fr 1.3fr auto 36px;gap:12px;align-items:end">{field("Name", n)}{money("Amount", a)}{field("Due", due)}'
-                f'<div class="f" style="position:relative">Repeats<button class="ctl" style="justify-content:space-between" aria-haspopup="menu" aria-expanded="{str(bool(menu)).lower()}"><span>{rec}</span>{icon("chevron-down")}</button>{menu}</div>'
-                f'<span style="height:44px;display:flex;align-items:center">{lk}</span><button class="icon-btn ghost" style="margin-bottom:4px" aria-label="Delete {n}">{icon("trash-2")}</button></div>')
-    save = '<div class="sfoot"><button class="btn primary" disabled>Save changes</button></div>'
+            return (f'<div class="reply" style="border-radius:22px">{text_f("Name", n)}<div class="g2">{money_f("Amount", a)}{text_f("Due", due)}</div>{rep}'
+                    f'<div style="display:flex;justify-content:space-between;align-items:center">{lk}<button class="ibtn ghost" aria-label="Delete {n}">{icon("trash-2")}</button></div></div>')
+        return (f'<div style="display:grid;grid-template-columns:1.3fr 1fr .8fr 1.3fr auto 44px;gap:12px;align-items:end">{text_f("Name", n)}{money_f("Amount", a)}{text_f("Due", due)}{rep}'
+                f'<span style="height:56px;display:flex;align-items:center">{lk}</span><button class="ibtn ghost" style="margin-bottom:6px" aria-label="Delete {n}">{icon("trash-2")}</button></div>')
+    save = '<div style="display:flex;justify-content:flex-end"><button class="btn primary sm" aria-disabled="true">Save changes</button></div>'
     secs = [
         ("money", "Money", f'<div class="f">This money is<div class="seg" role="group"><button aria-pressed="true">A lump sum</button><button aria-pressed="false">A monthly allowance</button></div></div>'
-                           f'<div {g}>{money("Amount at plan start", "3,900.00")}{field("Last until", "31 Jan 2027", "calendar-days")}</div>'),
-        ("income", "Income", f'<div class="f">Job<div class="seg" role="group"><button aria-pressed="false">Yes</button><button aria-pressed="true">No</button></div></div>'
-                             f'<div class="crow" style="display:grid;grid-template-columns:{"1fr 1fr" if mobile else "1.4fr 1fr 1.2fr auto"};gap:12px;align-items:end">{field("From", "Family transfer")}{money("Amount", "300.00")}{field("Date", "18 Dec 2026", "calendar-days")}'
-                             f'<span style="height:44px;display:flex;align-items:center" class="check"><span class="box on">{icon("check")}</span>Confirmed</span></div>'
-                             f'<button class="btn quiet" style="align-self:flex-start">{icon("plus")}Add income</button>'),
-        ("commitments", "Rent and commitments", crow("Rent", "620.00", "1st", "Monthly", True, rec_menu) + crow("Utilities", "55.00", "15th", "Monthly", False)
-         + f'<button class="btn quiet" style="align-self:flex-start">{icon("plus")}Add commitment</button>'),
-        ("reserve", "Reserve and savings", f'<div {g}>{money("Minimum reserve", "500.00")}{money("Savings goal by 31 Jan", "150.00")}{money("Savings now", "200.00")}{money("Investments now", "0.00")}</div>'),
-        ("spending", "Food and transport", f'<div {g}>{money("Groceries a week", "63.00")}{money("Transport a week", "36.40")}{money("Eating out a week", "38.50")}{money("Shopping a week", "42.98")}</div>'
-                                         '<div class="f">Protect first<div class="prio">' + "".join(f'<span class="tag">{i + 1} · {p}</span>' for i, p in enumerate(["Transport", "Groceries", "Eating out", "Shopping"])) + '</div></div>'),
-        ("optional", "Optional", f'<div {g}>{field("City or area", "London")}{field("Diet", "None")}</div>'
-                                 f'<div class="f">Discount memberships<div class="prio"><span class="tag">16-25 Railcard</span><span class="tag">Student Beans</span></div></div>'),
+                           f'<div {g}>{money_f("Amount at plan start", "3,900")}{text_f("Last until", "31 Jan 2027", "calendar-days")}</div>'),
+        ("income", "Income", f'<div class="f">Job<div class="seg" role="group" style="max-width:320px"><button aria-pressed="false">Yes</button><button aria-pressed="true">No</button></div></div>'
+                             f'<div {g}>{text_f("From", "Family transfer")}{money_f("Amount", "300")}{text_f("Date", "18 Dec 2026", "calendar-days")}'
+                             f'<div class="f">&nbsp;<span class="check" style="height:56px"><span class="box on">{icon("check", "i sm")}</span>Confirmed</span></div></div>'
+                             f'<button class="btn sm" style="align-self:flex-start">{icon("plus", "i sm")}Add income</button>'),
+        ("commitments", "Rent and bills", crow("Rent", "620", "1st", True, rm) + crow("Utilities", "55", "15th", True)
+         + f'<button class="btn sm" style="align-self:flex-start">{icon("plus", "i sm")}Add commitment</button>'),
+        ("reserve", "Reserve and savings", f'<div {g}>{money_f("Minimum reserve", "500")}{money_f("Savings goal by 31 Jan", "150")}{money_f("Savings now", "200")}{money_f("Investments now", "0")}</div>'),
+        ("spending", "Food and transport", f'<div {g}>{money_f("Groceries a week", "63")}{money_f("Transport a week", "36.40")}{money_f("Eating out a week", "38.50")}{money_f("Shopping a week", "42.98")}</div>'
+                                         '<div class="f">Protect first<div style="display:flex;gap:8px;flex-wrap:wrap">' + "".join(f'<span class="tag" style="height:36px;font-size:14px">{i + 1} · {p}</span>' for i, p in enumerate(["Transport", "Groceries", "Eating out", "Shopping"])) + '</div></div>'),
+        ("optional", "Optional", f'<div {g}>{text_f("City or area", "London")}{text_f("Diet", "None")}</div>'
+                                 '<div class="f">Discount memberships<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag" style="height:36px;font-size:14px">16-25 Railcard</span><span class="tag" style="height:36px;font-size:14px">Student Beans</span></div></div>'),
     ]
-    sec_html = "".join(f'<section class="ssec" id="{k}" aria-labelledby="h-{k}"><h2 class="h2" id="h-{k}">{t}</h2>{b}{save}</section>' for k, t, b in secs)
-    sec_html += (f'<section class="ssec danger" aria-labelledby="h-reset"><h2 class="h2" id="h-reset">Reset</h2>'
-                 f'<div class="resetrow"><span>Deletes your plan, ledger and settings on this device.</span><button class="btn danger">{icon("rotate-ccw")}Reset StudentPlan</button></div></section>')
-    side = "" if mobile else ('<nav class="snav" aria-label="Settings sections">' + "".join(f'<a href="#{k}"{" aria-current=true" if k == "money" else ""}>{t}</a>' for k, t, _ in secs) + '<a href="#reset">Reset</a></nav>')
+    sec = "".join(f'<section class="cal" id="{k}" style="display:flex;flex-direction:column;gap:18px;margin-bottom:16px;{"padding:18px" if mobile else "padding:28px"}"><h2 class="h2">{t}</h2>{b}{save}</section>' for k, t, b in secs)
+    sec += (f'<section class="cal" style="box-shadow:inset 0 0 0 2px var(--coral);display:flex;flex-direction:column;gap:14px;{"padding:18px" if mobile else "padding:28px"}"><h2 class="h2">Reset</h2>'
+            f'<div style="display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap"><span style="font-weight:700">Deletes your plan, ledger and settings on this device.</span>'
+            f'<button class="btn danger">{icon("rotate-ccw", "i sm")}Reset StudentPlan</button></div></section>')
     dlg = ""
     if dialog:
-        dlg = (f'<div class="dscrim"><div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dt" aria-describedby="dd"><h2 id="dt" class="h2" style="margin-bottom:8px">Reset StudentPlan?</h2>'
-               f'<p id="dd" style="margin:0 0 20px">This deletes your plan, ledger and settings from this device. It can’t be undone.</p>'
-               f'<div class="actions" style="justify-content:flex-end"><button class="btn" style="flex:none">Cancel</button><button class="btn danger" style="flex:none">Delete everything</button></div></div></div>')
+        dlg = ('<div class="scrim"></div><div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dt" aria-describedby="dd">'
+               f'<span class="ic">{icon("trash-2")}</span><h2 id="dt" class="h2">Reset StudentPlan?</h2>'
+               '<p id="dd">This deletes your plan, ledger and settings from this device. It can’t be undone.</p>'
+               f'<div class="acts" style="margin-top:6px"><button class="btn focus">Cancel</button><button class="btn danger">Delete everything</button></div></div>')
     if mobile:
-        return f'<div class="m">{mhead("settings")}<main class="spage mob"><h1 class="title">Settings</h1>{sec_html}</main>{dlg}</div>'
-    return f'{topbar("settings")}<main class="spage"><h1 class="title">Settings</h1><div class="sgrid">{side}<div>{sec_html}</div></div></main>{dlg}'
+        page(name, f'<div class="m" style="padding-bottom:40px">{mtop("settings")}<main class="mpad"><h1 class="title" style="font-size:32px;margin:4px 0 16px">Settings</h1>{sec}</main>{dlg}</div>', mobile=True)
+        return
+    nav = ('<nav aria-label="Settings sections" style="position:sticky;top:16px;display:flex;flex-direction:column;gap:4px">'
+           + "".join(f'<a href="#{k}" style="height:44px;display:flex;align-items:center;padding:0 16px;border-radius:999px;text-decoration:none;font-weight:800;{"background:var(--s3);color:var(--text)" if k == "money" else "color:var(--muted)"}"{" aria-current=true" if k == "money" else ""}>{t}</a>' for k, t, _ in secs)
+           + '<a href="#reset" style="height:44px;display:flex;align-items:center;padding:0 16px;color:var(--muted);text-decoration:none;font-weight:800">Reset</a></nav>')
+    page(name, f'{topbar("settings")}<main style="max-width:1120px;margin:0 auto;padding:12px 24px 64px"><h1 class="title" style="margin-bottom:24px">Settings</h1>'
+               f'<div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start">{nav}<div>{sec}</div></div></main>{dlg}')
 
 
-SET_CSS = """<style>
-.spage { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; }
-.spage.mob { padding: 20px 16px 48px; }
-.spage .title { margin-bottom: 24px; }
-.sgrid { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; align-items: start; }
-.snav { position: sticky; top: 24px; display: flex; flex-direction: column; }
-.snav a { height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 500; }
-.snav a[aria-current] { background: var(--surface); color: var(--text); font-weight: 700; box-shadow: inset 0 0 0 1px var(--rule); }
-.ssec { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 24px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; }
-.spage.mob .ssec { padding: 16px; }
-.ssec .h2 { margin: 0; }
-.sfoot { display: flex; justify-content: flex-end; border-top: 1px solid var(--sunk); padding-top: 16px; }
-.crow { padding-bottom: 12px; border-bottom: 1px solid var(--sunk); }
-.spage.mob .crow > div { display: flex; flex-direction: column; gap: 12px; }
-.prio { display: flex; gap: 8px; flex-wrap: wrap; }
-.prio .tag { height: 32px; font-size: 14px; padding: 0 12px; background: var(--sunk); color: var(--text); }
-.ssec.danger { border-color: var(--deficit); }
-.resetrow { display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
-.dscrim { position: fixed; inset: 0; background: rgb(29 33 37 / .45); display: grid; place-items: center; z-index: 60; padding: 16px; }
-.dialog { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-menu); padding: 24px; width: 100%; max-width: 440px; }
-</style>"""
-
-
-# ---------------------------------------------------------------- write all
-def write(name, title, body, width=None, head=""):
-    with open(os.path.join(HERE, name + ".html"), "w") as f:
-        f.write(page(title, body, extra_head=head, width=width))
-
-
+# ------------------------------------------------------------------ write all
 def main():
-    sk_dir = os.path.join(HERE, "..", "sketches")
-    have_sketches = all(os.path.exists(os.path.join(sk_dir, s + ".webp")) for s in ["welcome"] + [s for s, _ in STEPS])
+    # P-onboarding
+    onboarding("onboarding-desktop", "funds")
+    onboarding("onboarding-mobile", "funds", mobile=True)
+    onboarding("onboarding-error-desktop", "funds", error=True)
+    onboarding("onboarding-error-mobile", "funds", mobile=True, error=True)
+    welcome("onboarding-welcome-desktop")
+    welcome("onboarding-welcome-mobile", mobile=True)
+    for s, _ in STEPS[1:]:
+        onboarding(f"onboarding-step-{s}", s)
+        onboarding(f"onboarding-step-{s}-mobile", s, mobile=True)
 
-    def ob(slug, mobile=False, error=False):
-        h = onboarding(slug, mobile, error)
-        if not have_sketches:
-            h = re.sub(r'<img class="sketch"[^>]*>', '<div class="empty-frame">Sketch missing</div>', h)
-        return welcome_ctas_fix(h, mobile and slug == "welcome")
+    # P-plan
+    plan_desktop("plan-desktop", "s0", "day", day_tab("s0", TODAY), sugg=True)
+    plan_mobile("plan-mobile", "s0")
+    plan_desktop("plan-light-desktop", "s0", "day", day_tab("s0", TODAY), sugg=True, theme="light")
+    plan_mobile("plan-light-mobile", "s0", theme="light")
+    plan_desktop("plan-account-menu", "s0", "day", day_tab("s0", TODAY), menu=True)
+    plan_desktop("plan-month-menu", "s0", "day", day_tab("s0", TODAY), month_menu=True)
+    plan_desktop("plan-loading", "s0", "change", change_tab("loading"), text="I need to spend £35 on a replacement shower filter today", busy=True)
+    sheet_mobile("plan-loading-mobile", "s0", "change", change_tab("loading"), text="I need to spend £35 on a replacement shower filter today", busy=True)
+    plan_desktop("plan-deficit-desktop", "deficit", "change", change_tab("deficit"), month=(2027, 1), sel=None)
+    plan_mobile("plan-deficit-mobile", "deficit", start=D(2026, 12, 28), end=D(2027, 1, 17), month=("January", "2027"),
+                extra=f'<div class="reply" style="margin-top:12px;box-shadow:inset 0 0 0 2px var(--coral);background:var(--s1)"><div class="verdict short" style="font-size:22px">Your plan is £290 short</div>'
+                      f'<p style="font-weight:600">Rent (£620) on 1 Jan leaves you £85 below your £500 reserve.</p><p style="font-weight:600">Utilities (£55) on 15 Jan leaves you £55 below your £500 reserve.</p>'
+                      f'<p style="font-weight:600">Your £150 savings goal can\'t be funded: bills, your reserve and what you\'ve spent need £290 more than you have.</p>'
+                      f'<div class="acts"><button class="btn sm primary">{icon("plus", "i sm")}Add income</button><button class="btn sm">Edit reserve</button></div></div>')
 
-    # onboarding
-    write("onboarding-desktop", "StudentPlan · Onboarding", ob("funds"), head=OB_CSS)
-    write("onboarding-mobile", "StudentPlan · Onboarding", ob("funds", True), head=OB_CSS)
-    write("onboarding-error-desktop", "StudentPlan · Onboarding error", ob("funds", False, True), head=OB_CSS)
-    write("onboarding-error-mobile", "StudentPlan · Onboarding error", ob("funds", True, True), head=OB_CSS)
-    write("onboarding-welcome-desktop", "StudentPlan · Welcome", ob("welcome"), head=OB_CSS)
-    write("onboarding-welcome-mobile", "StudentPlan · Welcome", ob("welcome", True), head=OB_CSS)
-    for slug, _ in STEPS[1:]:
-        write(f"onboarding-step-{slug}", f"StudentPlan · {slug}", ob(slug), head=OB_CSS)
+    # P-plan-day
+    plan_desktop("plan-day-desktop", "s1", "day", day_tab("s1", TODAY), dot=True)
+    sheet_mobile("plan-day-mobile", "s1", "day", day_tab("s1", TODAY), dot=True)
+    sheet_mobile("plan-day-ordinary-mobile", "s1", "day", day_tab("s1", D(2026, 11, 12)))
+    plan_desktop("plan-day-item-menu", "s1", "day", day_tab("s1", D(2026, 11, 12), menu=True), sel=D(2026, 11, 12))
+    plan_desktop("plan-day-category", "s1", "day", day_tab("s1", TODAY, form=True))
 
-    # plan
-    write("plan-desktop", "StudentPlan · Plan", plan_desktop("initial", "day", day_tab("initial", TODAY)))
-    write("plan-mobile", "StudentPlan · Plan", plan_mobile("initial"))
-    write("plan-account-menu", "StudentPlan · App menu", plan_desktop("initial", "day", day_tab("initial", TODAY), menu="account"))
-    write("plan-month-menu", "StudentPlan · Month menu", plan_desktop("initial", "day", day_tab("initial", TODAY), menu="month"))
-    write("plan-loading", "StudentPlan · Reading", plan_desktop("s1", "change", change_tab("loading"), text="Can I spend £20 on dinner tomorrow?", busy=True))
-    write("plan-deficit-desktop", "StudentPlan · Deficit", plan_desktop("deficit", "change", change_tab("deficit"), month=(2027, 1), selected=None))
-    write("plan-deficit-mobile", "StudentPlan · Deficit", plan_mobile("deficit", "January 2027", D(2026, 12, 28), D(2027, 1, 17)))
+    # P-plan-change
+    plan_desktop("plan-change-desktop", "s1", "change", change_tab("s1"))
+    sheet_mobile("plan-change-mobile", "s1", "change", change_tab("s1"))
+    plan_desktop("plan-change-bubble-frame", "bubble", "change", change_tab("s1"), bubble=True, hashes=(("#t=340", False),))
+    plan_desktop("plan-change-bubble-reduced", "bubble", "change", change_tab("s1"), bubble=True, hashes=(("#t=340", True),))
+    plan_mobile("plan-change-bubble-mobile-frame", "bubble", bubble=True, hashes=(("#t=300", False),))
+    plan_desktop("plan-change-preview-desktop", "dinner_pv", "change", change_tab("s2"))
+    sheet_mobile("plan-change-preview-mobile", "dinner_pv", "change", change_tab("s2"))
+    plan_desktop("plan-change-tradeoff-desktop", "concert_pv", "change", change_tab("s3"), sel=D(2026, 11, 14))
+    sheet_mobile("plan-change-tradeoff-mobile", "concert_pv", "change", change_tab("s3"))
+    plan_desktop("plan-change-clarify", "s1", "change", change_tab("clarify"))
+    sheet_mobile("plan-change-clarify-mobile", "s1", "change", change_tab("clarify"))
+    plan_desktop("plan-change-fail", "s1", "change", change_tab("fail"))
+    sheet_mobile("plan-change-fail-mobile", "s1", "change", change_tab("fail"))
+    sheet_mobile("plan-change-income-mobile", "s4", "change", change_tab("s4"))
 
-    # day
-    write("plan-day-desktop", "StudentPlan · Day", plan_desktop("s1", "day", day_tab("s1", TODAY)))
-    write("plan-day-mobile", "StudentPlan · Day", sheet_mobile("day", day_tab("s1", TODAY)))
-    write("plan-day-item-menu", "StudentPlan · Day item menu", plan_desktop("s1", "day", day_tab("s1", D(2026, 11, 11), item_menu=True), selected=D(2026, 11, 11)))
-    write("plan-day-category", "StudentPlan · Record expense", plan_desktop("initial", "day", day_tab("initial", TODAY, add_form=True)))
+    # P-plan-offers
+    plan_desktop("plan-offers-desktop", "s1", "offers", offers_tab(3))
+    sheet_mobile("plan-offers-mobile", "s1", "offers", offers_tab(4))
 
-    # change
-    write("plan-change-desktop", "StudentPlan · Change", plan_desktop("s1", "change", change_tab("s1")))
-    write("plan-change-mobile", "StudentPlan · Change", sheet_mobile("change", change_tab("s1")))
-    write("plan-change-bubble", "StudentPlan · Bubble frame", plan_desktop("bubble", "change", change_tab("s1")) + BUBBLE_JS)
-    write("plan-change-bubble-mobile", "StudentPlan · Bubble frame", plan_mobile("bubble") + BUBBLE_JS)
-    write("plan-change-preview-desktop", "StudentPlan · Preview", plan_desktop("dinner", "change", change_tab("dinner"), preview_days=(D(2026, 11, 11),), selected=D(2026, 11, 11)))
-    write("plan-change-preview-mobile", "StudentPlan · Preview", sheet_mobile("change", change_tab("dinner")))
-    cdays = tuple([D(2026, 11, 14)] + [D(2026, 11, 15) + dt.timedelta(days=i) for i in range(14)])
-    write("plan-change-tradeoff-desktop", "StudentPlan · Trade-off", plan_desktop("concert", "change", change_tab("concert"), preview_days=(D(2026, 11, 14),), selected=D(2026, 11, 14)))
-    write("plan-change-tradeoff-mobile", "StudentPlan · Trade-off", sheet_mobile("change", change_tab("concert")))
-    write("plan-change-clarify", "StudentPlan · Clarification", plan_desktop("s1", "change", change_tab("clarify")))
-    write("plan-change-fail", "StudentPlan · Not understood", plan_desktop("s1", "change", change_tab("fail")))
+    # P-projections
+    projections("projections-desktop")
+    projections("projections-mobile", mobile=True)
+    projections("projections-empty-desktop", empty=True)
+    projections("projections-empty-mobile", empty=True, mobile=True)
 
-    # offers
-    write("plan-offers-desktop", "StudentPlan · Offers", plan_desktop("s1", "offers", offers_tab()))
-    write("plan-offers-mobile", "StudentPlan · Offers", sheet_mobile("offers", offers_tab()))
+    # P-settings
+    settings("settings-desktop")
+    settings("settings-mobile", mobile=True)
+    settings("settings-recurrence-menu", rec_menu=True)
+    settings("settings-reset-dialog-desktop", dialog=True)
+    settings("settings-reset-dialog-mobile", mobile=True, dialog=True)
 
-    # projections / settings
-    write("projections-desktop", "StudentPlan · Projections", projections(), head=PROJ_CSS)
-    write("projections-mobile", "StudentPlan · Projections", projections(mobile=True), head=PROJ_CSS)
-    write("projections-empty-desktop", "StudentPlan · Projections empty", projections(empty=True), head=PROJ_CSS)
-    write("projections-empty-mobile", "StudentPlan · Projections empty", projections(empty=True, mobile=True), head=PROJ_CSS)
-    write("settings-desktop", "StudentPlan · Settings", settings(), head=SET_CSS)
-    write("settings-mobile", "StudentPlan · Settings", settings(mobile=True), head=SET_CSS)
-    write("settings-recurrence-menu", "StudentPlan · Repeats menu", settings(recurrence_menu=True), head=SET_CSS)
-    write("settings-reset-dialog", "StudentPlan · Reset", settings(dialog=True), head=SET_CSS)
-    write("settings-reset-dialog-mobile", "StudentPlan · Reset", settings(mobile=True, dialog=True), head=SET_CSS)
-    print("sketches:", "present" if have_sketches else "MISSING")
+    # renames for hashed renders
+    for r in RENDERS:
+        if r["html"] in ("plan-change-bubble-frame", "plan-change-bubble-reduced", "plan-change-bubble-mobile-frame"):
+            r["out"] = r["html"]
+        if r["html"].endswith("-mobile") or r["html"].startswith("plan-change-bubble-mobile"):
+            r["mobile"] = True
+        if "reset-dialog" in r["html"]:
+            r["full"] = False
+    with open(os.path.join(HERE, "renders.json"), "w") as f:
+        json.dump(RENDERS, f, indent=1)
+    print(len(RENDERS), "pages")
 
 
 if __name__ == "__main__":
