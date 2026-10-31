@@ -9,7 +9,14 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "postinstall": "node scripts/codegraph-setup.mjs",
+    "codegraph:setup": "node scripts/codegraph-setup.mjs",
+    "codegraph:init": "codegraph init --yes",
+    "codegraph:sync": "codegraph sync",
+    "codegraph:status": "codegraph status",
+    "codegraph:explore": "codegraph explore",
+    "codegraph:affected": "codegraph affected"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

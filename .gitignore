@@ -16,3 +16,8 @@ next-env.d.ts
 /playwright/.cache/
 .vercel
 *.pem
+
+# CodeGraph local database and runtime state
+.codegraph/
+.codegraph-*/
+

@@ -1,0 +1,11 @@
+{
+  "exclude": [
+    ".prd-to-production/design/v1-rejected/",
+    "skills/prd-to-production/references/upstream/"
+  ],
+  "deprioritize": [
+    ".prd-to-production/",
+    "skills/",
+    "scripts/"
+  ]
+}
