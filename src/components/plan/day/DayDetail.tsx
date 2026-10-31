@@ -27,9 +27,9 @@ function EntryRow({ e, changed }: { e: EntryItem; changed: boolean }) {
     if (!r.ok) setErr(r.error?.message ?? 'Could not delete.');
   };
   return (
-    <li data-item={`ledger:${e.id}`} className={`rounded-2xl bg-[var(--accent)] px-3 py-2 text-[var(--accent-ink)] ${changed ? 'ring-2 ring-[var(--lime)]' : ''}`}>
+    <li data-item={`ledger:${e.id}`} className={`rounded-2xl px-3 py-2 ${e.kind === 'income' ? 'bg-[var(--lime)] text-[#0B0C1F]' : 'bg-[var(--accent)] text-[var(--accent-ink)]'} ${changed ? 'ring-2 ring-[var(--lime)]' : ''}`}>
       <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate font-semibold">{e.kind === 'income' ? 'Income' : e.label}{e.note ? ` · ${e.note}` : ''}</span>
+        <span className="min-w-0 flex-1 truncate font-semibold"><span className="sr-only">{e.kind === 'income' ? 'Received: ' : 'Spent: '}</span>{e.kind === 'income' ? `Income${e.note ? ` · ${e.note}` : ''}` : `${e.label}${e.note ? ` · ${e.note}` : ''}`}</span>
         {editing ? (
           <>
             <label className="sr-only" htmlFor={`amt-${e.id}`}>Amount in pounds</label>

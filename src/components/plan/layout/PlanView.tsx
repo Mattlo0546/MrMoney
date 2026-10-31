@@ -5,6 +5,7 @@ import { formatMoney } from '@/lib/engine';
 import type { ISODate } from '@/lib/engine';
 import { useAppSnapshot } from '@/lib/store';
 import { Composer } from '@/components/plan/composer/Composer';
+import { useChangeView } from '@/components/plan/change/changeState';
 import { ChangePanel } from '@/components/plan/change/ChangePanel';
 import { OffersPanel } from '@/components/plan/offers/OffersPanel';
 import { buildPlanData } from '../calendar/data';
@@ -12,6 +13,7 @@ import { MonthCalendar } from '../calendar/MonthCalendar';
 import { Agenda } from '../calendar/Agenda';
 import { playBubbles } from '../calendar/bubble';
 import { DayDetail } from '../day/DayDetail';
+import type { ChipSpec, PreviewChips } from '../calendar/shared';
 import { SummaryStrip } from './SummaryStrip';
 
 type Tab = 'day' | 'change' | 'offers';
@@ -71,6 +73,8 @@ export function PlanView() {
   const [tab, setTab] = useState<Tab>('day');
   const [sheet, setSheet] = useState(false);
   const [seenChange, setSeenChange] = useState<number | null>(null);
+  const view = useChangeView();
+  const [seenView, setSeenView] = useState(view);
 
   const { state, today, changeId, changedDays, changedItems } = snap;
   const data = useMemo(() => (state ? buildPlanData(state, today) : null), [state, today]);
@@ -88,6 +92,43 @@ export function PlanView() {
     }
   }
 
+  // The composer produced something (pending, clarification, preview, result, error): show the Change tab.
+  if (view !== seenView) {
+    setSeenView(view);
+    if (view.status !== 'idle') {
+      setTab('change');
+      setSheet(true);
+      // Bring the previewed day into view.
+      if (view.status === 'preview' && view.intent.kind === 'hypothetical') setMonth(view.intent.date.slice(0, 7));
+    }
+  }
+
+  // Un-applied preview: outline affected days and add preview chips (read from changeState, never mutated here).
+  const { preview, previewDays } = useMemo(() => {
+    const chips: PreviewChips = new Map();
+    const days = new Set<ISODate>();
+    if (view.status === 'preview') {
+      const intent = view.intent;
+      const add = (d: ISODate, c: ChipSpec) => chips.set(d, [...(chips.get(d) ?? []), c]);
+      if (intent.kind === 'hypothetical') {
+        days.add(intent.date);
+        add(intent.date, { key: `pv-${intent.date}`, kind: 'preview', label: intent.label ?? intent.category, pence: intent.amount.pence });
+      }
+      if (view.pv.ok) {
+        for (const d of view.pv.diff.changedDays) days.add(d);
+        const perDay = new Map<ISODate, number>();
+        for (const c of view.pv.diff.cellChanges) {
+          if (c.field !== 'planned' || (intent.kind === 'hypothetical' && c.day === intent.date)) continue;
+          perDay.set(c.day, (perDay.get(c.day) ?? 0) + (c.from.pence - c.to.pence));
+        }
+        for (const [d, delta] of perDay) {
+          if (delta !== 0) add(d, { key: `pv-adj-${d}`, kind: 'preview', label: 'Adjusted', pence: Math.abs(delta), negative: delta > 0 });
+        }
+      }
+    }
+    return { preview: chips, previewDays: days };
+  }, [view]);
+
   useEffect(() => {
     if (!snap.hydrated || changeId === 0 || !rootRef.current) return;
     if (changedDays.length === 0 && changedItems.length === 0) return;
@@ -103,6 +144,8 @@ export function PlanView() {
   const month = monthOverride ?? sel.slice(0, 7);
   const info = data.days.get(sel)!;
   const summary = (state.plan ?? null)?.summary;
+  const upcoming = state.incomes.filter((i) => i.confirmed && i.date > today).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const nextIncome = upcoming ? { date: upcoming.date, pence: upcoming.amount.pence } : null;
   const select = (d: ISODate) => { setSelected(d); setTab('day'); if (!desktop) setSheet(true); };
   const deficitBanner = data.undated.length > 0 || data.fundingGap > 0;
 
@@ -124,12 +167,14 @@ export function PlanView() {
 
   if (desktop) {
     return (
-      <div ref={rootRef} className="mx-auto flex h-[calc(100dvh-4rem)] min-h-[720px] max-w-[1600px] flex-col gap-4 p-6">
-        {summary && <SummaryStrip s={summary} />}
-        {banner}
-        <div className="flex min-h-0 flex-1 gap-4">
-          <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} changed={changed} />
-          <aside aria-label="Assistant and details" className="flex min-h-0 w-[400px] shrink-0 flex-col gap-3 rounded-3xl bg-[var(--surface)] p-4">
+      <div ref={rootRef} className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[1600px] flex-col gap-4 p-6">
+        <div className="flex flex-1 items-start gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
+            {banner}
+            <MonthCalendar data={data} today={today} month={month} onMonth={setMonth} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
+          </div>
+          <aside aria-label="Assistant and details" className="sticky top-4 flex h-[calc(100dvh-6rem)] min-h-[560px] w-[400px] shrink-0 flex-col gap-3 rounded-3xl bg-[var(--surface)] p-4">
             <Composer />
             <PanelTabs tab={tab} setTab={setTab}>{panels}</PanelTabs>
           </aside>
@@ -140,9 +185,9 @@ export function PlanView() {
 
   return (
     <div ref={rootRef} className="flex flex-col gap-4 p-4 pb-40">
-      {summary && <SummaryStrip s={summary} />}
+      {summary && <SummaryStrip s={summary} today={today} nextIncome={nextIncome} />}
       {banner}
-      <Agenda data={data} today={today} selected={sel} onSelect={select} changed={changed} />
+      <Agenda data={data} today={today} selected={sel} onSelect={select} preview={preview} previewDays={previewDays} />
       {sheet && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/50" onClick={() => setSheet(false)}>
           <div role="dialog" aria-label="Plan details" onClick={(e) => e.stopPropagation()} className="flex max-h-[75dvh] min-h-[50dvh] w-full flex-col rounded-t-3xl bg-[var(--surface)] p-4 pb-28">

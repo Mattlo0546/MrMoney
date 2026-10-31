@@ -11,39 +11,55 @@ export function PinIcon({ className = 'h-3 w-3' }: { className?: string }) {
   );
 }
 
-export interface ChipSpec { key: string; kind: 'actual' | 'fixed' | 'planned'; label: string; pence: number; itemKey?: string }
+export type ChipKind = 'actual' | 'income' | 'fixed' | 'planned' | 'preview';
+export interface ChipSpec { key: string; kind: ChipKind; label: string; pence: number; itemKey?: string; negative?: boolean }
 
-export function chipsFor(day: DayInfo, changed: Set<string>): ChipSpec[] {
+/** Preview chips for one day, supplied by the plan layout from the un-applied preview. */
+export type PreviewChips = Map<string, ChipSpec[]>;
+
+/** Shorter label for tight calendar cells; the full label stays available via the tooltip. */
+export function shortLabel(label: string, max = 11): string {
+  if (label.length <= max) return label;
+  const first = label.split(/\s+/)[0];
+  if (first.length >= 4 && first.length <= max) return first;
+  return `${label.slice(0, max - 1)}…`;
+}
+
+export function chipsFor(day: DayInfo, preview?: ChipSpec[]): ChipSpec[] {
   const out: ChipSpec[] = [];
   for (const f of day.fixed) out.push({ key: f.id, kind: 'fixed', label: f.name, pence: f.pence });
   for (const e of day.entries) {
-    out.push({ key: e.id, kind: 'actual', label: e.kind === 'income' ? `+ ${e.label}` : e.label, pence: e.pence, itemKey: `ledger:${e.id}` });
+    out.push({ key: e.id, kind: e.kind === 'income' ? 'income' : 'actual', label: e.label, pence: e.pence, itemKey: `ledger:${e.id}` });
   }
-  for (const p of day.purchases) out.push({ key: p.id, kind: 'planned', label: p.label, pence: p.pence });
-  for (const it of day.items) {
-    const k = `${day.date}|${it.category}`;
-    if (changed.has(k)) out.push({ key: k, kind: 'planned', label: it.name, pence: it.planned, itemKey: k });
-  }
+  // One chip per planned purchase, under its own label. Category cells are never listed again.
+  for (const p of day.purchases) out.push({ key: p.id, kind: 'planned', label: p.label, pence: p.pence, itemKey: `${day.date}|${p.category}` });
+  if (preview) out.push(...preview);
   return out;
 }
 
+const SR = { actual: 'Spent', income: 'Received', fixed: 'Bill', planned: 'Planned', preview: 'Preview' } as const;
+
 export function Chip({ chip, compact }: { chip: ChipSpec; compact?: boolean }) {
-  const style =
-    chip.kind === 'actual'
-      ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
-      : chip.kind === 'fixed'
-        ? 'bg-[var(--navy)] text-white border border-[var(--line)]'
-        : 'border border-dashed border-[var(--line)] text-[var(--muted)]';
-  const sr = chip.kind === 'actual' ? 'Spent' : chip.kind === 'fixed' ? 'Fixed' : 'Planned';
+  const style = {
+    actual: 'bg-[var(--accent)] text-[var(--accent-ink)]',
+    income: 'bg-[var(--lime)] text-[#0B0C1F]',
+    fixed: 'bg-[var(--navy)] text-white border border-[var(--accent)]',
+    planned: 'border border-dashed border-[var(--line)] text-[var(--muted)]',
+    preview: 'border border-dashed border-[var(--lime)] text-[var(--lime)]',
+  }[chip.kind];
+  const amount = `${chip.kind === 'income' ? '+' : chip.negative ? '−' : ''}${money(chip.pence)}`;
   return (
     <span
       data-item={chip.itemKey}
-      className={`flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 ${compact ? 'text-[11px]' : 'text-xs'} font-semibold leading-4 ${style}`}
+      data-chip={chip.kind}
+      title={`${SR[chip.kind]}: ${chip.label} ${amount}`}
+      className={`flex w-fit min-w-0 max-w-full items-center gap-1 rounded-full px-2 py-0.5 ${compact ? 'text-[11px]' : 'text-xs'} font-semibold leading-4 ${style}`}
     >
       {chip.kind === 'fixed' && <PinIcon className="h-2.5 w-2.5 shrink-0" />}
-      <span className="sr-only">{sr}: </span>
-      <span className="truncate">{chip.label}</span>
-      <span className="ml-auto shrink-0 tabular-nums">{money(chip.pence)}</span>
+      <span className="sr-only">{SR[chip.kind]}: </span>
+      <span className="min-w-0 truncate" aria-hidden="true">{compact ? shortLabel(chip.label) : chip.label}</span>
+      <span className="sr-only">{chip.label}</span>
+      <span className="shrink-0 tabular-nums">{amount}</span>
     </span>
   );
 }
