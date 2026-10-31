@@ -1,5 +1,5 @@
 /** Mutable working grid used while applying one intent to a cloned state. */
-import { categoryOrder, cellKey, prefMinMap, takeOrder, cellUseMap } from './accounting';
+import { capSeries, categoryOrder, cellKey, prefMinMap, takeOrder, cellUseMap } from './accounting';
 import { addDays } from './dates';
 import { evenSplitLatest, largestRemainder } from './money';
 import { futureDays } from './plan';
@@ -122,17 +122,95 @@ export function addEven(w: Work, amount: number, days: ISODate[]) {
   });
 }
 
-/** Take up to `amount` from the other cells of day d (lowest priority first, no floors). */
-export function intraDayTake(w: Work, d: ISODate, exclude: CategoryId, amount: number): number {
+export const isEssential = (w: Work, c: CategoryId) => !!w.s.profile.categories.find((x) => x.id === c)?.essential;
+
+/** How the same-day step may take from a day's other categories:
+ * 'any' (no floors), 'floors' (essentials keep their minimumDaily),
+ * 'nonEssential' (essential categories are never touched). */
+export type IntraDayMode = 'any' | 'floors' | 'nonEssential';
+
+/** Take up to `amount` from the other cells of day d (lowest priority first). */
+export function intraDayTake(w: Work, d: ISODate, exclude: CategoryId, amount: number, mode: IntraDayMode = 'floors'): number {
   let need = amount;
   const order = [...takeOrder(w.s), ...cellsOfDay(w, d).filter((c) => !w.s.profile.categories.some((x) => x.id === c))];
   for (const c of order) {
     if (need <= 0) break;
     if (c === exclude) continue;
-    const x = Math.min(need, cellFree(w, d, c, false));
+    if (mode === 'nonEssential' && isEssential(w, c)) continue;
+    const x = Math.min(need, cellFree(w, d, c, mode !== 'any'));
     if (x > 0) { setP(w, d, c, getP(w, d, c) - x); need -= x; }
   }
   return amount - need;
+}
+
+/** What day d can give a purchase in category c without touching essentials: the
+ * unused part of c's own cell plus the unused non-essential cells. */
+export function dayAvailable(w: Work, d: ISODate, c: CategoryId): number {
+  return cellsOfDay(w, d).reduce((a, x) => {
+    if (x !== c && isEssential(w, x)) return a;
+    return a + Math.max(0, getP(w, d, x) - cellUse(w, d, x));
+  }, 0);
+}
+
+/** Planned decreases on days other than `except` between two snapshots, by category. */
+export function movesBetween(
+  w: Work, before: Map<string, number>, except?: ISODate,
+): { category: CategoryId; amount: number; days: ISODate[] }[] {
+  const acc = new Map<CategoryId, { amount: number; days: Set<ISODate> }>();
+  for (const [k, v] of before) {
+    const now = w.planned.get(k) ?? 0;
+    if (now >= v) continue;
+    const [d, c] = k.split('|');
+    if (d === except) continue;
+    if (!acc.has(c)) acc.set(c, { amount: 0, days: new Set() });
+    acc.get(c)!.amount += v - now;
+    acc.get(c)!.days.add(d);
+  }
+  return categoryOrder(w.s, acc.keys())
+    .filter((c) => acc.has(c))
+    .map((c) => ({ category: c, amount: acc.get(c)!.amount, days: [...acc.get(c)!.days].sort() }));
+}
+
+/**
+ * Cash repair (fallback when an incremental change breaks I3): wherever cumulative
+ * planned spending runs ahead of the cash cap, move the excess from the days up to that
+ * point (today last) to the days after it, taking in take order with essential floors.
+ * Returns false if it cannot repair (the caller then re-plans in full).
+ */
+export function repairCash(w: Work): boolean {
+  const W = futureDays(w.s, w.today);
+  if (!W.length) return false;
+  for (let guard = 0; guard < 4 * W.length + 8; guard++) {
+    const caps = capSeries(w.s, w.today, W);
+    const byDay = new Map<ISODate, number>();
+    for (const [k, v] of w.planned) {
+      const d = k.slice(0, 10);
+      if (d >= w.today) byDay.set(d, (byDay.get(d) ?? 0) + v);
+    }
+    const useByDay = new Map<ISODate, number>();
+    for (const [k, v] of w.uses) {
+      const d = k.slice(0, 10);
+      if (d >= w.today) useByDay.set(d, (useByDay.get(d) ?? 0) + v);
+    }
+    let p = 0, u = 0, bad = -1, excess = 0;
+    for (let i = 0; i < W.length; i++) {
+      p += byDay.get(W[i]) ?? 0;
+      u += useByDay.get(W[i]) ?? 0;
+      const lim = Math.max(caps[i], u);
+      if (p > lim) { bad = i; excess = p - lim; break; }
+    }
+    if (bad < 0) return true;
+    if (bad === W.length - 1) return false;
+    const order = takeOrder(w.s);
+    let taken = takeEven(w, order, W.slice(1, bad + 1), excess, true);
+    if (taken < excess) taken += takeEven(w, order, [W[0]], excess - taken, true);
+    if (taken < excess) {
+      if (taken > 0) addEven(w, taken, W.slice(bad + 1));
+      return false;
+    }
+    addEven(w, taken, W.slice(bad + 1));
+  }
+  return false;
 }
 
 export const tomorrowOf = (d: ISODate) => addDays(d, 1);

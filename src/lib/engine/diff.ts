@@ -12,6 +12,8 @@ export function protectedSnapshot(s: EngineState, today: ISODate): ProtectedSnap
     })),
     minimumReserve: s.profile.minimumReserve,
     savingsGoal: s.profile.savingsGoal,
+    plannedSavings: s.plan?.summary.plannedSavings ?? s.profile.savingsGoal,
+    reserveShortfall: gbp((s.plan?.deficits ?? []).filter((d) => d.kind === 'reserve-short').reduce((a, d) => a + d.amount.pence, 0)),
   };
 }
 
@@ -21,7 +23,8 @@ export function sameProtected(a: ProtectedSnapshot, b: ProtectedSnapshot): boole
 
 type Extras = Partial<Pick<ChangeSet,
   'amount' | 'target' | 'absorbed' | 'overspend' | 'dayRemainingBefore' | 'dayRemainingAfter' |
-  'shortfall' | 'commitment' | 'savingsGoal' | 'replanned'>>;
+  'shortfall' | 'commitment' | 'savingsGoal' | 'replanned' | 'takenFromLater' | 'fromUnallocated' | 'uncovered' |
+  'dayAvailableBefore' | 'borrowed' | 'tradeoff' | 'removedPurchase'>>;
 
 export function computeDiff(
   before: EngineState, after: EngineState, intent: Intent, today: ISODate, extras: Extras = {},

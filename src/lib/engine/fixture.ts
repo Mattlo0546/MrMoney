@@ -18,9 +18,12 @@ export function demoBaseState(): EngineState {
       hasJob: false,
       // Weights are the onboarding daily amounts in pence (£9.00, £5.20, £5.50, £6.14).
       // Protect-first order: transport, groceries, eating out, shopping.
+      // D16: essentials keep their full planned daily amount as a floor (£9.00 groceries,
+      // £5.20 transport), so automatic reallocation and same-day "make room" never fund
+      // other spending from food or travel.
       categories: [
-        { id: 'groceries', name: 'Groceries', weight: 900, priority: 2, essential: true },
-        { id: 'transport', name: 'Transport', weight: 520, priority: 1, essential: true },
+        { id: 'groceries', name: 'Groceries', weight: 900, priority: 2, essential: true, minimumDaily: gbp(900) },
+        { id: 'transport', name: 'Transport', weight: 520, priority: 1, essential: true, minimumDaily: gbp(520) },
         { id: 'eating-out', name: 'Eating out', weight: 550, priority: 3, essential: false },
         { id: 'shopping', name: 'Shopping', weight: 614, priority: 4, essential: false },
       ],

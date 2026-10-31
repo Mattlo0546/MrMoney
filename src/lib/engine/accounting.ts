@@ -3,8 +3,10 @@
  *
  * balanceSOD = opening + inflows[planStart, today) − bills[planStart, today) − expenses[planStart, today)
  * pool       = balanceSOD + inflows[today, end] − bills[today, end] − reserve − savingsGoal
- * Cap(t)     = balanceSOD − reserve − savingsGoal + inflows[today, t] − bills[today, t]
+ * Cap(t)     = balanceSOD − held(t) + inflows[today, t] − bills[today, t]
  *              (the most flexible money that can have been spent by the end of day t)
+ * held(t)    = reserve (from today) + savings due by t: savings deadlines with byDate <= t,
+ *              and the whole savings goal on the last day of the plan.
  */
 import { addDays, daysInMonth, makeDate, parseISODate } from './dates';
 import { occurrences, type Occurrence } from './recurrence';
@@ -82,6 +84,19 @@ export function protectedHeld(s: EngineState): number {
   return s.profile.minimumReserve.pence + s.profile.savingsGoal.pence;
 }
 
+/** Savings that must already be set aside at the end of day t. */
+export function savingsHeldOn(s: EngineState, t: ISODate): number {
+  const goal = s.profile.savingsGoal.pence;
+  if (t >= s.profile.horizonEnd) return goal;
+  const due = (s.profile.savingsDeadlines ?? []).filter((x) => x.byDate <= t).reduce((a, x) => a + x.amount.pence, 0);
+  return Math.min(goal, due);
+}
+
+/** Protected money that must be in the bank at the end of day t (reserve + savings due). */
+export function heldOn(s: EngineState, t: ISODate): number {
+  return s.profile.minimumReserve.pence + savingsHeldOn(s, t);
+}
+
 export function futureInflow(s: EngineState, today: ISODate): number {
   return sum(inflowEvents(s, today, s.profile.horizonEnd));
 }
@@ -100,8 +115,8 @@ export function capSeries(s: EngineState, today: ISODate, days: ISODate[]): numb
   for (const e of inflowEvents(s, today, end)) inflow.set(e.date, (inflow.get(e.date) ?? 0) + e.pence);
   const bills = new Map<ISODate, number>();
   for (const e of billEvents(s, today, end)) bills.set(e.date, (bills.get(e.date) ?? 0) + e.pence);
-  let c = balanceAtStartOf(s, today) - protectedHeld(s);
-  return days.map((d) => (c += (inflow.get(d) ?? 0) - (bills.get(d) ?? 0)));
+  let c = balanceAtStartOf(s, today);
+  return days.map((d) => (c += (inflow.get(d) ?? 0) - (bills.get(d) ?? 0)) - heldOn(s, d));
 }
 
 /** Expense actuals per (day, category). */
@@ -115,21 +130,36 @@ export function actualMap(s: EngineState): Map<string, number> {
   return m;
 }
 
+/** Ids of planned purchases completed by a recorded expense (Transaction.plannedPurchaseId). */
+export function completedPurchaseIds(s: EngineState): Set<string> {
+  const out = new Set<string>();
+  for (const t of s.ledger) if (t.kind === 'expense' && t.plannedPurchaseId) out.add(t.plannedPurchaseId);
+  return out;
+}
+
+/** Outstanding planned purchases (not yet completed by an expense). */
+export function outstandingPurchases(s: EngineState) {
+  const done = completedPurchaseIds(s);
+  return s.plannedPurchases.filter((p) => !done.has(p.id));
+}
+
+/** Money still set aside per (day, category): outstanding planned purchases only. */
 export function earmarkMap(s: EngineState): Map<string, number> {
   const m = new Map<string, number>();
-  for (const p of s.plannedPurchases) {
+  for (const p of outstandingPurchases(s)) {
     const k = cellKey(p.date, p.category);
     m.set(k, (m.get(k) ?? 0) + p.amount.pence);
   }
   return m;
 }
 
-/** Use of a cell = max(actual, planned purchases): actuals consume that day's planned
- * purchases in the same category first. */
+/** Use of a cell = actuals + outstanding planned purchases. An expense releases a planned
+ * purchase only when it is linked to it (plannedPurchaseId), so an unrelated actual in the
+ * same cell never hides an earmark. */
 export function cellUseMap(s: EngineState): Map<string, number> {
   const a = actualMap(s), e = earmarkMap(s);
   const m = new Map<string, number>();
-  for (const k of new Set([...a.keys(), ...e.keys()])) m.set(k, Math.max(a.get(k) ?? 0, e.get(k) ?? 0));
+  for (const k of new Set([...a.keys(), ...e.keys()])) m.set(k, (a.get(k) ?? 0) + (e.get(k) ?? 0));
   return m;
 }
 

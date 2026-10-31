@@ -40,8 +40,16 @@ export interface Profile {
   horizonEnd: ISODate;
   minimumReserve: Money;
   savingsGoal: Money;
+  /** Parts of the savings goal that must be set aside by a date (from goal intents with a
+   * byDate). The rest of the goal is held by horizonEnd. Optional; default none. */
+  savingsDeadlines?: SavingsDeadline[];
   categories: Category[];
   hasJob: boolean;
+}
+
+export interface SavingsDeadline {
+  amount: Money;
+  byDate: ISODate;
 }
 
 export type Recurrence =
@@ -77,6 +85,8 @@ export interface Transaction {
   /** Expense category: a flexible category id or any other label (e.g. 'household'). */
   category?: CategoryId;
   note?: string;
+  /** Expense: the planned purchase this actual completes (its earmark is released). */
+  plannedPurchaseId?: string;
 }
 
 /** "Keep £X available for <date>": that day's unspent allowance stays >= amount. */
@@ -173,6 +183,10 @@ export interface ExpenseIntent extends IntentBase {
   date: ISODate;
   category: CategoryId;
   note?: string;
+  /** The planned purchase this expense completes. If omitted, an outstanding planned
+   * purchase on the same day with the same category (or a label equal to the category
+   * or note) is matched automatically. */
+  plannedPurchaseId?: string;
 }
 export interface HypotheticalIntent extends IntentBase {
   kind: 'hypothetical';
@@ -210,6 +224,13 @@ export interface GoalIntent extends IntentBase {
   amount: Money;
   byDate?: ISODate;
 }
+/** Cancel a planned purchase (by id, or by label and optional date). Its earmark is released. */
+export interface RemovePlannedPurchaseIntent extends IntentBase {
+  kind: 'removePlannedPurchase';
+  plannedPurchaseId?: string;
+  label?: string;
+  date?: ISODate;
+}
 export interface SettingsEditIntent extends IntentBase {
   kind: 'settingsEdit';
   patch: Partial<Pick<Profile, 'minimumReserve' | 'savingsGoal' | 'horizonEnd' | 'categories'>>;
@@ -222,7 +243,8 @@ export type Intent =
   | CommitmentChangeIntent
   | PreferenceIntent
   | GoalIntent
-  | SettingsEditIntent;
+  | SettingsEditIntent
+  | RemovePlannedPurchaseIntent;
 
 // ---------- Diff / results ----------
 
@@ -245,6 +267,26 @@ export interface ProtectedSnapshot {
   commitments: { id: string; name: string; total: Money }[];
   minimumReserve: Money;
   savingsGoal: Money;
+  /** The part of the savings goal the plan actually funds (summary.plannedSavings). */
+  plannedSavings?: Money;
+  /** How far cash dips below the reserve at worst (sum of reserve-short deficits). */
+  reserveShortfall?: Money;
+}
+
+/** Money borrowed from later days' non-essential categories for a planned purchase (D16). */
+export interface BorrowSource {
+  category: CategoryId;
+  categoryName: string;
+  amount: Money;
+  from: ISODate;
+  to: ISODate;
+  days: ISODate[];
+}
+export interface Borrowing {
+  amount: Money;
+  from: ISODate;
+  to: ISODate;
+  sources: BorrowSource[];
 }
 
 export interface ChangeSet {
@@ -265,14 +307,29 @@ export interface ChangeSet {
   sameDayAdditions: CategoryMove[];
   /** Expense: part covered by the day's own allowance. */
   absorbed?: Money;
-  /** Expense: part taken from later days. */
+  /** Expense: the part the day's allowance could not cover (= takenFromLater + uncovered). */
   overspend?: Money;
+  /** Expense: part of the overspend actually taken from later days. */
+  takenFromLater?: Money;
+  /** Expense: part of the overspend taken from money not assigned to any day (after the plan ended). */
+  fromUnallocated?: Money;
+  /** Expense: part of the overspend nothing could cover (it becomes a funding gap). */
+  uncovered?: Money;
+  /** Hypothetical: what the day could give this purchase without touching essentials. */
+  dayAvailableBefore?: Money;
+  /** Hypothetical: money borrowed from the following days' non-essentials (D16). */
+  borrowed?: Borrowing;
+  /** Hypothetical: the chosen trade-off option and what it moved. */
+  tradeoff?: { optionId: string; title: string; amount: Money; sources: BorrowSource[] };
+  /** removePlannedPurchase: the purchase that was removed. */
+  removedPurchase?: PlannedPurchase;
   /** Hypothetical: the day's remaining allowance before / after. */
   dayRemainingBefore?: Money;
   dayRemainingAfter?: Money;
+  /** Hypothetical: the amount a chosen trade-off option covered. */
   shortfall?: Money;
   commitment?: { name: string; before: Money; after: Money; effectiveFrom: ISODate; totalDelta: Money };
-  savingsGoal?: { before: Money; after: Money };
+  savingsGoal?: { before: Money; after: Money; byDate?: ISODate };
   ledgerAdded: Transaction[];
   summaryBefore: Summary;
   summaryAfter: Summary;
@@ -291,9 +348,18 @@ export interface ExplanationFact {
   value?: Money;
   text?: string;
 }
+/** One £ figure in the sentence and the ChangeSet field it came from (I11). */
+export interface MoneyMention {
+  /** The formatted text exactly as it appears in the sentence, e.g. "£8.64". */
+  text: string;
+  /** Path into the ChangeSet, e.g. "borrowed.amount" or "sources[0].amount". */
+  path: string;
+}
 export interface Explanation {
   facts: ExplanationFact[];
   sentence: string;
+  /** Every £ figure in `sentence`, in order of appearance, with its ChangeSet path. */
+  mentions?: MoneyMention[];
 }
 
 export interface EngineError {
@@ -303,7 +369,8 @@ export interface EngineError {
     | 'shortfall'
     | 'insufficient-flexible'
     | 'cash-constraint'
-    | 'unknown-option';
+    | 'unknown-option'
+    | 'not-found';
   message: string;
   details?: unknown;
 }

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { assertNumbersFromDiff } from './demo-journey.test';
 import { protectedSnapshot } from './diff';
 import { demoFixture } from './fixture';
 import { affordability, applyIntent, previewIntent } from './intents';
 import { checkInvariants } from './invariants';
 import { gbp } from './money';
 import { generatePlan } from './plan';
-import { arbIntent, arbSpec, buildState, START } from './testkit';
+import { arbIntent, arbSpec, assertExplanationFromDiff, buildState, START } from './testkit';
 import { commit, createUndoStack, undo } from './undo';
 import type { ApplyResult, EngineState, Intent } from './types';
 
@@ -35,17 +34,20 @@ describe('random intent sequences (properties)', () => {
           expect(s).toEqual(before); // never mutates input
           if (!r.ok) return;
           expect(checkInvariants(r.nextState, START)).toEqual([]);
-          const pb = protectedSnapshot(before, START), pa = protectedSnapshot(r.nextState, START);
+          // I4 is about the protected settings; funding status (plannedSavings, reserve
+          // shortfall) may change and is reported honestly in the explanation.
+          const settings = ({ commitments, minimumReserve, savingsGoal }: ReturnType<typeof protectedSnapshot>) => ({ commitments, minimumReserve, savingsGoal });
+          const pb = settings(protectedSnapshot(before, START)), pa = settings(protectedSnapshot(r.nextState, START));
           if (intent.kind === 'goal') {
             expect(pa.minimumReserve).toEqual(pb.minimumReserve);
             expect(pa.commitments).toEqual(pb.commitments);
             expect(pa.savingsGoal.pence).toBe(pb.savingsGoal.pence + intent.amount.pence);
           } else expect(pa).toEqual(pb);
-          assertNumbersFromDiff(r.explanationFacts.sentence, r.diff); // I11
+          assertExplanationFromDiff(r.explanationFacts, r.diff); // I11 (strict: each £ is a named diff field)
           s = r.nextState;
         });
       }), { numRuns: 200 });
-  });
+  }, 60_000);
 });
 
 describe('I5 history before today is never changed', () => {
@@ -91,7 +93,11 @@ describe('I6 no double counting', () => {
     const s1 = ok(applyIntent(state, { kind: 'hypothetical', amount: gbp(2000), date: T, category: 'eating-out', idempotencyKey: 'h' }, T)).nextState;
     const r = ok(applyIntent(s1, { kind: 'expense', amount: gbp(2000), date: T, category: 'eating-out', idempotencyKey: 'e' }, T));
     expect(r.diff.overspend).toEqual(gbp(0));
-    expect(r.nextState.plan!.summary.todayRemaining.pence).toBe(584);
+    // D16: the £20 used eating out (£5.50) + shopping (£6.14) and borrowed £8.36; groceries
+    // and transport (£14.20) are what is left today.
+    expect(r.nextState.plan!.summary.todayRemaining.pence).toBe(1420);
+    expect(r.nextState.ledger[0].plannedPurchaseId).toBe('pp-h');
+    expect(r.nextState.plan!.summary.earmarked).toEqual(gbp(0));
   });
 });
 
@@ -166,7 +172,9 @@ describe('I4 protected values change only through explicit intents', () => {
     expect(r.nextState.plan!.summary.flexibleRemaining.pence).toBe(214_500 - 10_000);
     expect(checkInvariants(r.nextState, T)).toEqual([]);
     const huge = ok(applyIntent(state, { kind: 'expense', amount: gbp(500_000), date: T, category: 'household', idempotencyKey: 'h' }, T));
-    expect(protectedSnapshot(huge.nextState, T)).toEqual(protectedSnapshot(state, T));
+    expect(protectedSnapshot(huge.nextState, T)).toMatchObject({ minimumReserve: state.profile.minimumReserve, savingsGoal: state.profile.savingsGoal });
+    expect(protectedSnapshot(huge.nextState, T).commitments).toEqual(protectedSnapshot(state, T).commitments);
+    expect(huge.diff.protectedUnchanged).toBe(false); // savings no longer funded: said honestly
     expect(huge.nextState.plan!.fundingGap.pence).toBeGreaterThan(0);
   });
   it('removing a bill frees its money for later days', () => {

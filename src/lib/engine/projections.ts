@@ -31,6 +31,8 @@ export interface ProjectionPoint {
   investments: Money;
   total: Money;
   contributed: Money;
+  /** total − contributed: interest and returns earned so far. */
+  growth?: Money;
   cumulativeIncome: Money;
 }
 
@@ -72,6 +74,7 @@ export function project(a: ProjectionAssumptions, months: number): ProjectionRes
       investments: gbp(Math.round(inv)),
       total: gbp(Math.round(sav) + Math.round(inv)),
       contributed: gbp(contributed),
+      growth: gbp(Math.round(sav) + Math.round(inv) - contributed),
       cumulativeIncome: gbp(a.confirmedIncome.pence + a.expectedMonthlyIncome.pence * m),
     });
     pts.push({ ...point(0), cumulativeIncome: gbp(0) });

@@ -60,3 +60,6 @@ export function evenSplitLatest(total: number, n: number): number[] {
   const r = total - q * n;
   return Array.from({ length: n }, (_, i) => q + (i >= n - r ? 1 : 0));
 }
+
+/** Largest single amount the engine accepts: £10,000,000 (keeps all sums safe integers). */
+export const MAX_PENCE = 1_000_000_000;

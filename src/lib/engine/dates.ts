@@ -61,3 +61,11 @@ export function formatShortDate(s: ISODate): string {
 
 export const minDate = (a: ISODate, b: ISODate): ISODate => (a < b ? a : b);
 export const maxDate = (a: ISODate, b: ISODate): ISODate => (a > b ? a : b);
+
+/** "12–18 Nov" (same month), "28 Nov – 4 Dec", or "12 Nov" (one day). */
+export function formatDayRange(a: ISODate, b: ISODate): string {
+  if (a === b) return formatShortDate(a);
+  const pa = parseISODate(a)!, pb = parseISODate(b)!;
+  if (pa.y === pb.y && pa.m === pb.m) return `${pa.d}–${formatShortDate(b)}`;
+  return `${formatShortDate(a)} – ${formatShortDate(b)}`;
+}

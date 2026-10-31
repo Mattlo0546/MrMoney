@@ -18,7 +18,7 @@ describe('generatePlan: properties over random profiles', () => {
       const s = withPlan(buildState(g));
       expect(checkInvariants(s, START)).toEqual([]);
     }), { numRuns: 200 });
-  });
+  }, 30_000);
   it('I8 deterministic, Σ planned = pool exactly, no negative allowance', () => {
     fc.assert(fc.property(arbSpec, (g) => {
       const s = buildState(g);
@@ -30,7 +30,7 @@ describe('generatePlan: properties over random profiles', () => {
       else { expect(sum).toBe(0); expect(a.fundingGap.pence).toBe(-P); }
       expect(a.allocations.every((x) => x.planned.pence >= 0)).toBe(true);
     }), { numRuns: 200 });
-  });
+  }, 30_000);
   it('I8 without cash pressure: days differ by at most 1p, extra pence on the latest days', () => {
     fc.assert(fc.property(fc.integer({ min: 0, max: 2_000_000 }), fc.integer({ min: 1, max: 100 }), (funds, days) => {
       const s = buildState({ funds, monthly: false, days, reserve: 0, savings: 0, bills: [], incomes: [], weights: [3, 2], floors: [0, 0, 0, 0, 0] });

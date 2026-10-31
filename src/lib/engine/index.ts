@@ -1,9 +1,9 @@
 export * from './types';
-export { gbp, ZERO, formatMoney, isMoney, largestRemainder } from './money';
-export { addDays, dateRange, dayOfWeek, daysInMonth, endOfMonth, formatShortDate, isISODate } from './dates';
+export { gbp, ZERO, formatMoney, isMoney, largestRemainder, MAX_PENCE } from './money';
+export { addDays, dateRange, dayOfWeek, daysInMonth, endOfMonth, formatDayRange, formatShortDate, isISODate } from './dates';
 export { occurrences, amountOn } from './recurrence';
 export { generatePlan, validateState, summarize, EngineValidationError } from './plan';
-export { applyIntent, previewIntent, affordability, ensurePlan } from './intents';
+export { applyIntent, previewIntent, affordability, ensurePlan, BORROW_WINDOW_DAYS, BORROW_MAX_SHARE } from './intents';
 export type { Affordability, TradeoffOption } from './intents';
 export { explain } from './explain';
 export { computeDiff, protectedSnapshot } from './diff';

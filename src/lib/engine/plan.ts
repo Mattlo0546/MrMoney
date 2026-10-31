@@ -1,10 +1,10 @@
 import {
   actualMap, balanceAtStartOf, billEvents, capSeries, categoryOrder, cellKey, earmarkMap,
-  expensesBetween, futureBills, futureInflow, inflowEvents, poolFor, prefMinMap, cellUseMap,
+  expensesBetween, futureBills, futureInflow, inflowEvents, poolFor, prefMinMap, cellUseMap, savingsHeldOn,
 } from './accounting';
 import { allocateDayTotals, splitDay } from './allocate';
 import { addDays, dateRange, formatShortDate, isISODate } from './dates';
-import { formatMoney, gbp } from './money';
+import { formatMoney, gbp, MAX_PENCE } from './money';
 import type { Allocation, CategoryId, DeficitItem, EngineState, ISODate, Plan, Summary } from './types';
 
 export class EngineValidationError extends Error {
@@ -15,7 +15,8 @@ export class EngineValidationError extends Error {
 
 const okMoney = (m: unknown, allowNeg = false) =>
   typeof m === 'object' && m !== null && (m as { currency: string }).currency === 'GBP' &&
-  Number.isSafeInteger((m as { pence: number }).pence) && (allowNeg || (m as { pence: number }).pence >= 0);
+  Number.isSafeInteger((m as { pence: number }).pence) && (allowNeg || (m as { pence: number }).pence >= 0) &&
+  Math.abs((m as { pence: number }).pence) <= MAX_PENCE;
 
 /** Field-level validation of the profile and schedule (used by onboarding/settings too). */
 export function validateState(s: EngineState): Record<string, string> {
@@ -31,6 +32,8 @@ export function validateState(s: EngineState): Record<string, string> {
   else if (isISODate(p.planStart) && p.horizonEnd < p.planStart) e.horizonEnd = 'The end date must be after the start date.';
   if (!okMoney(p.minimumReserve)) e.minimumReserve = 'Enter a reserve of 0 or more.';
   if (!okMoney(p.savingsGoal)) e.savingsGoal = 'Enter a savings goal of 0 or more.';
+  if (p.savingsDeadlines !== undefined && !(Array.isArray(p.savingsDeadlines) && p.savingsDeadlines.every((x) => okMoney(x.amount) && isISODate(x.byDate))))
+    e.savingsDeadlines = 'Savings deadlines need an amount and a valid date.';
   const ids = new Set<string>();
   let wsum = 0;
   if (!Array.isArray(p.categories) || p.categories.length === 0) e.categories = 'Add at least one spending category.';
@@ -79,15 +82,23 @@ export function generatePlan(s: EngineState, today: ISODate): Plan {
   for (const a of s.plan?.allocations ?? []) if (a.day < today) planned.set(cellKey(a.day, a.category), a.planned.pence);
 
   const usesByDay = new Map<ISODate, Map<CategoryId, number>>();
+  // Money used on a day from today on but outside the plan window (after the plan ended):
+  // its cell is planned at exactly its use and it comes out of the pool.
+  let outside = 0;
   for (const [k, v] of uses) {
     const [d, c] = k.split('|');
     if (d < today) continue;
+    if (d > s.profile.horizonEnd) {
+      planned.set(k, v);
+      outside += v;
+      continue;
+    }
     if (!usesByDay.has(d)) usesByDay.set(d, new Map());
     usesByDay.get(d)!.set(c, v);
   }
   const hardDay = W.map((d) => [...(usesByDay.get(d)?.values() ?? [])].reduce((a, b) => a + b, 0));
   const hardTotal = hardDay.reduce((a, b) => a + b, 0);
-  const P = poolFor(s, today);
+  const P = poolFor(s, today) - outside;
   let gap = 0, unallocated = 0;
   const reasons: string[] = [];
   let totals: number[];
@@ -202,11 +213,12 @@ function computeDeficits(
       const d = k.slice(0, 10);
       if (d >= today) flexByDay.set(d, (flexByDay.get(d) ?? 0) + v);
     }
-    const savingsBand = gap > 0 ? 0 : savings;
-    const threshold = reserve + savingsBand;
     let cash = balanceAtStartOf(s, today);
     let M = 0;
     for (const d of W) {
+      // Savings are held by their deadline (or the last day), the reserve from today.
+      const savingsBand = gap > 0 ? 0 : savingsHeldOn(s, d);
+      const threshold = reserve + savingsBand;
       const dayBills = bills.get(d) ?? [];
       cash += (inflow.get(d) ?? 0) - dayBills.reduce((a, b) => a + b.pence, 0) - (flexByDay.get(d) ?? 0);
       const short = threshold - cash;
@@ -256,7 +268,7 @@ export function summarize(s: EngineState, plan: Plan, today: ISODate): Summary {
     if (a.day < today) continue;
     const k = cellKey(a.day, a.category);
     flex += a.planned.pence - a.actual.pence;
-    earmarked += Math.max(0, (ear.get(k) ?? 0) - a.actual.pence);
+    earmarked += ear.get(k) ?? 0;
     if (a.day === today) {
       tAllow += a.planned.pence;
       tRem += a.planned.pence - (uses.get(k) ?? 0);

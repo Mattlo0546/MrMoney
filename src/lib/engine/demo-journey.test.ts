@@ -8,6 +8,7 @@ import { affordability, applyIntent, previewIntent, type Affordability } from '.
 import { checkInvariants } from './invariants';
 import { formatMoney, gbp } from './money';
 import { createUndoStack, commit, undo } from './undo';
+import { assertExplanationFromDiff } from './testkit';
 import type { ApplyResult, ChangeSet, EngineState, HypotheticalIntent, Intent } from './types';
 
 const T = '2026-11-10';
@@ -73,75 +74,93 @@ describe('demo journey', () => {
       'Shopping decreased by £9.16 across 11 Nov – 31 Jan. Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.',
     );
     assertNumbersFromDiff(e, r1.diff);
+    assertExplanationFromDiff(r1.explanationFacts, r1.diff);
+    expect(r1.diff).toMatchObject({ takenFromLater: gbp(916), uncovered: gbp(0) });
     expect(r1.diff.protectedUnchanged).toBe(true);
   });
   stack = commit(stack, s0, s1).stack;
 
-  // S2
-  it('S2: "£20 dinner tomorrow" preview fits and does not mutate state', () => {
+  // S2 (D16): the dinner fits by borrowing from later days' shopping.
+  it('S2: "£20 dinner tomorrow" fits by borrowing £8.47 from shopping over 12–18 Nov; preview does not mutate state', () => {
     const frozen = structuredClone(s1);
     const p = previewIntent(s1, S2, T);
     expect(s1).toEqual(frozen);
     expect(p.ok).toBe(true);
-    expect(p.affordability).toMatchObject({ fits: true, dayRemaining: 2573, remainingAfter: 573 });
+    // 11 Nov can give eating out £5.50 + shopping £6.03 = £11.53 without touching essentials.
+    expect(p.affordability).toMatchObject({
+      fits: true, dayRemaining: 1153, dayAvailable: 1153, dayRemainingTotal: 2573, borrowed: 847, remainingAfter: 1420,
+      message: 'Fits — £8.47 comes from shopping over 12–18 Nov',
+    });
     const a = affordability(s1, S2, T) as Affordability;
-    expect(a.fits).toBe(true);
+    expect(a.fits && a.borrowing).toEqual({
+      amount: gbp(847), from: '2026-11-12', to: '2026-11-18',
+      sources: [expect.objectContaining({ category: 'shopping', amount: gbp(847), from: '2026-11-12', to: '2026-11-18' })],
+    });
   });
   const r2 = ok(applyIntent(s1, S2, T));
   const s2 = r2.nextState;
-  it('S2 Apply: eating out → £20, shopping → £0, groceries → £0.53, transport unchanged, day total unchanged', () => {
-    expect(cells(s2, '2026-11-11')).toEqual({ groceries: 53, transport: 520, 'eating-out': 2000, shopping: 0 });
-    expect(total(s2, '2026-11-11')).toBe(2573);
+  it('S2 Apply: eating out → £20, shopping → £0, groceries and transport unchanged; −£1.21 shopping on 12–18 Nov', () => {
+    expect(cells(s2, '2026-11-11')).toEqual({ groceries: 900, transport: 520, 'eating-out': 2000, shopping: 0 });
+    expect(cells(s1, '2026-11-11')).toMatchObject({ groceries: 900, transport: 520 });
+    for (const d of ['2026-11-12', '2026-11-15', '2026-11-18']) expect(cells(s2, d)).toEqual({ groceries: 900, transport: 520, 'eating-out': 550, shopping: 482 });
+    expect(cells(s2, '2026-11-19').shopping).toBe(603);
+    expect(r2.diff.borrowed!.amount).toEqual(gbp(847));
+    expect(r2.diff.sameDaySources).toEqual([expect.objectContaining({ category: 'shopping', amount: gbp(603) })]);
     expect(s2.plan!.summary.flexibleRemaining).toEqual(gbp(211_000));
-    expect(r2.diff.changedDays).toEqual(['2026-11-11']);
-    assertNumbersFromDiff(r2.explanationFacts.sentence, r2.diff);
+    expect(r2.diff.changedDays).toEqual(['2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16', '2026-11-17', '2026-11-18']);
+    expect(r2.explanationFacts.sentence).toBe(
+      'Fits — £8.47 comes from shopping over 12–18 Nov. Set aside £20 for Dinner (eating out) on 11 Nov. ' +
+      'To make room, shopping went down by £6.03 on 11 Nov. Rent, utilities, your £500 emergency reserve and your £150 savings goal are unchanged.',
+    );
+    assertExplanationFromDiff(r2.explanationFacts, r2.diff);
+    expect(checkInvariants(s2, T)).toEqual([]);
   });
   stack = commit(stack, s1, s2).stack;
 
-  // S3
+  // S3: the concert exceeds what the week can lend (cap: next 7 days, half of each
+  // non-essential cell), so it still shows a shortfall with options.
   const aff = affordability(s2, S3(), T) as Affordability;
-  it('S3: £60 concert on Saturday 14 Nov does not fit: shortfall £34.27 with 3 options', () => {
+  it('S3: £60 concert on Sat 14 Nov: £10.32 to spare + £37.92 borrowable → £11.76 short, 4 options', () => {
     expect(aff.fits).toBe(false);
     if (aff.fits) return;
-    expect(aff.dayRemaining).toBe(2573);
-    expect(aff.shortfall).toBe(3427);
-    expect(aff.options.map((o) => o.id)).toEqual(['shopping-later', 'eating-out-two-weeks', 'all-flexible-rest']);
+    expect(aff.dayRemaining).toBe(1032);
+    expect(aff.dayAvailable).toBe(1032);
+    expect(aff.borrowable).toBe(3792);
+    expect(aff.shortfall).toBe(1176);
+    expect(aff.amount - aff.dayRemaining - aff.borrowable!).toBe(aff.shortfall);
+    expect(aff.borrowing!.sources.map((x) => [x.category, x.amount.pence])).toEqual([['shopping', 1867], ['eating-out', 1925]]);
+    expect(aff.message).toBe(
+      '£11.76 short — 14 Nov has £10.32 to spare and £37.92 can be borrowed from shopping (£18.67) and eating out (£19.25) over 15–21 Nov without touching groceries, transport or protected money',
+    );
+    expect(aff.options.map((o) => o.id)).toEqual(['shopping-later', 'eating-out-two-weeks', 'all-flexible-rest', 'earlier-days']);
     expect(aff.options.map((o) => o.title)).toEqual([
-      'Shopping, 15 Nov – 30 Nov', 'Eating out, 15 Nov – 28 Nov', 'All flexible spending, 15 Nov – 31 Jan',
+      'Shopping, 15 Nov – 30 Nov', 'Eating out, 15 Nov – 28 Nov', 'All flexible spending, 15 Nov – 31 Jan', 'Shopping and eating out, 11 Nov – 13 Nov',
     ]);
     for (const o of aff.options) {
-      expect(o.sources.reduce((a, x) => a + x.amount, 0)).toBe(3427);
+      expect(o.sources.reduce((a, x) => a + x.amount, 0)).toBe(1176);
+      expect(o.borrowed).toBe(3792);
       expect(checkInvariants(o.preview.nextState, T)).toEqual([]);
-      expect(cells(o.preview.nextState, '2026-11-14')).toEqual({ groceries: 0, transport: 0, 'eating-out': 0, shopping: 0, concert: 6000 });
-      assertNumbersFromDiff(o.preview.explanation.sentence, o.preview.diff);
+      expect(cells(o.preview.nextState, '2026-11-14')).toEqual({ groceries: 900, transport: 520, 'eating-out': 0, shopping: 0, concert: 6000 });
+      assertExplanationFromDiff(o.preview.explanation, o.preview.diff);
     }
-    // Eating out option: −£2.44 on 15–17 Nov, −£2.45 on 18–28 Nov (3×244 + 11×245 = 3,427).
-    const eo = aff.options[1].preview.nextState;
-    expect(cells(eo, '2026-11-15')['eating-out']).toBe(550 - 244);
-    expect(cells(eo, '2026-11-28')['eating-out']).toBe(550 - 245);
-    // Shopping option: −£2.14 ×13, −£2.15 on 28–30 Nov.
-    const sh = aff.options[0].preview.nextState;
-    expect(cells(sh, '2026-11-15').shopping).toBe(603 - 214);
-    expect(cells(sh, '2026-11-30').shopping).toBe(603 - 215);
-    // All flexible: −£0.43 ×5, −£0.44 ×73 per day.
-    const al = aff.options[2].preview.nextState;
-    expect(total(al, '2026-11-15')).toBe(2573 - 43);
-    expect(total(al, '2027-01-31')).toBe(2573 - 44);
     expect(s2).toEqual(demoState2());
   });
   it('S3: applying without picking an option is refused and leaves state untouched', () => {
     const r = applyIntent(s2, S3(), T);
     expect(r.ok).toBe(false);
     expect(r.ok === false && r.error?.code).toBe('shortfall');
-    expect(r.ok === false && r.error?.details).toMatchObject({ shortfall: 3427 });
+    expect(r.ok === false && r.error?.details).toMatchObject({ shortfall: 1176, dayRemaining: 1032, borrowable: 3792 });
   });
   const r3 = ok(applyIntent(s2, S3('shopping-later'), T));
   const s3 = r3.nextState;
-  it('S3 Apply (shopping option): concert £60 planned on Sat, flexible left stays £2,110', () => {
+  it('S3 Apply (shopping option): concert £60 planned on Sat, essentials untouched, flexible left stays £2,110', () => {
     expect(s3.plan!.summary.flexibleRemaining).toEqual(gbp(211_000));
     expect(s3.plan!.summary.earmarked).toEqual(gbp(8000));
-    expect(r3.explanationFacts.sentence).toContain('Shopping decreased by £34.27 across 15 Nov – 30 Nov.');
+    expect(r3.diff.borrowed!.amount).toEqual(gbp(3792));
+    expect(r3.diff.tradeoff).toMatchObject({ optionId: 'shopping-later', amount: gbp(1176) });
+    expect(r3.explanationFacts.sentence).toContain('That day had £10.32 to spare, £37.92 is borrowed from shopping (£18.67) and eating out (£19.25) over 15–21 Nov, and the other £11.76 comes from your chosen trade-off');
     expect(r3.diff.protectedUnchanged).toBe(true);
+    assertExplanationFromDiff(r3.explanationFacts, r3.diff);
     expect(checkInvariants(s3, T)).toEqual([]);
   });
   stack = commit(stack, s2, s3).stack;
@@ -157,7 +176,7 @@ describe('demo journey', () => {
     expect(total(s4, '2026-11-19') - total(s3, '2026-11-19')).toBe(244);
     expect(total(s4, T)).toBe(total(s3, T));
     expect(r4.diff.additions.reduce((a, m) => a + m.amount.pence, 0)).toBe(20000);
-    assertNumbersFromDiff(r4.explanationFacts.sentence, r4.diff);
+    assertExplanationFromDiff(r4.explanationFacts, r4.diff);
     expect(checkInvariants(s4, T)).toEqual([]);
   });
   stack = commit(stack, s3, s4).stack;
@@ -174,22 +193,29 @@ describe('demo journey', () => {
     expect(undo(u.stack)).toBeNull();
   });
 
-  it('Deficit: £2,400 tuition deposit after S1 → short £140 of the reserve, savings unfunded', () => {
+  it('Deficit: £2,400 tuition after S1: £2,110 from later days, £290 not covered; reserve £140 short, savings unfunded (said honestly)', () => {
     const r = ok(applyIntent(s1, { kind: 'expense', amount: gbp(240_000), date: T, category: 'tuition', idempotencyKey: 'tuition' }, T));
     const p = r.nextState.plan!;
     expect(p.summary.balance).toEqual(gbp(146_500));
     expect(p.summary.flexibleRemaining).toEqual(gbp(0));
     expect(p.summary.plannedSavings).toEqual(gbp(0));
     expect(p.fundingGap).toEqual(gbp(29_000));
+    expect(r.diff).toMatchObject({ absorbed: gbp(0), overspend: gbp(240_000), takenFromLater: gbp(211_000), uncovered: gbp(29_000) });
     expect(p.deficits).toEqual([
       expect.objectContaining({ kind: 'savings-unfunded', amount: gbp(15_000) }),
       expect.objectContaining({ kind: 'reserve-short', date: '2027-01-01', amount: gbp(8500) }),
       expect.objectContaining({ kind: 'reserve-short', date: '2027-01-15', amount: gbp(5500) }),
+      expect.objectContaining({ kind: 'essentials' }),
     ]);
     expect(r.nextState.profile.minimumReserve).toEqual(gbp(50_000));
-    expect(r.diff.protectedUnchanged).toBe(true);
+    expect(r.diff.protectedAfter).toMatchObject({ plannedSavings: gbp(0), reserveShortfall: gbp(14_000) });
+    expect(r.diff.protectedUnchanged).toBe(false);
+    const e = r.explanationFacts.sentence;
+    expect(e).toContain('£2,110 comes from later days; £290 couldn\'t be covered.');
+    expect(e).toContain('Your £500 emergency reserve would run £140 short at its lowest point. Your £150 savings goal can no longer be funded.');
+    expect(e).not.toMatch(/reserve and your £150 savings goal are unchanged/);
     expect(p.allocations.every((a) => a.planned.pence >= 0)).toBe(true);
-    assertNumbersFromDiff(r.explanationFacts.sentence, r.diff);
+    assertExplanationFromDiff(r.explanationFacts, r.diff);
     expect(checkInvariants(r.nextState, T)).toEqual([]);
   });
 
@@ -220,7 +246,9 @@ describe('demo journey', () => {
     const r = ok(applyIntent(s1, { kind: 'goal', amount: gbp(10_000), byDate: '2026-11-30', idempotencyKey: 'goal' }, T));
     expect(r.nextState.profile.savingsGoal).toEqual(gbp(25_000));
     expect(r.diff.sources).toEqual([expect.objectContaining({ category: 'shopping', amount: gbp(10_000) })]);
-    expect(r.explanationFacts.sentence).toContain('Your savings goal rose by £100 to £250.');
+    expect(r.explanationFacts.sentence).toContain('Your savings goal rose by £100 to £250, set aside by 30 Nov.');
+    expect(r.nextState.profile.savingsDeadlines).toEqual([{ amount: gbp(10_000), byDate: '2026-11-30' }]);
+    expect(r.diff.sources[0].days.at(-1)).toBe('2026-11-30');
     expect(checkInvariants(r.nextState, T)).toEqual([]);
   });
 });
