@@ -14,7 +14,7 @@ _Updated by the orchestrator at every step. Newest entry first._
 | Agent | Role | Task | State |
 |---|---|---|---|
 | designer-v2 (Opus) | Design | Mockups v2, Cleo-inspired, all 7 screens + states → `.prd-to-production/design/` (v1 moved to `v1-rejected/`) | 🔄 running |
-| parser-dev (Sonnet) | Execution | DemoParser + GeminiParser (`gemini-3.8-flash`) + `/api/parse` → `src/lib/parser/` | 🔄 running |
+| parser-dev (Sonnet) | Execution | DemoParser + GeminiParser (`gemini-3.8-flash`) + `/api/parse` → `src/lib/parser/` | ✅ done: 52 tests; live Gemini smoke OK. Fix queued (D17). |
 | store-dev (Sonnet) | Execution | localStorage store, preview/apply/undo, highlight state → `src/lib/store/` | ✅ done: 12 tests pass; typecheck and lint exit 0 |
 | offers-dev (Sonnet) | Execution | Curated sample offers + matching → `src/lib/offers/` | ✅ done: 11 sample offers, 9 tests pass, lint clean |
 | illustrator-v2 (Sonnet) | Creative | Regenerate the 10 onboarding illustrations in the bold, playful Cleo-inspired style (v1 kept in `sketches/v1-pencil/`) | ✅ done: palette navy #1B1F5E, blue #3D5AFE, coral #FF5A5F, lime #C8F53C |
@@ -29,6 +29,7 @@ _Updated by the orchestrator at every step. Newest entry first._
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: Parser done and committed. Decisions D16 (groceries floor, borrow from the week) and D17 ("need to spend" = expense). Engine change waits for the reviewer so all fixes are batched.
 - 2026-10-31: Engine, store and offers verified by the orchestrator: 96 tests pass, typecheck and lint exit 0. Committed. Independent engine review started.
 - 2026-10-31: Store done. Engine follow-ups to consider: an edit-entry intent, an undo diff, exporting the `UndoStack` type. The store works around all three today.
 - 2026-10-31: Offers done. Before demo day, verify: Pizza Express 25% vs 30%, Leon %, Zizzi day tiers, Itsu redemption, My Waitrose perks. Whole-project typecheck currently exits 2 (other modules mid-write); to be rechecked at integration.
