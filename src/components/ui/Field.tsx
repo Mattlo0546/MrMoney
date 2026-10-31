@@ -29,4 +29,4 @@ export function Field({ label, children, error, hint, className }: FieldProps) {
 
 /** Shared input styling for text/number/select controls. */
 export const inputClass =
-  'min-h-11 w-full rounded-[16px] border border-line bg-surface px-4 text-[16px] text-text shadow-soft placeholder:text-muted focus:border-accent aria-[invalid=true]:border-neg';
+  'min-h-11 w-full rounded-[16px] border border-line bg-surface px-4 text-[16px] text-text outline-none shadow-soft placeholder:text-muted focus:border-line-strong aria-[invalid=true]:border-neg';

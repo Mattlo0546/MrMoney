@@ -83,9 +83,13 @@ test("R-demo full journey", async ({ page }) => {
     expect.soft(await fundsPence(page)).toBe(funds2);
   });
 
-  await test.step("9 /projections empty state", async () => {
+  await test.step("9 /projections Argon populated state & diagrams", async () => {
     await page.goto("/projections");
-    await expect.soft(page.getByTestId("empty")).toBeVisible({ timeout: 10_000 });
+    await expect.soft(page.getByTestId("hero")).toBeVisible({ timeout: 10_000 });
+    await expect.soft(page.getByTestId("argon-allocator")).toBeVisible();
+    await expect.soft(page.getByTestId("projection-diagrams")).toBeVisible();
+    await expect.soft(page.getByTestId("bank-selection-grid")).toBeVisible();
+    await expect.soft(page.getByTestId("stock-selection-grid")).toBeVisible();
     await expect.soft(page.getByText(/not advice|guarantee/i).first()).toBeVisible();
   });
 

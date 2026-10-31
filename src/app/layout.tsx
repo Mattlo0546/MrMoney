@@ -21,6 +21,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: { default: "MrMoney", template: "%s · MrMoney" },
   description: "A calm day-by-day money plan that lasts the whole term.",
+  icons: { icon: "/icon.svg", shortcut: "/icon.svg", apple: "/icon.svg" },
 };
 
 export const viewport: Viewport = {

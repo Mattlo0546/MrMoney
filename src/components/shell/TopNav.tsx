@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { CalendarDays, ChartLine, Landmark, SlidersHorizontal, Wallet } from 'lucide-react';
 import { useAppSnapshot } from '@/lib/store';
 import { AppMenu } from './AppMenu';
+import { MrMoneyLogo } from './MrMoneyLogo';
 
 const LINKS = [
   { href: '/plan', label: 'Plan', icon: Wallet },
@@ -28,10 +29,8 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-md">
       <div className="mx-auto flex min-h-14 max-w-[1400px] items-center gap-2 px-4 lg:gap-4 lg:px-6">
-        <Link href="/" className="inline-flex min-h-11 shrink-0 items-center gap-2 font-display text-lg font-extrabold tracking-tight lg:text-xl">
-          <span aria-hidden="true" className="grid size-8 place-items-center rounded-[10px] bg-grad-primary shadow-glow">
-            <CalendarDays size={18} />
-          </span>
+        <Link href="/" className="group inline-flex min-h-11 shrink-0 items-center gap-2.5 font-display text-lg font-extrabold tracking-tight lg:text-xl">
+          <MrMoneyLogo size={36} className="shadow-glow rounded-[10px] transition-transform duration-200 group-hover:scale-105" />
           <span>Mr<span className="text-grad-primary">Money</span></span>
         </Link>
         {hasPlan && (

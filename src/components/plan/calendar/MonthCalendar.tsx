@@ -107,7 +107,7 @@ export function MonthCalendar({
           <select
             value={month}
             onChange={(e) => onMonth(e.target.value)}
-            className="font-display min-h-11 cursor-pointer appearance-none rounded-full bg-transparent py-0 pr-8 text-2xl font-extrabold text-text focus-visible:outline-2 focus-visible:outline-accent"
+            className="font-display min-h-11 cursor-pointer appearance-none rounded-full bg-transparent py-0 pr-8 text-2xl font-extrabold text-text outline-none"
           >
             {months.map((ym) => <option key={ym} value={ym}>{monthLabel(ym)}</option>)}
           </select>
@@ -147,7 +147,7 @@ export function MonthCalendar({
                     aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${hint.headline ? `, ${hint.buckets.map((b) => BUCKET_LABEL[b]).join(', ')}: ${hint.headline.label}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
                     onClick={() => { setCursor(d); onSelect(d); }}
                     onKeyDown={(e) => onKey(e, d)}
-                    className={`relative flex min-h-[92px] w-full flex-col gap-1 rounded-2xl border p-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                    className={`relative flex min-h-[92px] w-full flex-col gap-1 rounded-2xl border p-2 text-left transition-colors outline-none ${
                       pv ? 'border-dashed border-accent-2 bg-accent-soft' : sel ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong hover:bg-surface-2'
                     } ${pv ? 'border-2' : ''} ${past ? 'opacity-55' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
                   >
