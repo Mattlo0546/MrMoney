@@ -3,15 +3,27 @@ import type { ComponentProps, InputHTMLAttributes, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { IconBadge, iconFor, type Tone, type ValueKind } from '@/components/ui/Value';
 
-export function PageFrame({ title, icon, children }: { title: string; icon?: ValueKind | LucideIcon; children: ReactNode }) {
+export function PageFrame({
+  title,
+  icon,
+  children,
+  maxWidth = 'max-w-[1400px]',
+  className = '',
+}: {
+  title: string;
+  icon?: ValueKind | LucideIcon;
+  children: ReactNode;
+  maxWidth?: string;
+  className?: string;
+}) {
   return (
     <div className="min-h-dvh bg-bg text-text">
-      <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
+      <div className={`mx-auto w-full ${maxWidth} px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8`}>
         <h1 className="mb-6 flex items-center gap-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
           {icon && <IconBadge icon={icon} tone="primary" size="lg" solid />}
           {title}
         </h1>
-        <div className="flex flex-col gap-4">{children}</div>
+        <div className={`flex flex-col gap-6 ${className}`}>{children}</div>
       </div>
     </div>
   );

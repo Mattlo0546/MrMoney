@@ -70,10 +70,12 @@ export function SettingsView() {
   if (!state || !draft) {
     return (
       <PageFrame title="Settings" icon={SlidersHorizontal}>
-        <Card title="No plan yet" hint="Set up your plan first, then come back to adjust it.">
-          <Link href="/onboarding" className="inline-flex min-h-11 items-center rounded-full bg-grad-primary px-5 font-bold shadow-glow">Start setup</Link>
-        </Card>
-        <Card title="Appearance" icon={Palette}><ThemeToggle theme={theme} onPick={pickTheme} /></Card>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card title="No plan yet" hint="Set up your plan first, then come back to adjust it.">
+            <Link href="/onboarding" className="inline-flex min-h-11 items-center rounded-full bg-grad-primary px-5 font-bold shadow-glow">Start setup</Link>
+          </Card>
+          <Card title="Appearance" icon={Palette}><ThemeToggle theme={theme} onPick={pickTheme} /></Card>
+        </div>
       </PageFrame>
     );
   }
@@ -200,133 +202,141 @@ export function SettingsView() {
         </p>
       )}
 
-      <Card title="Money" icon="balance">
-        <div className="mb-4">
-          <Choice label="Funds type" value={d.fundsType} onPick={(k) => patch({ fundsType: k })}
-            options={[{ id: 'lump', label: 'Lump sum', icon: Banknote }, { id: 'monthly', label: 'Monthly allowance', icon: Repeat }]} />
-        </div>
-        <Field id="funds" icon="balance" label={d.fundsType === 'lump' ? 'Lump sum' : 'Monthly allowance'} prefix="£" inputMode="decimal" value={d.funds} onChange={(e) => patch({ funds: e.target.value })} error={errors.funds} />
-        <div className="mt-5">
-          <Field id="horizonEnd" icon="date" label="Money needs to last until" type="date" value={d.horizonEnd} onChange={(e) => patch({ horizonEnd: e.target.value })} error={errors.horizonEnd} />
-        </div>
-      </Card>
-
-      <Card title="Protected amounts" icon="reserve" hint="Only changed here, on purpose. Reallocation never touches these.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="reserve" icon="reserve" label="Minimum reserve" prefix="£" inputMode="decimal" value={d.reserve} onChange={(e) => patch({ reserve: e.target.value })} error={errors.reserve} />
-          <Field id="goal" icon="savings" iconTone="positive" label="Savings goal" prefix="£" inputMode="decimal" value={d.goal} onChange={(e) => patch({ goal: e.target.value })} error={errors.goal} />
-        </div>
-      </Card>
-
-      <Card title="Rent and commitments" icon="bills" hint="Changing an amount applies from today. Past bills stay as they were.">
-        <ul className="flex flex-col gap-4">
-          {live.map((c) => (
-            <li key={c.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <IconBadge icon="bills" tone="warning" size="md" solid />
-                  <div className="min-w-0">
-                    <p className="font-bold">{c.name}</p>
-                    <p className="text-sm text-muted">
-                      <WithIcon icon={c.recurrence.kind === 'monthly' ? 'repeat' : 'date'} tone="warning" size={13}>
-                        {c.recurrence.kind === 'monthly' ? `Monthly, due on the ${ordinal(c.recurrence.dayOfMonth)}` : `Once, ${formatShortDate(c.recurrence.date)}`}
-                      </WithIcon>
-                    </p>
-                  </div>
-                </div>
-                <Btn variant="ghost" className="shrink-0 !px-4" onClick={() => removeBill(c.id)} aria-label={`Remove ${c.name}`}>Remove</Btn>
-              </div>
-              <Field id={`com-${c.id}`} icon="bills" iconTone="warning" label="Amount" prefix="£" inputMode="decimal" value={d.commits[c.id] ?? ''} onChange={(e) => patch({ commits: { ...d.commits, [c.id]: e.target.value } })} error={errors[`com.${c.id}`]} />
-            </li>
-          ))}
-          {live.length === 0 && <li className="text-muted">No commitments yet.</li>}
-        </ul>
-        <div className="mt-5 rounded-[16px] border border-dashed border-line-strong p-4">
-          <p className="mb-3 font-bold">Add a bill</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="billName" icon="category" label="Name" value={bill.name} onChange={(e) => setBill({ ...bill, name: e.target.value })} error={errors.billName} />
-            <Field id="billAmount" icon="bills" iconTone="warning" label="Amount" prefix="£" inputMode="decimal" value={bill.amount} onChange={(e) => setBill({ ...bill, amount: e.target.value })} error={errors.billAmount} />
-            <div className="flex flex-col gap-1.5">
-              <span id="billKind-l" className="text-sm font-semibold text-muted">Repeats</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button id="billKind" type="button" aria-labelledby="billKind-l billKind"
-                    className="flex min-h-12 w-full items-center justify-between gap-2 rounded-[16px] border border-line bg-surface pl-2 pr-4 text-left text-base font-semibold shadow-soft">
-                    <span className="flex items-center gap-2"><IconBadge icon={bill.kind === 'monthly' ? 'repeat' : 'date'} size="sm" />{bill.kind === 'monthly' ? 'Every month' : 'Once'}</span>
-                    <ChevronDown size={18} aria-hidden="true" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[var(--radix-dropdown-menu-trigger-width)]">
-                  <DropdownMenuRadioGroup value={bill.kind} onValueChange={(v) => setBill({ ...bill, kind: v === 'once' ? 'once' : 'monthly' })}>
-                    <DropdownMenuRadioItem value="monthly" className="min-h-11">Every month</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="once" className="min-h-11">Once</DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Column: Core Plan Parameters & App Config */}
+        <div className="flex flex-col gap-6 lg:col-span-5">
+          <Card title="Money" icon="balance">
+            <div className="mb-4">
+              <Choice label="Funds type" value={d.fundsType} onPick={(k) => patch({ fundsType: k })}
+                options={[{ id: 'lump', label: 'Lump sum', icon: Banknote }, { id: 'monthly', label: 'Monthly allowance', icon: Repeat }]} />
             </div>
-            {bill.kind === 'monthly'
-              ? <Field id="billDay" icon="date" label="Due day of month" inputMode="numeric" placeholder="1 to 31" value={bill.day} onChange={(e) => setBill({ ...bill, day: e.target.value })} error={errors.billDay} />
-              : <Field id="billDate" label="Due date" type="date" value={bill.date} onChange={(e) => setBill({ ...bill, date: e.target.value })} error={errors.billDate} />}
-          </div>
-          <Btn className="mt-4" variant="ghost" onClick={addBill}>Add bill</Btn>
+            <Field id="funds" icon="balance" label={d.fundsType === 'lump' ? 'Lump sum' : 'Monthly allowance'} prefix="£" inputMode="decimal" value={d.funds} onChange={(e) => patch({ funds: e.target.value })} error={errors.funds} />
+            <div className="mt-5">
+              <Field id="horizonEnd" icon="date" label="Money needs to last until" type="date" value={d.horizonEnd} onChange={(e) => patch({ horizonEnd: e.target.value })} error={errors.horizonEnd} />
+            </div>
+          </Card>
+
+          <Card title="Protected amounts" icon="reserve" hint="Only changed here, on purpose. Reallocation never touches these.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="reserve" icon="reserve" label="Minimum reserve" prefix="£" inputMode="decimal" value={d.reserve} onChange={(e) => patch({ reserve: e.target.value })} error={errors.reserve} />
+              <Field id="goal" icon="savings" iconTone="positive" label="Savings goal" prefix="£" inputMode="decimal" value={d.goal} onChange={(e) => patch({ goal: e.target.value })} error={errors.goal} />
+            </div>
+          </Card>
+
+          <Card title="Appearance" icon={Palette}><ThemeToggle theme={theme} onPick={pickTheme} /></Card>
+
+          <Card title="Danger zone" tone="danger" icon={TriangleAlert} hint="Starts you over from scratch.">
+            <Btn variant="danger" onClick={() => setConfirmReset(true)}>Reset MrMoney</Btn>
+          </Card>
         </div>
-      </Card>
 
-      <Card title="Income" icon="income" hint="Only confirmed income feeds your plan.">
-        <ul className="flex flex-col gap-4">
-          {state.incomes.map((inc) => {
-            const x = d.incomes[inc.id];
-            if (!x) return null;
-            const set = (q: Partial<typeof x>) => patch({ incomes: { ...d.incomes, [inc.id]: { ...x, ...q } } });
-            return (
-              <li key={inc.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
-                <p className="mb-3 flex items-center gap-3 font-bold"><IconBadge icon="income" tone="positive" size="md" solid />{inc.note || (inc.source === 'job' ? 'Job' : 'Other income')}</p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field id={`inc-a-${inc.id}`} icon="income" iconTone="positive" label="Amount" prefix="£" inputMode="decimal" value={x.amount} onChange={(e) => set({ amount: e.target.value })} error={errors[`inc.${inc.id}.amount`]} />
-                  <Field id={`inc-d-${inc.id}`} label="Date" type="date" value={x.date} onChange={(e) => set({ date: e.target.value })} error={errors[`inc.${inc.id}.date`]} />
+        {/* Right Column: Recurring Commitments, Incomes, and Categories */}
+        <div className="flex flex-col gap-6 lg:col-span-7">
+          <Card title="Rent and commitments" icon="bills" hint="Changing an amount applies from today. Past bills stay as they were.">
+            <ul className="flex flex-col gap-4">
+              {live.map((c) => (
+                <li key={c.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <IconBadge icon="bills" tone="warning" size="md" solid />
+                      <div className="min-w-0">
+                        <p className="font-bold">{c.name}</p>
+                        <p className="text-sm text-muted">
+                          <WithIcon icon={c.recurrence.kind === 'monthly' ? 'repeat' : 'date'} tone="warning" size={13}>
+                            {c.recurrence.kind === 'monthly' ? `Monthly, due on the ${ordinal(c.recurrence.dayOfMonth)}` : `Once, ${formatShortDate(c.recurrence.date)}`}
+                          </WithIcon>
+                        </p>
+                      </div>
+                    </div>
+                    <Btn variant="ghost" className="shrink-0 !px-4" onClick={() => removeBill(c.id)} aria-label={`Remove ${c.name}`}>Remove</Btn>
+                  </div>
+                  <Field id={`com-${c.id}`} icon="bills" iconTone="warning" label="Amount" prefix="£" inputMode="decimal" value={d.commits[c.id] ?? ''} onChange={(e) => patch({ commits: { ...d.commits, [c.id]: e.target.value } })} error={errors[`com.${c.id}`]} />
+                </li>
+              ))}
+              {live.length === 0 && <li className="text-muted">No commitments yet.</li>}
+            </ul>
+            <div className="mt-5 rounded-[16px] border border-dashed border-line-strong p-4">
+              <p className="mb-3 font-bold">Add a bill</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field id="billName" icon="category" label="Name" value={bill.name} onChange={(e) => setBill({ ...bill, name: e.target.value })} error={errors.billName} />
+                <Field id="billAmount" icon="bills" iconTone="warning" label="Amount" prefix="£" inputMode="decimal" value={bill.amount} onChange={(e) => setBill({ ...bill, amount: e.target.value })} error={errors.billAmount} />
+                <div className="flex flex-col gap-1.5">
+                  <span id="billKind-l" className="text-sm font-semibold text-muted">Repeats</span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button id="billKind" type="button" aria-labelledby="billKind-l billKind"
+                        className="flex min-h-12 w-full items-center justify-between gap-2 rounded-[16px] border border-line bg-surface pl-2 pr-4 text-left text-base font-semibold shadow-soft">
+                        <span className="flex items-center gap-2"><IconBadge icon={bill.kind === 'monthly' ? 'repeat' : 'date'} size="sm" />{bill.kind === 'monthly' ? 'Every month' : 'Once'}</span>
+                        <ChevronDown size={18} aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="min-w-[var(--radix-dropdown-menu-trigger-width)]">
+                      <DropdownMenuRadioGroup value={bill.kind} onValueChange={(v) => setBill({ ...bill, kind: v === 'once' ? 'once' : 'monthly' })}>
+                        <DropdownMenuRadioItem value="monthly" className="min-h-11">Every month</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="once" className="min-h-11">Once</DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
-                  <input type="checkbox" className="size-6 accent-(--accent) before:absolute before:inset-0 before:content-['']" checked={x.confirmed} onChange={(e) => set({ confirmed: e.target.checked })} />
-                  Confirmed
-                </label>
-              </li>
-            );
-          })}
-          {state.incomes.length === 0 && <li className="text-muted">No income recorded.</li>}
-        </ul>
-      </Card>
-
-      <Card title="Categories and priorities" icon="category" hint="Priority 1 is the most protected. Weight sets each category's share of the day.">
-        {errors.categories && <p role="alert" className="mb-3 text-sm font-semibold text-neg">{errors.categories}</p>}
-        <ul className="flex flex-col gap-4">
-          {d.cats.map((c, i) => (
-            <li key={c.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="col-span-2 sm:col-span-1">
-                  <Field id={`cat-n-${i}`} icon="category" label="Name" value={c.name} onChange={(e) => setCat(i, { name: e.target.value })} error={errors[`cat.${i}.name`]} />
-                </div>
-                <Field id={`cat-w-${i}`} icon="weight" label="Weight" inputMode="decimal" value={c.weight} onChange={(e) => setCat(i, { weight: e.target.value })} error={errors[`cat.${i}.weight`]} />
-                <Field id={`cat-p-${i}`} icon="priority" label="Priority" inputMode="numeric" value={c.priority} onChange={(e) => setCat(i, { priority: e.target.value })} error={errors[`cat.${i}.priority`]} />
+                {bill.kind === 'monthly'
+                  ? <Field id="billDay" icon="date" label="Due day of month" inputMode="numeric" placeholder="1 to 31" value={bill.day} onChange={(e) => setBill({ ...bill, day: e.target.value })} error={errors.billDay} />
+                  : <Field id="billDate" label="Due date" type="date" value={bill.date} onChange={(e) => setBill({ ...bill, date: e.target.value })} error={errors.billDate} />}
               </div>
-              <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
-                <input type="checkbox" className="size-6 accent-(--accent) before:absolute before:inset-0 before:content-['']" checked={c.essential} onChange={(e) => setCat(i, { essential: e.target.checked })} />
-                Essential
-              </label>
-            </li>
-          ))}
-        </ul>
-      </Card>
+              <Btn className="mt-4" variant="ghost" onClick={addBill}>Add bill</Btn>
+            </div>
+          </Card>
 
-      <Card title="Appearance" icon={Palette}><ThemeToggle theme={theme} onPick={pickTheme} /></Card>
+          <Card title="Income" icon="income" hint="Only confirmed income feeds your plan.">
+            <ul className="flex flex-col gap-4">
+              {state.incomes.map((inc) => {
+                const x = d.incomes[inc.id];
+                if (!x) return null;
+                const set = (q: Partial<typeof x>) => patch({ incomes: { ...d.incomes, [inc.id]: { ...x, ...q } } });
+                return (
+                  <li key={inc.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
+                    <p className="mb-3 flex items-center gap-3 font-bold"><IconBadge icon="income" tone="positive" size="md" solid />{inc.note || (inc.source === 'job' ? 'Job' : 'Other income')}</p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field id={`inc-a-${inc.id}`} icon="income" iconTone="positive" label="Amount" prefix="£" inputMode="decimal" value={x.amount} onChange={(e) => set({ amount: e.target.value })} error={errors[`inc.${inc.id}.amount`]} />
+                      <Field id={`inc-d-${inc.id}`} label="Date" type="date" value={x.date} onChange={(e) => set({ date: e.target.value })} error={errors[`inc.${inc.id}.date`]} />
+                    </div>
+                    <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
+                      <input type="checkbox" className="size-6 accent-(--accent) before:absolute before:inset-0 before:content-['']" checked={x.confirmed} onChange={(e) => set({ confirmed: e.target.checked })} />
+                      Confirmed
+                    </label>
+                  </li>
+                );
+              })}
+              {state.incomes.length === 0 && <li className="text-muted">No income recorded.</li>}
+            </ul>
+          </Card>
+
+          <Card title="Categories and priorities" icon="category" hint="Priority 1 is the most protected. Weight sets each category's share of the day.">
+            {errors.categories && <p role="alert" className="mb-3 text-sm font-semibold text-neg">{errors.categories}</p>}
+            <ul className="flex flex-col gap-4">
+              {d.cats.map((c, i) => (
+                <li key={c.id} className="rounded-[16px] border border-line bg-surface-2 p-4">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="col-span-2 sm:col-span-1">
+                      <Field id={`cat-n-${i}`} icon="category" label="Name" value={c.name} onChange={(e) => setCat(i, { name: e.target.value })} error={errors[`cat.${i}.name`]} />
+                    </div>
+                    <Field id={`cat-w-${i}`} icon="weight" label="Weight" inputMode="decimal" value={c.weight} onChange={(e) => setCat(i, { weight: e.target.value })} error={errors[`cat.${i}.weight`]} />
+                    <Field id={`cat-p-${i}`} icon="priority" label="Priority" inputMode="numeric" value={c.priority} onChange={(e) => setCat(i, { priority: e.target.value })} error={errors[`cat.${i}.priority`]} />
+                  </div>
+                  <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
+                    <input type="checkbox" className="size-6 accent-(--accent) before:absolute before:inset-0 before:content-['']" checked={c.essential} onChange={(e) => setCat(i, { essential: e.target.checked })} />
+                    Essential
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+      </div>
 
       <div className="sticky bottom-3 z-10 flex items-center gap-3 rounded-full border border-line bg-surface/95 p-2 pl-5 shadow-card backdrop-blur">
         <p role="status" className="flex min-w-0 flex-1 items-center gap-2 text-sm font-bold leading-tight text-pos">{saved ? <><CircleCheck aria-hidden="true" size={18} className="shrink-0" />Saved — plan updated</> : ''}</p>
         <Btn onClick={save}>Save changes</Btn>
       </div>
-
-      <Card title="Danger zone" tone="danger" icon={TriangleAlert} hint="Starts you over from scratch.">
-        <Btn variant="danger" onClick={() => setConfirmReset(true)}>Reset MrMoney</Btn>
-      </Card>
 
       {confirmReset && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 backdrop-blur-[2px] sm:items-center" onKeyDown={(e) => e.key === 'Escape' && setConfirmReset(false)}>

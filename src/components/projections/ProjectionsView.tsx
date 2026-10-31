@@ -519,24 +519,9 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
         className="overflow-hidden rounded-[24px] border border-line bg-surface shadow-soft"
       >
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-grad-primary-soft px-5 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-grad-primary text-white shadow-glow">
-              <Scale aria-hidden="true" size={20} strokeWidth={2.2} />
-            </span>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-lg font-extrabold tracking-tight">
-                  Argon Lump-Sum Capital Allocator
-                </h2>
-                <span className="rounded-full border border-pos/30 bg-pos-soft px-2.5 py-0.5 text-[11px] font-extrabold text-pos">
-                  {decision.decidedBy === 'gemini-4-argon' ? 'Decided by gemini-4-argon' : 'Argon Decision Engine Active'}
-                </span>
-              </div>
-              <p className="text-xs font-medium text-muted">
-                Enter your lump sum budget — Argon allocates the exact amount to UK bank savings and stock/ETF investments.
-              </p>
-            </div>
-          </div>
+          <h2 className="font-display text-lg font-extrabold tracking-tight sm:text-xl">
+            Argon Lump-Sum Capital Allocator
+          </h2>
           <button
             type="button"
             onClick={handleAskArgon}
@@ -700,124 +685,134 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
         </div>
       </section>
 
-      <Card title="How far ahead?" icon="days">
-        <Choice
-          label="Period"
-          cols={4}
-          value={String(v.months)}
-          onPick={(m) => setProjectionsInputs((p) => ({ ...p, months: Number(m) }), snapState)}
-          options={PERIODS.map((m) => ({ id: String(m), label: `${m} mo`, icon: 'days' as const }))}
-        />
-      </Card>
-
-      {/* Hero + Multi-Scenario Table */}
-      <section aria-live="polite" className="overflow-hidden rounded-[24px] border border-line bg-surface shadow-soft">
-        <div className="flex items-start gap-4 border-b border-line bg-grad-primary-soft p-5 sm:p-6">
-          <IconBadge icon="total" tone="primary" size="lg" solid />
-          <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-muted">
-              <WithIcon icon="days" tone="primary" size={14}>
-                Base total after {v.months} months
-              </WithIcon>
-            </p>
-            {showTable && base ? (
-              <p
-                data-testid="hero"
-                className="font-display text-5xl font-extrabold tabular-nums tracking-tight text-grad-primary sm:text-7xl"
-              >
-                {formatMoney(base.total.pence)}
-              </p>
-            ) : showTable ? (
-              <p className="text-2xl font-extrabold text-muted sm:text-3xl">Enter a base rate to see this</p>
-            ) : (
-              <p data-testid="empty" className="text-2xl font-extrabold sm:text-3xl">
-                Enter rates to see this
-              </p>
-            )}
-          </div>
+      {/* Horizon Controls & Projected Outcomes */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-4 xl:col-span-3">
+          <Card title="How far ahead?" icon="days">
+            <Choice
+              label="Period"
+              cols={2}
+              value={String(v.months)}
+              onPick={(m) => setProjectionsInputs((p) => ({ ...p, months: Number(m) }), snapState)}
+              options={PERIODS.map((m) => ({ id: String(m), label: `${m} mo`, icon: 'days' as const }))}
+            />
+          </Card>
         </div>
-        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
-          {showTable && (
-            <div className="mt-5">
-              <table className="w-full table-fixed text-right text-[13px] tabular-nums sm:text-base">
-                <caption className="sr-only">Projected values after {v.months} months</caption>
-                <thead>
-                  <tr className="text-sm text-muted">
-                    <th scope="col" className="w-[30%] py-2 text-left font-semibold">
-                      <span className="sr-only">Line</span>
-                    </th>
-                    {SCEN.map((s) => (
-                      <th key={s.key} scope="col" className="py-2 font-semibold">
-                        <span className="inline-flex items-center justify-end gap-1">
-                          <s.icon
-                            aria-hidden="true"
-                            size={14}
-                            className={
-                              s.key === 'base' ? 'text-accent' : s.key === 'high' ? 'text-pos' : 'text-warn'
-                            }
-                          />
-                          {s.label}
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.label} className={`border-t border-line ${r.strong ? 'bg-accent-soft/60' : ''}`}>
-                      <th
-                        scope="row"
-                        className={`py-3 pr-1 text-left leading-tight ${
-                          r.strong ? 'font-bold' : 'font-semibold text-muted'
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5 sm:gap-2">
-                          <IconBadge
-                            icon={r.icon}
-                            tone={
-                              r.strong
-                                ? 'primary'
-                                : r.icon === 'growth' || r.icon === 'income'
-                                  ? 'positive'
-                                  : 'neutral'
-                            }
-                            size="xs"
-                            solid={r.strong}
-                          />
-                          {r.label}
-                        </span>
-                      </th>
-                      {SCEN.map((s) => {
-                        const p = last(s.key);
-                        return (
-                          <td
-                            key={s.key}
-                            className={`py-3 ${
-                              r.strong ? 'text-sm font-extrabold text-accent sm:text-lg' : 'font-semibold'
+
+        <div className="lg:col-span-8 xl:col-span-9">
+          {/* Hero + Multi-Scenario Table */}
+          <section
+            aria-live="polite"
+            className="flex h-full flex-col justify-between overflow-hidden rounded-[24px] border border-line bg-surface shadow-soft"
+          >
+            <div className="flex items-start gap-4 border-b border-line bg-grad-primary-soft p-5 sm:p-6">
+              <IconBadge icon="total" tone="primary" size="lg" solid />
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+                  <WithIcon icon="days" tone="primary" size={14}>
+                    Base total after {v.months} months
+                  </WithIcon>
+                </p>
+                {showTable && base ? (
+                  <p
+                    data-testid="hero"
+                    className="font-display text-5xl font-extrabold tabular-nums tracking-tight text-grad-primary sm:text-7xl"
+                  >
+                    {formatMoney(base.total.pence)}
+                  </p>
+                ) : showTable ? (
+                  <p className="text-2xl font-extrabold text-muted sm:text-3xl">Enter a base rate to see this</p>
+                ) : (
+                  <p data-testid="empty" className="text-2xl font-extrabold sm:text-3xl">
+                    Enter rates to see this
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+              {showTable && (
+                <div className="mt-5">
+                  <table className="w-full table-fixed text-right text-[13px] tabular-nums sm:text-base">
+                    <caption className="sr-only">Projected values after {v.months} months</caption>
+                    <thead>
+                      <tr className="text-sm text-muted">
+                        <th scope="col" className="w-[30%] py-2 text-left font-semibold">
+                          <span className="sr-only">Line</span>
+                        </th>
+                        {SCEN.map((s) => (
+                          <th key={s.key} scope="col" className="py-2 font-semibold">
+                            <span className="inline-flex items-center justify-end gap-1">
+                              <s.icon
+                                aria-hidden="true"
+                                size={14}
+                                className={
+                                  s.key === 'base' ? 'text-accent' : s.key === 'high' ? 'text-pos' : 'text-warn'
+                                }
+                              />
+                              {s.label}
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r) => (
+                        <tr key={r.label} className={`border-t border-line ${r.strong ? 'bg-accent-soft/60' : ''}`}>
+                          <th
+                            scope="row"
+                            className={`py-3 pr-1 text-left leading-tight ${
+                              r.strong ? 'font-bold' : 'font-semibold text-muted'
                             }`}
                           >
-                            {p ? money(r.get(p)) : '—'}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {result?.status === 'ok' && result.missing.length > 0 && (
-                <p className="mt-3 text-sm text-muted">
-                  Columns marked — need a rate for each of the amounts you entered.
+                            <span className="flex items-center gap-1.5 sm:gap-2">
+                              <IconBadge
+                                icon={r.icon}
+                                tone={
+                                  r.strong
+                                    ? 'primary'
+                                    : r.icon === 'growth' || r.icon === 'income'
+                                      ? 'positive'
+                                      : 'neutral'
+                                }
+                                size="xs"
+                                solid={r.strong}
+                              />
+                              {r.label}
+                            </span>
+                          </th>
+                          {SCEN.map((s) => {
+                            const p = last(s.key);
+                            return (
+                              <td
+                                key={s.key}
+                                className={`py-3 ${
+                                  r.strong ? 'text-sm font-extrabold text-accent sm:text-lg' : 'font-semibold'
+                                }`}
+                              >
+                                {p ? money(r.get(p)) : '—'}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {result?.status === 'ok' && result.missing.length > 0 && (
+                    <p className="mt-3 text-sm text-muted">
+                      Columns marked — need a rate for each of the amounts you entered.
+                    </p>
+                  )}
+                </div>
+              )}
+              {result?.status === 'invalid' && (
+                <p role="alert" className="mt-3 text-neg">
+                  {result.message}
                 </p>
               )}
             </div>
-          )}
-          {result?.status === 'invalid' && (
-            <p role="alert" className="mt-3 text-neg">
-              {result.message}
-            </p>
-          )}
+          </section>
         </div>
-      </section>
+      </div>
 
       {/* Accurate Projection Diagrams */}
       {showTable && result && (
@@ -836,7 +831,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
       >
         <div
           data-testid="bank-selection-grid"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {BANK_PRODUCTS.map((bank) => {
             const selected = v.selectedBankIds.includes(bank.id);
@@ -919,7 +914,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
       >
         <div
           data-testid="stock-selection-grid"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {STOCK_PRODUCTS.map((stock) => {
             const selected = v.selectedStockIds.includes(stock.id);
@@ -998,88 +993,90 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
       </Card>
 
       {/* Populated & Editable Assumptions Cards */}
-      <Card title="Savings" icon="savings" hint="Allocated by Argon from your lump sum and blended across your selected UK bank accounts.">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card title="Savings" icon="savings" hint="Allocated by Argon from your lump sum and blended across your selected UK bank accounts.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id="savingsNow"
+              icon="savings"
+              iconTone="positive"
+              label="Savings now"
+              prefix="£"
+              inputMode="decimal"
+              placeholder="0"
+              value={v.savingsNow}
+              onChange={set('savingsNow')}
+              error={errors.savingsNow}
+            />
+            <Field
+              id="savingsAdd"
+              icon="contributed"
+              label="Add per month"
+              prefix="£"
+              inputMode="decimal"
+              placeholder="0"
+              value={v.savingsAdd}
+              onChange={set('savingsAdd')}
+              error={errors.savingsAdd}
+            />
+          </div>
+          <p className="mb-2 mt-5 text-sm font-semibold text-muted">Savings AER (yearly)</p>
+          <div className="grid grid-cols-3 gap-3">
+            <Field id="sLow" label="Low" suffix="%" inputMode="decimal" value={v.sLow} onChange={set('sLow')} error={errors.sLow} />
+            <Field id="sBase" label="Base" suffix="%" inputMode="decimal" value={v.sBase} onChange={set('sBase')} error={errors.sBase} />
+            <Field id="sHigh" label="High" suffix="%" inputMode="decimal" value={v.sHigh} onChange={set('sHigh')} error={errors.sHigh} />
+          </div>
+        </Card>
+
+        <Card title="Investments" icon="investments" hint="Allocated by Argon across your selected index ETFs and fractional stocks. Returns can fall as well as rise.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id="invNow"
+              icon="investments"
+              label="Investments now"
+              prefix="£"
+              inputMode="decimal"
+              placeholder="0"
+              value={v.invNow}
+              onChange={set('invNow')}
+              error={errors.invNow}
+            />
+            <Field
+              id="invAdd"
+              icon="contributed"
+              label="Add per month"
+              prefix="£"
+              inputMode="decimal"
+              placeholder="0"
+              value={v.invAdd}
+              onChange={set('invAdd')}
+              error={errors.invAdd}
+            />
+          </div>
+          <p className="mb-2 mt-5 text-sm font-semibold text-muted">Expected annual return</p>
+          <div className="grid grid-cols-3 gap-3">
+            <Field id="iLow" label="Low" suffix="%" inputMode="decimal" value={v.iLow} onChange={set('iLow')} error={errors.iLow} />
+            <Field id="iBase" label="Base" suffix="%" inputMode="decimal" value={v.iBase} onChange={set('iBase')} error={errors.iBase} />
+            <Field id="iHigh" label="High" suffix="%" inputMode="decimal" value={v.iHigh} onChange={set('iHigh')} error={errors.iHigh} />
+          </div>
+        </Card>
+
+        <Card title="Income" icon="income" hint="Counted once a month for the projected period.">
           <Field
-            id="savingsNow"
-            icon="savings"
+            id="income"
+            icon="income"
             iconTone="positive"
-            label="Savings now"
+            label="Expected monthly income"
             prefix="£"
             inputMode="decimal"
             placeholder="0"
-            value={v.savingsNow}
-            onChange={set('savingsNow')}
-            error={errors.savingsNow}
+            value={v.income}
+            onChange={set('income')}
+            error={errors.income}
+            hint="Counted once a month for the period."
           />
-          <Field
-            id="savingsAdd"
-            icon="contributed"
-            label="Add per month"
-            prefix="£"
-            inputMode="decimal"
-            placeholder="0"
-            value={v.savingsAdd}
-            onChange={set('savingsAdd')}
-            error={errors.savingsAdd}
-          />
-        </div>
-        <p className="mb-2 mt-5 text-sm font-semibold text-muted">Savings AER (yearly)</p>
-        <div className="grid grid-cols-3 gap-3">
-          <Field id="sLow" label="Low" suffix="%" inputMode="decimal" value={v.sLow} onChange={set('sLow')} error={errors.sLow} />
-          <Field id="sBase" label="Base" suffix="%" inputMode="decimal" value={v.sBase} onChange={set('sBase')} error={errors.sBase} />
-          <Field id="sHigh" label="High" suffix="%" inputMode="decimal" value={v.sHigh} onChange={set('sHigh')} error={errors.sHigh} />
-        </div>
-      </Card>
-
-      <Card title="Investments" icon="investments" hint="Allocated by Argon across your selected index ETFs and fractional stocks. Returns can fall as well as rise.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="invNow"
-            icon="investments"
-            label="Investments now"
-            prefix="£"
-            inputMode="decimal"
-            placeholder="0"
-            value={v.invNow}
-            onChange={set('invNow')}
-            error={errors.invNow}
-          />
-          <Field
-            id="invAdd"
-            icon="contributed"
-            label="Add per month"
-            prefix="£"
-            inputMode="decimal"
-            placeholder="0"
-            value={v.invAdd}
-            onChange={set('invAdd')}
-            error={errors.invAdd}
-          />
-        </div>
-        <p className="mb-2 mt-5 text-sm font-semibold text-muted">Expected annual return</p>
-        <div className="grid grid-cols-3 gap-3">
-          <Field id="iLow" label="Low" suffix="%" inputMode="decimal" value={v.iLow} onChange={set('iLow')} error={errors.iLow} />
-          <Field id="iBase" label="Base" suffix="%" inputMode="decimal" value={v.iBase} onChange={set('iBase')} error={errors.iBase} />
-          <Field id="iHigh" label="High" suffix="%" inputMode="decimal" value={v.iHigh} onChange={set('iHigh')} error={errors.iHigh} />
-        </div>
-      </Card>
-
-      <Card title="Income" icon="income">
-        <Field
-          id="income"
-          icon="income"
-          iconTone="positive"
-          label="Expected monthly income"
-          prefix="£"
-          inputMode="decimal"
-          placeholder="0"
-          value={v.income}
-          onChange={set('income')}
-          error={errors.income}
-          hint="Counted once a month for the period."
-        />
-      </Card>
+        </Card>
+      </div>
 
       <p className="px-2 text-center text-xs text-muted">
         Projections are illustrative estimates, not advice or a guarantee of future performance. Capital at risk when investing.
