@@ -45,6 +45,10 @@ export interface Profile {
   savingsDeadlines?: SavingsDeadline[];
   categories: Category[];
   hasJob: boolean;
+  /** 'even' (default): the pool is spread over the days. 'itemised': each day gets exactly what its planned
+   * purchases (and actuals) need; nothing else is spread, and what is left stays unallocated ("not tied to a
+   * purchase yet"). Essential floors do not apply in itemised mode. */
+  allocationMode?: 'even' | 'itemised';
 }
 
 export interface SavingsDeadline {
@@ -122,6 +126,18 @@ export interface Preference {
   label?: string;
 }
 
+/** One real thing bought as part of a planned purchase (e.g. "Eggs x6, Tesco, £1.95"). */
+export interface PurchaseLine {
+  name: string;
+  /** Human quantity, e.g. "6 eggs", "1 x 510g bottle", "2 journeys". */
+  qty?: string;
+  /** What this line costs on this day (0 when it uses something already owned or left over). */
+  pence: number;
+  ref: ItemRef;
+  /** e.g. "already in your cupboard", "left over from Tue's omelette", "off-peak fare". */
+  note?: string;
+}
+
 /** An applied hypothetical: money set aside on a day for a planned purchase. */
 export interface PlannedPurchase {
   id: string;
@@ -131,6 +147,12 @@ export interface PlannedPurchase {
   label: string;
   /** The exact item and merchant the money is set aside for. */
   ref?: ItemRef;
+  /** Itemised breakdown; Σ lines[].pence === amount.pence when present. */
+  lines?: PurchaseLine[];
+  /** 'itinerary' = created by the creative spending plan (replaced as a set when it is re-applied). */
+  source?: 'itinerary';
+  /** Why this day: e.g. "Friday treat", "payday", "commute day (Circle line)". */
+  reason?: string;
 }
 
 export interface Allocation {
@@ -259,6 +281,13 @@ export interface RemovePlannedPurchaseIntent extends IntentBase {
   label?: string;
   date?: ISODate;
 }
+/** Replace every itinerary planned purchase (source 'itinerary') with `purchases` and set the allocation mode.
+ * Missing categories are added (weight 0, non-essential). Always a full re-plan. */
+export interface ItineraryIntent extends IntentBase {
+  kind: 'itinerary';
+  purchases: PlannedPurchase[];
+  mode: 'itemised' | 'even';
+}
 export interface SettingsEditIntent extends IntentBase {
   kind: 'settingsEdit';
   patch: Partial<Pick<Profile, 'minimumReserve' | 'savingsGoal' | 'horizonEnd' | 'categories' | 'funds' | 'fundsType'>>;
@@ -272,7 +301,8 @@ export type Intent =
   | PreferenceIntent
   | GoalIntent
   | SettingsEditIntent
-  | RemovePlannedPurchaseIntent;
+  | RemovePlannedPurchaseIntent
+  | ItineraryIntent;
 
 // ---------- Diff / results ----------
 
