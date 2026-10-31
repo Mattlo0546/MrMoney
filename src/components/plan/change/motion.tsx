@@ -19,7 +19,6 @@ const CSS = `
 .spc .spring{transition:transform 200ms cubic-bezier(.34,1.56,.64,1),background-color 150ms,opacity 150ms}
 .spc .spring:hover:not(:disabled){transform:scale(1.03)}
 .spc .spring:active:not(:disabled){transform:scale(.95)}
-.spc :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){
 .spc .pop,.spc .spin,.spc .dot{animation:none}
 .spc .halo{animation:none;box-shadow:0 0 0 3px rgb(124 58 237 / .45)}

@@ -60,7 +60,7 @@ export function Field({
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold text-muted">{label}</label>
       <div
-        className={`flex min-h-12 items-center gap-2 rounded-[16px] border bg-surface pl-2 pr-4 shadow-soft transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/10 ${error ? 'border-neg' : 'border-line'}`}
+        className={`flex min-h-12 items-center gap-2 rounded-[16px] border bg-surface pl-2 pr-4 shadow-soft transition-colors focus-within:border-line-strong ${error ? 'border-neg' : 'border-line'}`}
       >
         {glyph ? <IconBadge icon={glyph} tone={error ? 'negative' : iconTone} size="sm" /> : <span className="w-2" aria-hidden="true" />}
         {prefix && <span className="font-semibold text-muted">{prefix}</span>}
@@ -91,7 +91,7 @@ export function Btn({
   return (
     <button
       type="button"
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-bold transition-[transform,filter] active:scale-95 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${v} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-bold transition-[transform,filter] active:scale-95 disabled:opacity-50 outline-none ${v} ${className}`}
       {...p}
     />
   );

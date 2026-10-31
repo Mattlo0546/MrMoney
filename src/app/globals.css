@@ -180,9 +180,9 @@ h1, h2, h3 {
 .money, .tabular { font-variant-numeric: tabular-nums; }
 .money { font-family: var(--font-display); font-weight: 700; }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+*:focus,
+*:focus-visible {
+  outline: none !important;
 }
 
 /* Bubble: used via playBubble() (Web Animations API) or by adding .bubble */

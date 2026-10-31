@@ -17,7 +17,7 @@ import { DEFAULT_GOAL_DAYS, planGoalPurchase } from '@/lib/lifestyle/goal';
 import { buildPlanData } from '@/components/plan/calendar/data';
 import type { PreviewData } from '@/components/plan/change/changeState';
 import { newId, type GoalPreview, type UiCard } from './model';
-import { readProjectionRates, writeProjectionRate } from './projections';
+import { readProjectionRates, seedProjectionsFromState, writeProjectionRate } from './projections';
 
 // ------------------------------------------------------------------ context
 
@@ -241,6 +241,7 @@ function setupPlan(call: Extract<ClientToolCall, { name: 'setup_plan' }>): Exec 
     /* storage may be blocked */
   }
   const snap = store.getSnapshot();
+  seedProjectionsFromState(snap.state);
   return { result: planResult(call, snap), cards: [planCard(snap)] };
 }
 
@@ -257,6 +258,7 @@ function quickPlan(call: Extract<ClientToolCall, { name: 'quick_plan' }>): Exec 
   }
   const out = store.applyItinerary(plan.purchases, 'itemised');
   const snap = store.getSnapshot();
+  seedProjectionsFromState(snap.state);
   return {
     result: {
       id: call.id, name: call.name, ok: true,
