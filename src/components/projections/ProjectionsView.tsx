@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { formatMoney, gbp, project } from '@/lib/engine';
 import type { EngineState, ProjectionAssumptions, ProjectionPoint, Scenario } from '@/lib/engine';
 import { useAppSnapshot } from '@/lib/store';
@@ -186,6 +186,185 @@ function load(state: EngineState | null): Inputs {
   return fallback;
 }
 
+export interface ProjectionsStoreState {
+  v: Inputs | null;
+  argonBusy: boolean;
+  syncedRaw: string | null;
+  syncedFundsPence: number | undefined;
+}
+
+const EMPTY_PROJ: ProjectionsStoreState = {
+  v: null,
+  argonBusy: false,
+  syncedRaw: null,
+  syncedFundsPence: undefined,
+};
+
+let projState: ProjectionsStoreState = EMPTY_PROJ;
+const projListeners = new Set<() => void>();
+
+function notifyProj() {
+  projListeners.forEach((l) => l());
+}
+
+function persistInputs(next: Inputs): string | null {
+  try {
+    const raw = JSON.stringify(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(KEY, raw);
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+function ensureProjSynced(snapState: EngineState | null): Inputs {
+  const currentFunds = snapState?.profile.funds?.pence;
+  let currentRaw: string | null = null;
+  try {
+    if (typeof window !== 'undefined') currentRaw = localStorage.getItem(KEY);
+  } catch {
+    /* ignore */
+  }
+  const externalChange =
+    projState.v === null ||
+    (!projState.argonBusy &&
+      (currentRaw !== projState.syncedRaw || currentFunds !== projState.syncedFundsPence));
+  if (externalChange) {
+    const loaded = load(snapState);
+    projState = {
+      ...projState,
+      v: loaded,
+      syncedRaw: currentRaw,
+      syncedFundsPence: currentFunds,
+    };
+  }
+  return projState.v!;
+}
+
+export function setProjectionsInputs(updater: Inputs | ((prev: Inputs) => Inputs), fallbackState: EngineState | null = null) {
+  const prev = projState.v ?? ensureProjSynced(fallbackState);
+  const next = typeof updater === 'function' ? updater(prev) : updater;
+  const raw = persistInputs(next);
+  projState = {
+    ...projState,
+    v: next,
+    syncedRaw: raw ?? projState.syncedRaw,
+    syncedFundsPence: next.syncedPlanFundsPence ?? projState.syncedFundsPence,
+  };
+  notifyProj();
+}
+
+function setArgonBusy(argonBusy: boolean) {
+  projState = { ...projState, argonBusy };
+  notifyProj();
+}
+
+export function subscribeProjections(l: () => void) {
+  projListeners.add(l);
+  return () => {
+    projListeners.delete(l);
+  };
+}
+
+export function getProjectionsSnapshot(): ProjectionsStoreState {
+  return projState;
+}
+
+export function resetProjectionsStore() {
+  projState = EMPTY_PROJ;
+  notifyProj();
+}
+
+export function applyArgonReallocationStore(
+  nextPatch: Partial<{
+    lumpSum: string;
+    monthlySurplus: string;
+    riskProfile: ArgonRiskProfile;
+    selectedBankIds: string[];
+    selectedStockIds: string[];
+  }>,
+  fallbackState: EngineState | null = null,
+) {
+  const cur = projState.v ?? ensureProjSynced(fallbackState);
+  const nextLumpStr = nextPatch.lumpSum ?? cur.lumpSum;
+  const nextSurplusStr = nextPatch.monthlySurplus ?? cur.monthlySurplus;
+  const nextRisk = nextPatch.riskProfile ?? cur.riskProfile;
+  const nextBanks = nextPatch.selectedBankIds ?? cur.selectedBankIds;
+  const nextStocks = nextPatch.selectedStockIds ?? cur.selectedStockIds;
+
+  const lumpPounds = Math.round((parsePounds(nextLumpStr) ?? 0) / 100);
+  const surplusPounds = Math.round((parsePounds(nextSurplusStr) ?? 0) / 100);
+  const incomePounds = Math.round((parsePounds(cur.income) ?? 0) / 100);
+
+  const d = decideArgonAllocation({
+    lumpSumPounds: lumpPounds,
+    monthlySurplusPounds: surplusPounds,
+    monthlyIncomePounds: incomePounds,
+    riskProfile: nextRisk,
+    selectedBankIds: nextBanks,
+    selectedStockIds: nextStocks,
+  });
+
+  setProjectionsInputs((prev) => ({
+    ...prev,
+    lumpSum: nextLumpStr,
+    monthlySurplus: nextSurplusStr,
+    riskProfile: nextRisk,
+    selectedBankIds: d.selectedBankIds,
+    selectedStockIds: d.selectedStockIds,
+    savingsNow: String(d.savingsNowPounds),
+    savingsAdd: String(d.savingsAddPounds),
+    invNow: String(d.invNowPounds),
+    invAdd: String(d.invAddPounds),
+    sLow: String(d.rates.sLow),
+    sBase: String(d.rates.sBase),
+    sHigh: String(d.rates.sHigh),
+    iLow: String(d.rates.iLow),
+    iBase: String(d.rates.iBase),
+    iHigh: String(d.rates.iHigh),
+    rationale: d.rationale,
+    decidedBy: 'argon-engine',
+  }), fallbackState);
+}
+
+/**
+ * Stateful Argon Agent decision request: continues in the background even if the user
+ * navigates away from the Projections tab before `/api/projections/decide` responds.
+ */
+export async function askArgonAgent(fallbackState: EngineState | null = null): Promise<void> {
+  if (projState.argonBusy) return;
+  const cur = projState.v ?? ensureProjSynced(fallbackState);
+  const lumpPounds = Math.round((parsePounds(cur.lumpSum) ?? 390_000) / 100);
+  const surplusPounds = Math.round((parsePounds(cur.monthlySurplus) ?? 25_000) / 100);
+  const incomePounds = Math.round((parsePounds(cur.income) ?? 45_000) / 100);
+  setArgonBusy(true);
+  try {
+    const res = await fetch('/api/projections/decide', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        lumpSumPounds: lumpPounds > 0 ? lumpPounds : 3900,
+        monthlySurplusPounds: surplusPounds,
+        monthlyIncomePounds: incomePounds,
+        riskProfile: cur.riskProfile,
+        months: cur.months,
+      }),
+    });
+    if (res.ok) {
+      const d = (await res.json()) as ArgonDecision;
+      setProjectionsInputs((prev) => decisionToInputs(d, prev.months, prev.syncedPlanFundsPence), fallbackState);
+    } else {
+      applyArgonReallocationStore({}, fallbackState);
+    }
+  } catch {
+    applyArgonReallocationStore({}, fallbackState);
+  } finally {
+    setArgonBusy(false);
+  }
+}
+
 export function ProjectionsView() {
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const snap = useAppSnapshot();
@@ -201,19 +380,20 @@ export function ProjectionsView() {
 }
 
 function Projections({ snapState }: { snapState: EngineState | null }) {
-  const [v, setV] = useState<Inputs>(() => load(snapState));
-  const [argonBusy, setArgonBusy] = useState(false);
+  const storeSnap = useSyncExternalStore(subscribeProjections, getProjectionsSnapshot, () => EMPTY_PROJ);
+  const v = storeSnap.v ?? ensureProjSynced(snapState);
+  const argonBusy = storeSnap.argonBusy;
 
   useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(v));
-    } catch {
-      /* ignore */
+    const synced = ensureProjSynced(snapState);
+    const raw = persistInputs(synced);
+    if (raw && raw !== projState.syncedRaw) {
+      projState = { ...projState, syncedRaw: raw };
     }
-  }, [v]);
+  }, [snapState]);
 
   const set = (k: keyof Inputs) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setV((p) => ({ ...p, [k]: e.target.value }));
+    setProjectionsInputs((p) => ({ ...p, [k]: e.target.value }), snapState);
 
   // Current Argon allocation breakdown reflecting the active lump sum, risk profile, and selected products
   const decision = useMemo<ArgonDecision>(() => {
@@ -242,75 +422,11 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
     selectedBankIds: string[];
     selectedStockIds: string[];
   }>) {
-    const nextLumpStr = nextPatch.lumpSum ?? v.lumpSum;
-    const nextSurplusStr = nextPatch.monthlySurplus ?? v.monthlySurplus;
-    const nextRisk = nextPatch.riskProfile ?? v.riskProfile;
-    const nextBanks = nextPatch.selectedBankIds ?? v.selectedBankIds;
-    const nextStocks = nextPatch.selectedStockIds ?? v.selectedStockIds;
-
-    const lumpPounds = Math.round((parsePounds(nextLumpStr) ?? 0) / 100);
-    const surplusPounds = Math.round((parsePounds(nextSurplusStr) ?? 0) / 100);
-    const incomePounds = Math.round((parsePounds(v.income) ?? 0) / 100);
-
-    const d = decideArgonAllocation({
-      lumpSumPounds: lumpPounds,
-      monthlySurplusPounds: surplusPounds,
-      monthlyIncomePounds: incomePounds,
-      riskProfile: nextRisk,
-      selectedBankIds: nextBanks,
-      selectedStockIds: nextStocks,
-    });
-
-    setV((prev) => ({
-      ...prev,
-      lumpSum: nextLumpStr,
-      monthlySurplus: nextSurplusStr,
-      riskProfile: nextRisk,
-      selectedBankIds: d.selectedBankIds,
-      selectedStockIds: d.selectedStockIds,
-      savingsNow: String(d.savingsNowPounds),
-      savingsAdd: String(d.savingsAddPounds),
-      invNow: String(d.invNowPounds),
-      invAdd: String(d.invAddPounds),
-      sLow: String(d.rates.sLow),
-      sBase: String(d.rates.sBase),
-      sHigh: String(d.rates.sHigh),
-      iLow: String(d.rates.iLow),
-      iBase: String(d.rates.iBase),
-      iHigh: String(d.rates.iHigh),
-      rationale: d.rationale,
-      decidedBy: 'argon-engine',
-    }));
+    applyArgonReallocationStore(nextPatch, snapState);
   }
 
-  async function askArgonAgent() {
-    const lumpPounds = Math.round((parsePounds(v.lumpSum) ?? 390_000) / 100);
-    const surplusPounds = Math.round((parsePounds(v.monthlySurplus) ?? 25_000) / 100);
-    const incomePounds = Math.round((parsePounds(v.income) ?? 45_000) / 100);
-    setArgonBusy(true);
-    try {
-      const res = await fetch('/api/projections/decide', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          lumpSumPounds: lumpPounds > 0 ? lumpPounds : 3900,
-          monthlySurplusPounds: surplusPounds,
-          monthlyIncomePounds: incomePounds,
-          riskProfile: v.riskProfile,
-          months: v.months,
-        }),
-      });
-      if (res.ok) {
-        const d = (await res.json()) as ArgonDecision;
-        setV((prev) => decisionToInputs(d, prev.months, prev.syncedPlanFundsPence));
-      } else {
-        applyArgonReallocation({});
-      }
-    } catch {
-      applyArgonReallocation({});
-    } finally {
-      setArgonBusy(false);
-    }
+  function handleAskArgon() {
+    void askArgonAgent(snapState);
   }
 
   function toggleBank(id: string) {
@@ -423,7 +539,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
           </div>
           <button
             type="button"
-            onClick={askArgonAgent}
+            onClick={handleAskArgon}
             disabled={argonBusy}
             data-testid="argon-decide-btn"
             className="inline-flex min-h-10 items-center gap-2 rounded-full bg-grad-primary px-4 py-2 text-xs font-extrabold shadow-glow transition-transform hover:scale-[1.02] disabled:opacity-60"
@@ -589,7 +705,7 @@ function Projections({ snapState }: { snapState: EngineState | null }) {
           label="Period"
           cols={4}
           value={String(v.months)}
-          onPick={(m) => setV((p) => ({ ...p, months: Number(m) }))}
+          onPick={(m) => setProjectionsInputs((p) => ({ ...p, months: Number(m) }), snapState)}
           options={PERIODS.map((m) => ({ id: String(m), label: `${m} mo`, icon: 'days' as const }))}
         />
       </Card>

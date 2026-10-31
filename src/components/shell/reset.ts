@@ -1,6 +1,9 @@
 'use client';
 import { getAppStore } from '@/lib/store';
 import { resetChat, startDemoLocal } from '@/components/chat/chatStore';
+import { resetMoneyStore } from '@/components/money/moneyStore';
+import { resetItineraryStore } from '@/components/plan/itinerary/storage';
+import { resetProjectionsStore } from '@/components/projections/ProjectionsView';
 
 export type ResetMode = 'onboarding' | 'demo';
 
@@ -25,6 +28,9 @@ export function resetApp(mode: ResetMode = 'onboarding') {
   }
 
   resetChat();
+  resetMoneyStore();
+  resetItineraryStore();
+  resetProjectionsStore();
   const store = getAppStore();
   store.reset();
 

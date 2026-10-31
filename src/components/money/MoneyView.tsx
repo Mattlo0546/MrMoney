@@ -3,16 +3,23 @@
  * /money: the Money agent (gemini-4-argon) researches live rates and funds, runs the allocation engine on the
  * user's profile, and the money map animates the reallocation. Profile and chat live in localStorage only.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ArrowRight, Landmark, RotateCcw, Search, Sparkles, TriangleAlert, Undo2 } from 'lucide-react';
 import { useAppSnapshot } from '@/lib/store';
 import type { EngineState } from '@/lib/engine/types';
-import { allocate, formatPence } from '@/lib/finance/allocate';
-import { DEFAULT_PROFILE, FinanceProfileSchema, type Allocation, type FinanceProfile, type MoneyCard, type MoneyMessage, type MoneyResponse, type MoneyStatus } from '@/lib/finance/types';
+import { formatPence } from '@/lib/finance/allocate';
+import type { MoneyCard } from '@/lib/finance/types';
 import { Button, Card, Spinner, WithIcon } from '@/components/ui';
 import { allocationRows, BUCKET_KIND, currentRows, MoneyMap, ROW_ORDER, type RowKey } from './MoneyMap';
+import {
+  replayMoneyAnimation,
+  resetMoneyStore,
+  runMoneyLocalSplit,
+  sendMoneyMessage,
+  setMoneyDraft,
+  useMoneyStore,
+} from './moneyStore';
 
-const KEY = 'mrmoney:money:v1';
 const GREETING = 'I\'m Money. I research live UK savings rates, ISA platforms and index funds, then split your spare cash with the allocation engine. Ask me where your money should go.';
 const CHIPS = [
   'How should I split my spare money each month?',
@@ -21,85 +28,6 @@ const CHIPS = [
   'Is my paid bank plan worth it?',
 ];
 
-interface UiMessage { id: string; role: 'user' | 'assistant'; text: string; cards?: MoneyCard[]; notes?: string; }
-interface Saved { profile: FinanceProfile; messages: UiMessage[]; allocation: Allocation | null; }
-
-const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-
-/** Seed the money profile from the plan when the user hasn't told Money anything yet. */
-function profileFromPlan(state: EngineState | null): FinanceProfile {
-  if (!state) return DEFAULT_PROFILE;
-  const bills = state.commitments.filter((c) => c.recurrence.kind === 'monthly').reduce((s, c) => s + c.amount.pence, 0);
-  const food = state.profile.categories.filter((c) => c.essential).reduce((s, c) => s + (c.minimumDaily?.pence ?? 0) * 30, 0);
-  const essentials = bills + food;
-  return {
-    ...DEFAULT_PROFILE,
-    cashSavingsPence: state.profile.funds.pence,
-    essentialMonthlyCostsPence: essentials > 0 ? essentials : DEFAULT_PROFILE.essentialMonthlyCostsPence,
-  };
-}
-
-function load(): Saved | null {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    const j = JSON.parse(raw) as Partial<Saved>;
-    const p = FinanceProfileSchema.safeParse(j.profile);
-    if (!p.success) return null;
-    return { profile: p.data, messages: Array.isArray(j.messages) ? j.messages : [], allocation: j.allocation ?? null };
-  } catch {
-    return null;
-  }
-}
-function save(s: Saved) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* storage unavailable */ }
-}
-
-/** Model-only summary of an assistant turn's cards (refs for compare_savings, the split it saw). */
-function notesFor(cards: MoneyCard[]): string | undefined {
-  const out: string[] = [];
-  for (const c of cards) {
-    if (c.type === 'research_results' && c.items.length) out.push(`Research refs: ${c.items.map((i) => `${i.ref}=${i.provider} ${i.product} ${i.headline}`).join('; ')}`);
-    if (c.type === 'allocation') out.push(`Allocation: ${c.allocation.lines.map((l) => `${l.label} ${formatPence(l.pence)}`).join(', ')}`);
-    if (c.type === 'comparison') out.push(`Comparison ${c.comparison.label}: ${formatPence(c.comparison.yearlyGainPence)}/yr, worth switching: ${c.comparison.worthSwitching}`);
-  }
-  return out.length ? out.join('\n').slice(0, 1500) : undefined;
-}
-
-async function callMoney(messages: MoneyMessage[], profile: FinanceProfile, today: string, onStatus: (s: MoneyStatus) => void): Promise<MoneyResponse> {
-  const res = await fetch('/api/money', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
-    body: JSON.stringify({ messages, profile, today, stream: true }),
-  });
-  const ct = res.headers.get('content-type') ?? '';
-  if (!ct.includes('text/event-stream') || !res.body) return (await res.json()) as MoneyResponse;
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '';
-  let reply: MoneyResponse | null = null;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let idx: number;
-    while ((idx = buf.indexOf('\n\n')) >= 0) {
-      const chunk = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
-      const ev = /^event: (.+)$/m.exec(chunk)?.[1];
-      const data = /^data: (.+)$/m.exec(chunk)?.[1];
-      if (!ev || !data) continue;
-      try {
-        const j = JSON.parse(data);
-        if (ev === 'status') onStatus(j as MoneyStatus);
-        if (ev === 'reply') reply = j as MoneyResponse;
-      } catch { /* skip malformed event */ }
-    }
-  }
-  if (!reply) throw new Error('No reply');
-  return reply;
-}
-
 export function MoneyView() {
   const { hydrated, state, today } = useAppSnapshot();
   if (!hydrated) return <div className="grid min-h-[60vh] place-items-center"><Spinner size={28} /></div>;
@@ -107,20 +35,9 @@ export function MoneyView() {
 }
 
 function MoneyInner({ state, today }: { state: EngineState | null; today: string }) {
-  const [saved] = useState<Saved | null>(() => load());
-  const [profile, setProfile] = useState<FinanceProfile>(() => saved?.profile ?? profileFromPlan(state));
-  const [messages, setMessages] = useState<UiMessage[]>(() => saved?.messages ?? []);
-  const [allocation, setAllocation] = useState<Allocation | null>(() => saved?.allocation ?? null);
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<MoneyStatus | null>(null);
-  const [animKey, setAnimKey] = useState(0);
-  const [showCurrent, setShowCurrent] = useState(false);
+  const money = useMoneyStore(state);
+  const { profile, messages, allocation, draft: input, busy, status, animKey, showCurrent } = money;
   const listRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    save({ profile, messages, allocation });
-  }, [profile, messages, allocation]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -134,51 +51,18 @@ function MoneyInner({ state, today }: { state: EngineState | null; today: string
   const rows = useMemo(() => (allocation && !showCurrent ? allocationRows(allocation) : currentRows(profile)), [allocation, showCurrent, profile]);
   const mapTitle = allocation && !showCurrent ? 'Recommended split' : 'How it is now';
 
-  const send = useCallback(async (text: string) => {
-    const t = text.trim();
-    if (!t || busy) return;
-    const userMsg: UiMessage = { id: uid(), role: 'user', text: t };
-    const next = [...messages, userMsg];
-    setMessages(next);
-    setInput('');
-    setBusy(true);
-    setStatus({ phase: 'thinking', label: 'Thinking…', step: 1 });
-    const history: MoneyMessage[] = next.slice(-20).map((m) => ({ role: m.role, text: m.text, ...(m.notes ? { notes: m.notes } : {}) }));
-    try {
-      const reply = await callMoney(history, profile, today, setStatus);
-      if (reply.profile) setProfile(reply.profile);
-      const alloc = [...reply.cards].reverse().find((c) => c.type === 'allocation');
-      if (alloc && alloc.type === 'allocation') {
-        setShowCurrent(false);
-        setAllocation(alloc.allocation);
-        setAnimKey((k) => k + 1);
-      }
-      setMessages((m) => [...m, { id: uid(), role: 'assistant', text: reply.text, cards: reply.cards, notes: notesFor(reply.cards) }]);
-    } catch {
-      setMessages((m) => [...m, { id: uid(), role: 'assistant', text: 'Sorry, I couldn\'t reach Money just now. Please try again.', cards: [{ id: uid(), type: 'error', message: 'Network error', retryable: true }] }]);
-    } finally {
-      setBusy(false);
-      setStatus(null);
-    }
-  }, [busy, messages, profile, today]);
+  const send = useCallback((text: string) => {
+    void sendMoneyMessage(text, today);
+  }, [today]);
 
   const replay = () => {
-    if (!allocation) return;
-    setShowCurrent(true);
-    window.setTimeout(() => { setShowCurrent(false); setAnimKey((k) => k + 1); }, 900);
+    replayMoneyAnimation();
   };
   const runLocalSplit = () => {
-    const a = allocate(profile, today);
-    setShowCurrent(false);
-    setAllocation(a);
-    setAnimKey((k) => k + 1);
-    setMessages((m) => [...m, { id: uid(), role: 'assistant', text: `Here's the split from the allocation engine for ${formatPence(a.monthlySurplusPence)} a month. Ask me why, or tell me what's changed.`, cards: [{ id: uid(), type: 'allocation', allocation: a }], notes: notesFor([{ id: 'x', type: 'allocation', allocation: a }]) }]);
+    runMoneyLocalSplit(today);
   };
   const reset = () => {
-    setMessages([]);
-    setAllocation(null);
-    setShowCurrent(false);
-    setProfile(profileFromPlan(state));
+    resetMoneyStore(state);
   };
 
   const topCheck = allocation?.checks.find((c) => c.level === 'act') ?? allocation?.checks.find((c) => c.level === 'warn');
@@ -264,7 +148,7 @@ function MoneyInner({ state, today }: { state: EngineState | null; today: string
             <form className="flex items-center gap-2 rounded-full border border-line bg-surface p-1 pl-4 focus-within:border-accent" onSubmit={(e) => { e.preventDefault(); void send(input); }}>
               <input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => setMoneyDraft(e.target.value)}
                 placeholder="e.g. I have £250 spare a month and £3,900 saved"
                 aria-label="Message Money"
                 className="min-h-10 flex-1 bg-transparent text-sm outline-none"

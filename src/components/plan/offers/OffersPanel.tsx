@@ -8,6 +8,7 @@ import { MotionStyles } from '../change/motion';
 import { dayLabel } from '../change/format';
 import { Check, ExternalLink, Sparkles } from 'lucide-react';
 import { IconBadge, WithIcon } from '@/components/ui/Value';
+import { DealCompanyLogo, getOfferCompany } from './DealCompanyLogo';
 
 /** London student defaults: area defaults to London so TfL, NeoTaste, Too Good To Go & Soho/Brick Lane deals appear. */
 function readContext(): OfferContext {
@@ -132,47 +133,57 @@ export function OffersPanel() {
       <ul className="flex flex-col gap-3">
         {visible.map(({ offer, eligibleNow }, i) => {
           const applied = appliedById.get(offer.id);
+          const company = getOfferCompany(offer);
           return (
             <li
               key={offer.id}
-              className="pop rounded-[24px] border border-line bg-surface p-4 shadow-soft"
+              className="pop rounded-[24px] border border-line bg-surface p-4 shadow-soft transition-all hover:border-line-strong"
               style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  {offer.percentOff !== undefined && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-grad-positive px-3 py-1 text-xs font-bold">
-                      <IconBadge icon="deal" tone="onGradient" size="xs" className="!bg-transparent" />
-                      {offer.percentOff}% off
-                    </span>
-                  )}
-                  <span className="rounded-full border border-line bg-surface-2 px-2.5 py-0.5 text-[11px] font-semibold text-muted">
-                    {offer.area === 'London' ? 'London student' : 'UK student'} · {offer.category}
-                  </span>
-                  <span className="text-xs text-muted">
-                    <WithIcon icon="checked" tone="neutral" size={12}>Checked {dayLabel(offer.checked)}</WithIcon>
-                  </span>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <DealCompanyLogo offer={offer} size={44} className="shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center rounded-md bg-surface-2 px-2 py-0.5 text-xs font-bold tracking-tight text-text border border-line">
+                        {company.name}
+                      </span>
+                      {offer.percentOff !== undefined && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-grad-positive px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
+                          <IconBadge icon="deal" tone="onGradient" size="xs" className="!bg-transparent" />
+                          {offer.percentOff}% off
+                        </span>
+                      )}
+                      <span className="rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-muted">
+                        {offer.area === 'London' ? 'London student' : 'UK student'} · {offer.category}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 font-display text-base sm:text-lg font-bold text-text leading-snug">
+                      {offer.title}
+                    </h3>
+                  </div>
                 </div>
 
-                {applied ? (
-                  <span className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-grad-positive-soft px-3.5 py-1.5 text-xs font-bold text-pos">
-                    <Check aria-hidden="true" size={14} />
-                    Applied{applied.savedPence > 0 ? ` · Saved ${formatMoney(gbp(applied.savedPence))}` : ''}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleApplyOffer(offer)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-grad-positive px-3.5 py-1.5 text-xs font-bold text-white shadow-soft transition hover:opacity-95"
-                  >
-                    <IconBadge icon="deal" tone="onGradient" size="xs" className="!bg-transparent" />
-                    Apply deal
-                  </button>
-                )}
+                <div className="shrink-0 sm:self-start">
+                  {applied ? (
+                    <span className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-grad-positive-soft px-3.5 py-1.5 text-xs font-bold text-pos border border-pos/20">
+                      <Check aria-hidden="true" size={14} />
+                      Applied{applied.savedPence > 0 ? ` · ${formatMoney(gbp(applied.savedPence))}` : ''}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleApplyOffer(offer)}
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-grad-positive px-3.5 py-1.5 text-xs font-bold text-white shadow-soft transition hover:opacity-95 cursor-pointer"
+                    >
+                      <IconBadge icon="deal" tone="onGradient" size="xs" className="!bg-transparent" />
+                      Apply deal
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <h3 className="mt-2 font-display text-lg font-bold">{offer.title}</h3>
-              <p className="mt-2 flex items-center gap-2 rounded-2xl bg-grad-positive-soft px-3 py-2 text-sm">
+              <p className="mt-3 flex items-center gap-2 rounded-2xl bg-grad-positive-soft px-3 py-2 text-sm">
                 <IconBadge icon="savings" tone="positive" size="sm" solid />
                 <span>
                   <span className="text-muted">Student deal:</span>{' '}
@@ -198,15 +209,21 @@ export function OffersPanel() {
                   <dd className="inline">{offer.conditions}</dd>
                 </div>
               </dl>
-              <a
-                href={offer.source}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-accent underline underline-offset-4"
-              >
-                <ExternalLink aria-hidden="true" size={14} />Source
-                <span className="sr-only"> for {offer.title} (opens in a new tab)</span>
-              </a>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line/60 pt-2 text-xs text-muted">
+                <a
+                  href={offer.source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-8 items-center gap-1.5 text-xs font-semibold text-accent underline underline-offset-4"
+                >
+                  <ExternalLink aria-hidden="true" size={13} />
+                  <span>Official deal source</span>
+                  <span className="sr-only"> for {offer.title} (opens in a new tab)</span>
+                </a>
+                <span>
+                  <WithIcon icon="checked" tone="neutral" size={12}>Checked {dayLabel(offer.checked)}</WithIcon>
+                </span>
+              </div>
             </li>
           );
         })}

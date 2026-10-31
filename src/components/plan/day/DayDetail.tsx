@@ -21,13 +21,18 @@ export function PurchaseCard({ p, changed }: { p: PurchaseItem; changed: boolean
   const [open, setOpen] = useState(true);
   const id = `lines-${p.id}`;
   const lines = p.lines ?? [];
+  const labelParts = p.label.split(/\s*·\s*|\n/).map((s) => s.trim()).filter(Boolean);
   return (
     <li data-item={`${p.id}`} className={`overflow-hidden rounded-2xl border border-line bg-surface shadow-soft ${changed ? 'ring-2 ring-accent-2 ring-offset-2 ring-offset-surface' : ''}`}>
       <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}
         className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left hover:bg-surface-2">
         <IconBadge icon={BUCKET_ICON[p.bucket]} tone="primary" size="sm" />
         <span className="min-w-0 flex-1">
-          <span className="block font-semibold leading-snug">{p.label}</span>
+          <span className="block font-semibold leading-snug">
+            {labelParts.map((part, i) => (
+              <span key={i} className="block">{part}</span>
+            ))}
+          </span>
           <span className="mt-0.5 flex flex-wrap items-center gap-1">
             {p.reason && <span className="inline-flex rounded-full bg-grad-primary-soft px-2 py-0.5 text-[11px] font-bold text-accent">{p.reason}</span>}
             {p.dealTitle && (

@@ -279,9 +279,17 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
           <div className="flex min-h-0 flex-1 flex-col" hidden={tab !== 'chat'} style={tab !== 'chat' ? { display: 'none' } : undefined}>
             <ChatPanel variant="panel" autoFocus={entering} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
           </div>
-          {tab !== 'chat' && (
-            <div role="tabpanel" aria-labelledby={`tab-panel-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
-              {tab === 'day' ? <DayDetail info={info} today={today} changed={changed} /> : tab === 'plan' ? <ItineraryPanel /> : <OffersPanel />}
+          <div role="tabpanel" aria-labelledby="tab-panel-plan" className="min-h-0 flex-1 overflow-y-auto" hidden={tab !== 'plan'} style={tab !== 'plan' ? { display: 'none' } : undefined}>
+            <ItineraryPanel />
+          </div>
+          {tab === 'day' && (
+            <div role="tabpanel" aria-labelledby="tab-panel-day" className="min-h-0 flex-1 overflow-y-auto">
+              <DayDetail info={info} today={today} changed={changed} />
+            </div>
+          )}
+          {tab === 'deals' && (
+            <div role="tabpanel" aria-labelledby="tab-panel-deals" className="min-h-0 flex-1 overflow-y-auto">
+              <OffersPanel />
             </div>
           )}
         </aside>
@@ -309,13 +317,13 @@ function PlanLayout({ enterKey }: { enterKey: number }) {
       <div className="mt-3">
         <Segmented label="view" value={mobileView} onChange={setMobileView} items={[{ id: 'chat', label: 'Chat', icon: MessageCircle }, { id: 'plan', label: 'Spending plan', icon: Sparkles }, { id: 'calendar', label: 'Calendar', icon: CalendarDays }]} />
       </div>
-      {mobileView === 'chat' ? (
-        <div ref={mobileFill} className="flex min-h-0 flex-col pb-3 pt-3">
-          <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
-        </div>
-      ) : mobileView === 'plan' ? (
-        <div className="pb-10 pt-3"><ItineraryPanel onShowCalendar={() => setMobileView('calendar')} /></div>
-      ) : (
+      <div ref={mobileFill} className="flex min-h-0 flex-col pb-3 pt-3" hidden={mobileView !== 'chat'} style={mobileView !== 'chat' ? { display: 'none' } : undefined}>
+        <ChatPanel variant="panel" autoFocus={false} onShowDeals={() => setDealsSheet(true)} header={<p className="text-sm font-bold text-muted">{snap.demoActive ? 'Demo student' : 'Your assistant'}</p>} />
+      </div>
+      <div className="pb-10 pt-3" hidden={mobileView !== 'plan'} style={mobileView !== 'plan' ? { display: 'none' } : undefined}>
+        <ItineraryPanel onShowCalendar={() => setMobileView('calendar')} />
+      </div>
+      {mobileView === 'calendar' && (
         <div ref={rootRef} className={`flex flex-col gap-4 pb-10 pt-3 ${entering ? 'sp-plan-in' : ''}`}>
           {s && <SummaryStrip s={s} today={today} nextIncome={nextIncome} todayPlanned={todayPlanned} />}
           {banner}

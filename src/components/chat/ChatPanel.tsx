@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { ArrowUp, MoreHorizontal, RotateCcw, Tag } from 'lucide-react';
 import { WithIcon, type ValueKind } from '@/components/ui/Value';
 import {
@@ -8,7 +8,7 @@ import {
 import { useAppSnapshot } from '@/lib/store';
 import { MotionStyles } from '@/components/plan/change/motion';
 import { ChatCard } from './ChatCards';
-import { addOpening, newChat, sendMessage, startDemoLocal, useChat } from './chatStore';
+import { addOpening, newChat, sendMessage, setDraft, startDemoLocal, useChat } from './chatStore';
 import { PHASE_LABEL } from './model';
 
 const SETUP_CHIPS = ['£1,200 a month, rent £700, brokie 🍜', 'Try a demo student'];
@@ -50,7 +50,8 @@ export interface ChatPanelProps {
 export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanelProps) {
   const chat = useChat();
   const snap = useAppSnapshot();
-  const [text, setText] = useState('');
+  const text = chat.draft;
+  const setText = setDraft;
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const id = useId();

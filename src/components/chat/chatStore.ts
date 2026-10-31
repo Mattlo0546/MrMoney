@@ -20,6 +20,7 @@ import { newId, type Phase, type UiCard, type UiMessage } from './model';
 export interface ChatState {
   hydrated: boolean;
   messages: UiMessage[];
+  draft: string;
   phase: Phase;
   /** Free-text status from the server stream (e.g. "Searching the web… (step 2)"). */
   statusLabel: string;
@@ -31,7 +32,7 @@ export interface ChatState {
   lastTurnMs: number | null;
 }
 
-const EMPTY: ChatState = { hydrated: false, messages: [], phase: 'idle', statusLabel: '', busy: false, offline: false, planCreatedAt: 0, lastTurnMs: null };
+const EMPTY: ChatState = { hydrated: false, messages: [], draft: '', phase: 'idle', statusLabel: '', busy: false, offline: false, planCreatedAt: 0, lastTurnMs: null };
 let state: ChatState = EMPTY;
 const listeners = new Set<() => void>();
 
@@ -83,16 +84,20 @@ export function findCard(cardId: string): UiCard | undefined {
   return undefined;
 }
 
+export function setDraft(draft: string) {
+  set({ draft });
+}
+
 export function newChat() {
   if (state.busy) return;
   clearHistory();
-  set({ messages: [], phase: 'idle', statusLabel: '' });
+  set({ messages: [], draft: '', phase: 'idle', statusLabel: '' });
 }
 
 /** Complete reset for app reset / demo restart (ignores busy guard). */
 export function resetChat() {
   clearHistory();
-  set({ messages: [], phase: 'idle', statusLabel: '', busy: false });
+  set({ messages: [], draft: '', phase: 'idle', statusLabel: '', busy: false });
 }
 
 // ------------------------------------------------------------------ wire format
@@ -231,7 +236,7 @@ export async function sendMessage(raw: string): Promise<void> {
   getChat();
   push({ role: 'user', text });
   const started = performance.now();
-  set({ busy: true, phase: 'thinking', statusLabel: '' });
+  set({ draft: '', busy: true, phase: 'thinking', statusLabel: '' });
   controller = new AbortController();
   const hadPlan = !!getAppStore().getSnapshot().state;
   try {
@@ -502,7 +507,7 @@ export function startDemoLocal(label = 'Try a demo student') {
     text: "Meet our demo student: £3,900 to last until 31 Jan, rent £620 on the 1st. It's Tue 10 Nov in the demo. Try \"I spent £35 on a shower filter today\" or \"Can I spend £20 on dinner tomorrow?\"",
     cards: ex.cards,
   });
-  set({ planCreatedAt: Date.now() });
+  set({ draft: '', planCreatedAt: Date.now() });
 }
 
 /** Keep the greeting in the history once the conversation starts (not sent to the model). */

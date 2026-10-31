@@ -1,14 +1,22 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { formatMoney, formatShortDate, itineraryBudget, occurrences } from '@/lib/engine';
+import { useMemo } from 'react';
+import { formatMoney, formatShortDate, occurrences } from '@/lib/engine';
 import type { EngineState, ISODate } from '@/lib/engine';
-import { getAppStore, useAppSnapshot } from '@/lib/store';
-import { resolveCategories, scheduleItinerary } from '@/lib/itinerary/schedule';
-import type { Answers, Catalog, CatalogRequest, CatalogResponse, ItineraryPrefs, Question } from '@/lib/itinerary/types';
+import { useAppSnapshot } from '@/lib/store';
+import type { Catalog, ItineraryPrefs, Question } from '@/lib/itinerary/types';
 import { IconBadge, WithIcon } from '@/components/ui/Value';
 import { BUCKET_ICON, BUCKET_LABEL } from '../calendar/shared';
 import { PrefsForm } from './PrefsForm';
-import { loadItinerary, markItineraryApply, saveItinerary, type ItineraryStore } from './storage';
+import {
+  answerItineraryQuestion,
+  buildItinerary,
+  replanItinerary,
+  resetItineraryToEven,
+  setItineraryEditing,
+  updateItineraryStore,
+  useItineraryUi,
+  type ItineraryStore,
+} from './storage';
 import { CalendarDays, ChevronDown, Globe, LoaderCircle, RotateCcw, Shuffle, Sparkles, type LucideIcon } from 'lucide-react';
 
 type BucketKey = 'groceries' | 'transport' | 'eatingOut' | 'shopping';
@@ -26,17 +34,6 @@ function progressSteps(p: ItineraryPrefs): string[] {
   if (p.treatsPerWeek > 0) out.push('Saving treat dinners for Fridays and paydays…');
   out.push('Spreading it across your days…');
   return out;
-}
-
-function answerQuestion(a: Answers, q: Question, yes: boolean): Answers {
-  const next: Answers = { owned: { ...a.owned }, disliked: [...a.disliked], liked: [...a.liked], droppedWants: [...a.droppedWants] };
-  if (q.kind === 'owned') next.owned[q.target] = yes;
-  else if (q.kind === 'likeRecipe') {
-    next.liked = next.liked.filter((x) => x !== q.target);
-    next.disliked = next.disliked.filter((x) => x !== q.target);
-    (yes ? next.liked : next.disliked).push(q.target);
-  } else if (!yes && !next.droppedWants.includes(q.target)) next.droppedWants.push(q.target);
-  return next;
 }
 
 const BUTTONS: Record<Question['kind'], [yes: string, no: string]> = {
@@ -59,94 +56,20 @@ function upcomingBills(state: EngineState, today: ISODate) {
 export function ItineraryPanel({ onShowCalendar }: { onShowCalendar?: () => void }) {
   const snap = useAppSnapshot();
   const { state, today } = snap;
-  const [store, setStore] = useState<ItineraryStore>(() => loadItinerary());
-  const [phase, setPhase] = useState<'idle' | 'loading'>('idle');
-  const [error, setError] = useState('');
-  const [step, setStep] = useState(0);
-  const [editing, setEditing] = useState(false);
-  const abort = useRef<AbortController | null>(null);
+  const { store, phase, error, step, editing } = useItineraryUi();
 
   const applied = !!state?.plannedPurchases.some((p) => p.source === 'itinerary');
   const steps = useMemo(() => progressSteps(store.prefs), [store.prefs]);
   const bills = useMemo(() => (state ? upcomingBills(state, today) : []), [state, today]);
 
-  useEffect(() => {
-    if (phase !== 'loading') return;
-    const t = window.setInterval(() => setStep((s) => s + 1), 2400);
-    return () => window.clearInterval(t);
-  }, [phase]);
-  useEffect(() => () => abort.current?.abort(), []);
-
-  const update = (next: ItineraryStore) => {
-    setStore(next);
-    saveItinerary(next);
+  const update = updateItineraryStore;
+  const replan = replanItinerary;
+  const build = () => {
+    void buildItinerary();
   };
-
-  /** Schedule locally from a catalog (no research) and apply it to the plan. */
-  const replan = (base: ItineraryStore, catalog: Catalog): boolean => {
-    if (!state) return false;
-    const start = today > state.profile.planStart ? today : state.profile.planStart;
-    const end = state.profile.horizonEnd;
-    if (start > end) {
-      setError('Your plan has already ended. Extend it in Settings to build a spending plan.');
-      return false;
-    }
-    try {
-      const b = itineraryBudget(state, today);
-      const result = scheduleItinerary({
-        catalog, prefs: base.prefs, answers: base.answers, start, end,
-        budgetPence: b.budgetPence, caps: b.caps, incomeDates: b.incomeDates,
-        categories: resolveCategories(state.profile.categories), seed: base.seed,
-      });
-      markItineraryApply();
-      const r = getAppStore().applyItinerary(result.purchases, 'itemised');
-      if (r && 'ok' in r && !r.ok) {
-        setError(r.error?.message ?? 'That plan does not fit right now.');
-        return false;
-      }
-      const { purchases: _omit, ...summary } = result;
-      void _omit;
-      update({ ...base, catalog, result: summary });
-      setError('');
-      return true;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not build the plan.');
-      return false;
-    }
-  };
-
-  const build = async () => {
-    abort.current?.abort();
-    const ctl = new AbortController();
-    abort.current = ctl;
-    const timer = window.setTimeout(() => ctl.abort(), 90_000);
-    setPhase('loading');
-    setStep(0);
-    setError('');
-    try {
-      const body: CatalogRequest = { prefs: store.prefs, today };
-      const res = await fetch('/api/itinerary', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
-      if (!res.ok) throw new Error(`The price lookup failed (${res.status}). Try again in a moment.`);
-      const data = (await res.json()) as CatalogResponse;
-      if (!data?.catalog?.products) throw new Error('The price lookup came back empty. Try again in a moment.');
-      if (replan({ ...store, answered: [] }, data.catalog)) setEditing(false);
-    } catch (e) {
-      if (ctl.signal.aborted && abort.current !== ctl) return;
-      setError(ctl.signal.aborted ? 'The price lookup took too long. Try again.' : e instanceof Error ? e.message : 'Something went wrong.');
-    } finally {
-      window.clearTimeout(timer);
-      if (abort.current === ctl) setPhase('idle');
-    }
-  };
-
-  const answer = (q: Question, yes: boolean) => {
-    if (!store.catalog) return;
-    replan({ ...store, answers: answerQuestion(store.answers, q, yes), answered: [...store.answered, q.id] }, store.catalog);
-  };
-  const resetToEven = () => {
-    markItineraryApply();
-    getAppStore().applyItinerary([], 'even');
-  };
+  const answer = answerItineraryQuestion;
+  const resetToEven = resetItineraryToEven;
+  const setEditing = setItineraryEditing;
 
   const res = applied ? store.result : null;
   const questions = (res?.questions ?? []).filter((q) => !store.answered.includes(q.id));
