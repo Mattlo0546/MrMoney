@@ -113,7 +113,7 @@ export function Stat({ icon, tone = 'primary', label, value, valueTestId, classN
         <IconBadge icon={icon} tone={tone} size="xs" />
         {label}
       </dt>
-      <dd data-testid={valueTestId} className="font-display text-xl lg:text-2xl font-extrabold tabular-nums tracking-tight">{value}</dd>
+      <dd data-testid={valueTestId} className="font-display text-xl xl:text-2xl font-extrabold tabular-nums tracking-tight">{value}</dd>
       {children}
     </div>
   );

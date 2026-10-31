@@ -144,79 +144,89 @@ export function MonthCalendar({
         <div className="ml-auto"><Legend /></div>
       </div>
       <div ref={gridRef} role="grid" aria-label={monthLabel(month)} className="flex min-h-0 flex-1 flex-col gap-1">
-        <div role="row" className="grid shrink-0 grid-cols-7 gap-1 text-[11px] font-bold uppercase tracking-wide text-muted">
-          {WEEKDAYS.map((w) => <div key={w} role="columnheader" className="px-1.5">{w}</div>)}
+        <div role="rowgroup" className="shrink-0">
+          <div role="row" className="grid grid-cols-7 gap-1 text-[11px] font-bold uppercase tracking-wide text-muted">
+            {WEEKDAYS.map((w) => <div key={w} role="columnheader" className="px-1.5">{w}</div>)}
+          </div>
         </div>
-        {weeks.map((week) => (
-          <div key={week[0]} role="row" className="grid min-h-0 flex-1 grid-cols-7 gap-1">
-            {week.map((d) => {
-              const info = data.days.get(d);
-              if (!info) return <div key={d} role="gridcell" aria-hidden className="h-full min-h-0 rounded-xl border border-line opacity-40" />;
-              const chips = chipsFor(info, preview.get(d));
-              const isToday = d === today;
-              const past = d < today;
-              const hint = info.inPlan && !past ? dayHint(info) : { buckets: [], headline: null };
-              const shown = chips.slice(0, hint.headline ? 1 : 2);
-              const outside = ymOf(d) !== month;
-              const deficit = info.deficits.length > 0;
-              const sel = d === selected;
-              const pv = previewDays.has(d);
-              const showTotal = info.inPlan && !past;
-              return (
-                <div key={d} role="gridcell" aria-selected={sel} className="flex min-h-0 min-w-0 flex-col">
-                  <button
-                    type="button"
-                    data-day={d}
-                    data-preview={pv || undefined}
-                    tabIndex={d === cursor ? 0 : -1}
-                    aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${info.savedPence > 0 ? `, discounted by ${money(info.savedPence)}` : ''}${hint.headline ? `, ${hint.buckets.map((b) => BUCKET_LABEL[b]).join(', ')}: ${hint.headline.label}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
-                    onClick={() => { setCursor(d); onSelect(d); }}
-                    onKeyDown={(e) => onKey(e, d)}
-                    className={`relative flex h-full min-h-0 flex-1 w-full flex-col gap-0.5 overflow-hidden rounded-xl border p-1.5 text-left transition-colors outline-none ${
-                      pv ? 'border-dashed border-accent-2 bg-accent-soft' : sel ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong hover:bg-surface-2'
-                    } ${pv ? 'border-2' : ''} ${past ? 'opacity-55' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
-                  >
-                    <span className="flex items-start justify-between gap-1">
-                      <span className={`text-xs font-bold ${isToday ? 'rounded-full bg-grad-primary px-1.5 shadow-glow' : outside || past ? 'text-muted' : 'text-text'}`}>{Number(d.slice(8))}</span>
-                      <span className="flex items-center gap-1">
-                        {info.savedPence > 0 && (
-                          <span
-                            title={info.dealLabels.length ? `Student deal: ${info.dealLabels.join(', ')}` : 'Student deal applied'}
-                            className="inline-flex items-center gap-0.5 rounded-full bg-grad-positive px-1 py-0.5 text-[9px] font-bold leading-none text-white"
-                          >
-                            <Tag aria-hidden="true" size={8} strokeWidth={2.6} />-{money(info.savedPence)}
+        <div
+          role="rowgroup"
+          className="grid min-h-0 flex-1 gap-1"
+          style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}
+        >
+          {weeks.map((week) => (
+            <div key={week[0]} role="row" className="grid h-full min-h-0 grid-cols-7 gap-1">
+              {week.map((d) => {
+                const info = data.days.get(d);
+                if (!info) return <div key={d} role="gridcell" aria-hidden className="h-full min-h-0 rounded-xl border border-line opacity-40" />;
+                const chips = chipsFor(info, preview.get(d));
+                const isToday = d === today;
+                const past = d < today;
+                const hint = info.inPlan && !past ? dayHint(info) : { buckets: [], headline: null };
+                const shown = chips.slice(0, hint.headline ? 1 : 2);
+                const outside = ymOf(d) !== month;
+                const deficit = info.deficits.length > 0;
+                const sel = d === selected;
+                const pv = previewDays.has(d);
+                const showTotal = info.inPlan && !past;
+                return (
+                  <div key={d} role="gridcell" aria-selected={sel} className="flex h-full min-h-0 min-w-0 flex-col">
+                    <button
+                      type="button"
+                      data-day={d}
+                      data-preview={pv || undefined}
+                      tabIndex={d === cursor ? 0 : -1}
+                      aria-label={`${d}${showTotal ? `, planned ${money(info.total)}` : ''}${info.savedPence > 0 ? `, discounted by ${money(info.savedPence)}` : ''}${hint.headline ? `, ${hint.buckets.map((b) => BUCKET_LABEL[b]).join(', ')}: ${hint.headline.label}` : ''}${chips.length ? `, ${chips.length} item${chips.length > 1 ? 's' : ''}` : ''}${deficit ? ', shortfall' : ''}${isToday ? ', today' : ''}${pv ? ', preview' : ''}`}
+                      onClick={() => { setCursor(d); onSelect(d); }}
+                      onKeyDown={(e) => onKey(e, d)}
+                      className={`relative flex h-full min-h-0 w-full flex-col justify-between overflow-hidden rounded-xl border p-1 text-left transition-colors outline-none sm:p-1.5 ${
+                        pv ? 'border-dashed border-accent-2 bg-accent-soft' : sel ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong hover:bg-surface-2'
+                      } ${pv ? 'border-2' : ''} ${past ? 'opacity-55' : ''} ${outside && !pv ? 'opacity-70' : ''}`}
+                    >
+                      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+                        <span className="flex shrink-0 items-start justify-between gap-1">
+                          <span className={`text-xs font-bold ${isToday ? 'rounded-full bg-grad-primary px-1.5 shadow-glow' : outside || past ? 'text-muted' : 'text-text'}`}>{Number(d.slice(8))}</span>
+                          <span className="flex items-center gap-1">
+                            {info.savedPence > 0 && (
+                              <span
+                                title={info.dealLabels.length ? `Student deal: ${info.dealLabels.join(', ')}` : 'Student deal applied'}
+                                className="inline-flex items-center gap-0.5 rounded-full bg-grad-positive px-1 py-0.5 text-[9px] font-bold leading-none text-white"
+                              >
+                                <Tag aria-hidden="true" size={8} strokeWidth={2.6} />-{money(info.savedPence)}
+                              </span>
+                            )}
+                            {deficit && <span role="img" aria-label="Shortfall" className="grid size-3.5 place-items-center rounded-full bg-grad-negative"><TriangleAlert aria-hidden="true" size={8} strokeWidth={2.8} /></span>}
+                          </span>
+                        </span>
+                        {hint.headline && (
+                          <span aria-hidden="true" title={hint.headline.label} className="flex min-w-0 items-center gap-1 text-[10px] font-semibold leading-tight text-muted">
+                            <span className="flex shrink-0 items-center gap-0.5 text-accent">
+                              {hint.buckets.slice(0, 3).map((b) => { const I = BUCKET_ICON[b]; return <I key={b} size={10} strokeWidth={2.4} />; })}
+                            </span>
+                            <span className="min-w-0 truncate">{stripPrefix(hint.headline.label)}</span>
                           </span>
                         )}
-                        {deficit && <span role="img" aria-label="Shortfall" className="grid size-3.5 place-items-center rounded-full bg-grad-negative"><TriangleAlert aria-hidden="true" size={8} strokeWidth={2.8} /></span>}
-                      </span>
-                    </span>
-                    {hint.headline && (
-                      <span aria-hidden="true" title={hint.headline.label} className="flex min-w-0 items-center gap-1 text-[10px] font-semibold leading-tight text-muted">
-                        <span className="flex shrink-0 items-center gap-0.5 text-accent">
-                          {hint.buckets.slice(0, 3).map((b) => { const I = BUCKET_ICON[b]; return <I key={b} size={10} strokeWidth={2.4} />; })}
+                        <span className="flex min-h-0 min-w-0 flex-col gap-0.5 overflow-hidden">
+                          {shown.map((c) => <Chip key={c.key} chip={c} compact />)}
+                          {chips.length > shown.length && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted"><Layers aria-hidden="true" size={9} strokeWidth={2.5} />+{chips.length - shown.length} more</span>}
                         </span>
-                        <span className="min-w-0 truncate">{stripPrefix(hint.headline.label)}</span>
-                      </span>
-                    )}
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      {shown.map((c) => <Chip key={c.key} chip={c} compact />)}
-                      {chips.length > shown.length && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted"><Layers aria-hidden="true" size={9} strokeWidth={2.5} />+{chips.length - shown.length} more</span>}
-                    </span>
-                    {showTotal && (
-                      <span className="mt-auto inline-flex flex-wrap items-baseline gap-1 text-xs lg:text-sm font-bold tabular-nums leading-none">
-                        <Wallet aria-hidden="true" size={11} strokeWidth={2.4} className={`shrink-0 ${info.savedPence > 0 ? 'text-pos' : 'text-accent'}`} />
-                        <span className={info.savedPence > 0 ? 'text-pos' : ''}>{money(info.total)}</span>
-                        {info.savedPence > 0 && (
-                          <span className="text-[10px] font-semibold text-muted line-through">{money(info.originalTotal)}</span>
-                        )}
-                      </span>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                      </div>
+                      {showTotal && (
+                        <span className="mt-auto shrink-0 inline-flex flex-wrap items-baseline gap-1 pt-0.5 text-xs lg:text-sm font-bold tabular-nums leading-none">
+                          <Wallet aria-hidden="true" size={11} strokeWidth={2.4} className={`shrink-0 ${info.savedPence > 0 ? 'text-pos' : 'text-accent'}`} />
+                          <span className={info.savedPence > 0 ? 'text-pos' : ''}>{money(info.total)}</span>
+                          {info.savedPence > 0 && (
+                            <span className="text-[10px] font-semibold text-muted line-through">{money(info.originalTotal)}</span>
+                          )}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
