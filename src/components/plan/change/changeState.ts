@@ -18,9 +18,26 @@ export type ChangeView =
   | { status: 'pending'; text: string }
   | { status: 'clarify'; question: string; missing: ClarifyField[]; originalText: string; source?: ParseSource }
   | { status: 'error'; message: string }
-  | { status: 'preview'; intent: Intent; source: ParseSource; pv: PreviewData; key: string; chosenOptionId: string | null }
-  | { status: 'applied'; intent: Intent; source: ParseSource; diff: ChangeSet; explanation: Explanation; changeId: number; noop: boolean }
+  | { status: 'preview'; intent: Intent; source: ParseSource; pv: PreviewData; key: string; chosenOptionId: string | null; userText: string; applying?: boolean }
+  | { status: 'applied'; intent: Intent; source: ParseSource; diff: ChangeSet; explanation: Explanation; changeId: number; noop: boolean; userText: string }
   | { status: 'undone' };
+
+/**
+ * TAB-SWITCHING SIGNAL (for the plan layout). Subscribe with `useChangeSignal()` (or `subscribeChange` +
+ * `getChangeSignal`). `revision` increments on EVERY view transition (pending, clarify, error, preview,
+ * applied, undone, dismissed), so an effect keyed on `revision` fires once per transition.
+ * `lastResultKind` is the status that transition produced: 'idle' | 'pending' | 'clarify' | 'error' |
+ * 'preview' | 'applied' | 'undone'. To make sure the user sees the answer, switch to the Change tab
+ * (and open the mobile sheet) whenever lastResultKind is one of 'pending' | 'clarify' | 'error' | 'preview'
+ * | 'applied' | 'undone'. The snapshot object is stable between transitions (safe for useSyncExternalStore).
+ */
+export interface ChangeSignal {
+  revision: number;
+  lastResultKind: ChangeView['status'];
+}
+let signal: ChangeSignal = { revision: 0, lastResultKind: 'idle' };
+export const getChangeSignal = (): ChangeSignal => signal;
+const IDLE_SIGNAL: ChangeSignal = { revision: 0, lastResultKind: 'idle' };
 
 let view: ChangeView = { status: 'idle' };
 let seq = 0;
@@ -29,6 +46,7 @@ const listeners = new Set<() => void>();
 
 function set(v: ChangeView) {
   view = v;
+  signal = { revision: signal.revision + 1, lastResultKind: v.status };
   listeners.forEach((l) => l());
 }
 export const getChangeView = (): ChangeView => view;
@@ -39,11 +57,18 @@ export function subscribeChange(l: () => void) {
   };
 }
 const IDLE: ChangeView = { status: 'idle' };
+export function useChangeSignal(): ChangeSignal {
+  return useSyncExternalStore(subscribeChange, getChangeSignal, () => IDLE_SIGNAL);
+}
 export function useChangeView(): ChangeView {
   return useSyncExternalStore(subscribeChange, getChangeView, () => IDLE);
 }
 
-const newKey = () => `ui-${Date.now().toString(36)}-${++keyCounter}`;
+/** A fresh idempotency key per submission (never reused, even across reloads). */
+const newKey = () => {
+  const rnd = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+  return `ui-${Date.now().toString(36)}-${++keyCounter}-${rnd}`;
+};
 const FRIENDLY = 'Something went wrong reading that, and nothing was changed. Please try again.';
 
 export function dismissChange() {
@@ -105,7 +130,7 @@ export async function submitText(rawText: string): Promise<boolean> {
     const aff = pv.affordability;
     const shortfall = !pv.ok && pv.error?.code === 'shortfall' && aff && !aff.fits;
     if (pv.ok || shortfall) {
-      set({ status: 'preview', intent, source, pv, key, chosenOptionId: null });
+      set({ status: 'preview', intent, source, pv, key, chosenOptionId: null, userText: text });
       return true;
     }
     if (!pv.ok && pv.needsClarification) {
@@ -116,10 +141,10 @@ export async function submitText(rawText: string): Promise<boolean> {
     return false;
   }
 
-  return commit(intent, source, key);
+  return commit(intent, source, key, text);
 }
 
-function commit(intent: Intent, source: ParseSource, key: string): boolean {
+function commit(intent: Intent, source: ParseSource, key: string, userText: string): boolean {
   const store = getAppStore();
   const out = store.apply(intent, key);
   if (!out.ok) {
@@ -132,10 +157,10 @@ function commit(intent: Intent, source: ParseSource, key: string): boolean {
   }
   const diff = out.diff ?? store.getSnapshot().lastDiff;
   if (!diff) {
-    set({ status: 'applied', intent, source, diff: null as unknown as ChangeSet, explanation: { facts: [], sentence: 'This change was already applied, so nothing changed.' }, changeId: out.changeId, noop: true });
+    set({ status: 'applied', intent, source, diff: null as unknown as ChangeSet, explanation: { facts: [], sentence: 'This change was already applied, so nothing changed.' }, changeId: out.changeId, noop: true, userText });
     return true;
   }
-  set({ status: 'applied', intent, source, diff, explanation: explain(diff), changeId: out.changeId, noop: out.noop });
+  set({ status: 'applied', intent, source, diff, explanation: explain(diff), changeId: out.changeId, noop: out.noop, userText });
   return true;
 }
 
@@ -154,15 +179,20 @@ export function chooseOption(id: string) {
   if (view.status === 'preview') set({ ...view, chosenOptionId: id });
 }
 
-export function applyPreview(): boolean {
+/** Shows "Applying…" briefly (so the click is acknowledged), then commits. */
+export async function applyPreview(): Promise<boolean> {
   const v = view;
-  if (v.status !== 'preview') return false;
+  if (v.status !== 'preview' || v.applying) return false;
   const aff = v.pv.affordability;
   const needsOption = !!aff && !aff.fits;
   if (needsOption && !v.chosenOptionId) return false;
   const intent: Intent =
     v.intent.kind === 'hypothetical' && needsOption ? { ...v.intent, tradeoffOptionId: v.chosenOptionId ?? undefined } : v.intent;
-  return commit(intent, v.source, v.key);
+  const mine = ++seq;
+  set({ ...v, applying: true });
+  await new Promise((r) => setTimeout(r, 220));
+  if (mine !== seq) return false;
+  return commit(intent, v.source, v.key, v.userText);
 }
 
 export function undoChange(): void {

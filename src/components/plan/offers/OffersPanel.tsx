@@ -1,9 +1,24 @@
 'use client';
 import { useMemo } from 'react';
+import type { OfferContext } from '@/lib/offers';
 import { matchOffers } from '@/lib/offers';
 import { useAppSnapshot } from '@/lib/store';
 import { MotionStyles } from '../change/motion';
 import { dayLabel } from '../change/format';
+
+/** G1: onboarding extras from localStorage (never throws). Demo students default to London. */
+function readContext(demo: boolean): OfferContext {
+  let ex: { city?: unknown; memberships?: unknown; diet?: unknown } = {};
+  try {
+    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('studentplan.onboardingExtras') : null;
+    if (raw) ex = JSON.parse(raw) ?? {};
+  } catch {
+    ex = {};
+  }
+  const strs = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string') : []);
+  const city = typeof ex.city === 'string' && ex.city.trim() ? ex.city.trim() : demo ? 'London' : undefined;
+  return { area: city, memberships: strs(ex.memberships), diet: strs(ex.diet) };
+}
 
 export function OffersPanel() {
   const snap = useAppSnapshot();
@@ -15,8 +30,8 @@ export function OffersPanel() {
     const planned = state.plan.allocations
       .filter((a) => a.day >= today)
       .map((a) => ({ category: a.category, plannedPence: a.planned.pence }));
-    return matchOffers(planned, {});
-  }, [state, today]);
+    return matchOffers(planned, readContext(snap.demoActive));
+  }, [state, today, snap.demoActive]);
 
   return (
     <div className="spc flex flex-col gap-3">

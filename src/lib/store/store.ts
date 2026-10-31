@@ -3,13 +3,13 @@ import {
   applyIntent, canUndo, commit, computeDiff, createUndoStack, demoFixture, ensurePlan, generatePlan, previewIntent, undo as engineUndo,
   validateState,
 } from '@/lib/engine';
-import type { ApplyResult, ChangeSet, Commitment, EngineState, Income, Intent, ISODate, Profile, Transaction } from '@/lib/engine';
+import type { Affordability, ApplyResult, ChangeSet, Commitment, EngineState, Income, Intent, ISODate, Profile, Transaction } from '@/lib/engine';
 type UndoStack = ReturnType<typeof createUndoStack>;
 import {
   clearPersisted, emptyPersisted, loadPersisted, savePersisted, type LoadStatus, type PersistedV1, type StorageAdapter,
 } from './storage';
 
-export type PreviewResult = ApplyResult & { intent: Intent; today: ISODate };
+export type PreviewResult = ApplyResult & { intent: Intent; today: ISODate; affordability?: Affordability };
 
 export interface AppSnapshot {
   hydrated: boolean;

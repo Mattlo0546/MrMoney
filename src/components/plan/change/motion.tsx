@@ -2,7 +2,7 @@
 export const SCOPE = 'spc';
 
 const CSS = `
-.spc{--c-bg:var(--bg,#0B0C1F);--c-surface:var(--surface,#16183A);--c-surface2:var(--surface-2,#20235A);--c-line:var(--line,#2C3070);
+.spc{--c-bg:var(--bg,#0B0C1F);--c-surface:var(--surface,#16183A);--c-surface2:var(--surface-2,#20235A);--c-surface-2:var(--surface-2,#20235A);--c-lime-fill:var(--lime-fill,#C8F53C);--c-line:var(--line,#2C3070);
 --c-text:var(--text,#F5F5FA);--c-muted:var(--muted,#A3A6D1);--c-accent:var(--accent,#3D5AFE);--c-accent-ink:var(--accent-ink,#fff);
 --c-lime:var(--lime,#C8F53C);--c-coral:var(--coral,#FF5A5F);--c-navy:var(--navy,#1B1F5E);color:var(--c-text)}
 .spc *{box-sizing:border-box}
