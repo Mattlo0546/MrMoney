@@ -11,6 +11,7 @@
  *   neg      rose → red        shortfalls, over budget, destructive
  *
  * Every gradient's lightest stop keeps white text at ≥ 4.5:1 (WCAG AA body text).
+ * The page itself is pure white (--bg); cards separate with a hairline border and a very soft shadow.
  * The old dark/lime look (--lime, --lime-fill, --coral, --navy, --c-*) has been removed; use these tokens only.
  */
 :root {
