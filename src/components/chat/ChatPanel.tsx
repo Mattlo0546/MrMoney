@@ -10,7 +10,7 @@ import { ChatCard } from './ChatCards';
 import { addOpening, newChat, sendMessage, startDemoLocal, useChat } from './chatStore';
 import { PHASE_LABEL } from './model';
 
-const SETUP_CHIPS = ['I have £3,900 until 31 Jan', 'Try a demo student'];
+const SETUP_CHIPS = ['£1,200 a month, rent £700, brokie 🍜', 'Try a demo student'];
 const PLAN_CHIPS = [
   { label: 'I spent £…', stub: 'I spent £' },
   { label: 'Can I spend £…', stub: 'Can I spend £' },
@@ -78,7 +78,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
 
   const opening = hasPlan
     ? 'Tell me what changed: "I spent £12 on lunch", "Can I spend £40 on Saturday?", or ask me to find a better savings rate.'
-    : "Hey! Tell me about your money and I'll build your plan. How much do you have, and how long does it need to last?";
+    : "Hey! Three questions and I'll do all the maths. First up: how much money comes in each month?";
   const send = (value: string) => {
     const v = value.trim();
     if (!v || chat.busy) return;
@@ -202,7 +202,7 @@ export function ChatPanel({ variant, header, onShowDeals, autoFocus }: ChatPanel
                 send(text);
               }
             }}
-            placeholder={hasPlan ? 'Tell me what changed…' : 'e.g. I have £3,900 to last until 31 Jan, rent £620 on the 1st'}
+            placeholder={hasPlan ? 'Tell me what changed…' : 'e.g. £1,200 a month, rent £700, living like a brokie'}
             className={`max-h-40 min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 focus-visible:outline-none text-(--c-text) outline-none placeholder:text-(--c-muted) ${welcome ? 'text-lg' : 'text-base'}`}
           />
           <button

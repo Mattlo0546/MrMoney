@@ -24,17 +24,19 @@ describe('system prompt: D17 committed vs hypothetical spending', () => {
 });
 
 describe('system prompt: style and context', () => {
-  it('asks for 1–2 sentences and engine-style money, and formats context money without ".00"', () => {
+  it('asks for a lead line plus bullets and engine-style money, and formats context money without ".00"', () => {
     const sys = systemPrompt(ctx);
-    expect(sys).toMatch(/1–2 short sentences/);
+    expect(sys).toMatch(/2–4 bullets/);
     expect(sys).toContain('never "£35.00"');
     expect(sys).toContain('today allowance £25.84');
     expect(sys).toContain('planned savings £150');
     expect(sys.replace('never "£35.00"', '')).not.toMatch(/£\d+\.00\b/);
   });
-  it('setup: sets up straight away when funds and end date are known, otherwise asks ONE question', () => {
+  it('setup: asks only income, rent and lifestyle (one at a time), then calls quick_plan', () => {
     const sys = systemPrompt({ today: '2026-10-31', demoMode: false, hasPlan: false });
-    expect(sys).toMatch(/If the first message has both, call setup_plan straight away/);
-    expect(sys).toMatch(/ask_user with ONE short question/);
+    expect(sys).toMatch(/exactly THREE things/);
+    expect(sys).toMatch(/ONE per turn/);
+    expect(sys).toMatch(/As soon as you have all three, call quick_plan/);
+    expect(sys).not.toMatch(/setup_plan/);
   });
 });

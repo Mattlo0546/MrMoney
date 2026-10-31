@@ -4,6 +4,7 @@ import { contentsFromMessages, runChat, type LoopDeps } from './loop';
 import { decodeState, encodeState } from './state';
 import { geminiResponse, hangingFetch, scriptedFetch } from './testkit';
 import type { ChatRequest, ChatResponse, ResearchResult } from './types';
+import { FALLBACK_DEALS } from '@/lib/lifestyle/fallback';
 
 const SECRET = 'test-secret';
 const ctx = { today: '2026-10-31', demoMode: false, hasPlan: false };
@@ -337,8 +338,12 @@ describe('model request shape', () => {
     await runChat(req('hi'), deps(f.impl));
     await runChat({ messages: [{ role: 'user', text: 'hi' }], context: { today: '2026-11-10', demoMode: false, hasPlan: true } }, deps(f.impl));
     const names = (i: number) => ((f.calls[i].body.tools as { functionDeclarations: { name: string }[] }[])[0].functionDeclarations).map((d) => d.name);
-    expect(names(0)).toEqual(['setup_plan', 'start_demo', 'research', 'ask_user']);
+    expect(names(0)).toEqual(['quick_plan', 'start_demo', 'research', 'ask_user']);
     expect(names(1)).not.toContain('setup_plan');
+    expect(names(1)).toContain('quick_plan');
+    // The model never sees (or sends) the server-attached menu.
+    const qp = (f.calls[0].body.tools as { functionDeclarations: { name: string; parametersJsonSchema: { properties: object } }[] }[])[0].functionDeclarations[0];
+    expect(Object.keys(qp.parametersJsonSchema.properties)).toEqual(['monthlyIncomePence', 'monthlyRentPence', 'lifestyle']);
     expect(names(1)).toContain('record_expense');
     expect(f.calls[0].body.generationConfig).toMatchObject({ maxOutputTokens: 2048 });
   });
@@ -376,5 +381,37 @@ describe('contentsFromMessages', () => {
     expect(c.map((x) => x.role)).toEqual(['user', 'model', 'user']);
     expect(c[1].parts[0].text).toContain('ref r-1-0');
     expect(c[2].parts).toHaveLength(2);
+  });
+});
+
+describe('runChat: quick_plan', () => {
+  const MENU = { deals: FALLBACK_DEALS, live: false };
+  const QP = { monthlyIncomePence: 150000, monthlyRentPence: 90000, lifestyle: 'brokie' };
+
+  it('attaches the researched menu to the client call and shows the food prices as a card', async () => {
+    const lifestyleMenu = vi.fn(async () => ({ menu: MENU, savingsResearch: null }));
+    const f = scriptedFetch([() => geminiResponse([{ functionCall: { name: 'quick_plan', args: { ...QP, menu: 'ignored' }, id: 'q1' }, thoughtSignature: 's' }])]);
+    const status: string[] = [];
+    const r = asCalls(await runChat(req('£1500 a month, rent £900, brokie'), deps(f.impl, { lifestyleMenu, onStatus: (s) => status.push(s.label) })));
+    expect(lifestyleMenu).toHaveBeenCalledWith('brokie', expect.objectContaining({ today: '2026-10-31' }));
+    expect(r.calls).toEqual([{ id: 'q1', name: 'quick_plan', args: { ...QP, menu: MENU } }]);
+    expect(r.cards[0]).toMatchObject({ type: 'research_results', topic: 'cheap_food', sample: true });
+    expect(status).toContain('Hunting down the cheapest meal deals…');
+  });
+
+  it('lets the model write the reply, and falls back to a template with the same figures when it is slow', async () => {
+    const lifestyleMenu = vi.fn(async () => ({ menu: MENU, savingsResearch: null }));
+    const f1 = scriptedFetch([() => geminiResponse([{ functionCall: { name: 'quick_plan', args: QP, id: 'q1' }, thoughtSignature: 's' }])]);
+    const r1 = asCalls(await runChat(req('x'), deps(f1.impl, { lifestyleMenu })));
+    const result = { created: true, numbers: { lifestyle: 'brokie', savingsPerMonthPence: 36579, savingsPerYearPence: 438948, foodPerMonthPence: 23421, cheapestMealDeal: { merchant: 'Tesco', pricePence: 385 } } };
+    const toolResults = [{ id: 'q1', name: 'quick_plan' as const, ok: true, result }];
+    const f2 = scriptedFetch([() => geminiResponse([{ text: 'Congrats!' }])]);
+    expect(await runChat(req('x', { toolResults, modelState: r1.modelState }), deps(f2.impl))).toMatchObject({ kind: 'reply', text: 'Congrats!' });
+    const r3 = await runChat(req('x', { toolResults, modelState: r1.modelState }), deps(hangingFetch, { timeoutMs: 50, hedgeAfterMs: 1000 }));
+    expect(r3).toMatchObject({ kind: 'reply', phase: 'done' });
+    if (r3.kind === 'reply') {
+      expect(r3.text).toContain('Two Tesco meal deals a day (£3.85 each) and you save £365.79 a month');
+      expect(r3.text).toContain('• Saved after a year: £4,389.48');
+    }
   });
 });

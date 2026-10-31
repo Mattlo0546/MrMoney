@@ -2,13 +2,15 @@
 import { z } from 'zod';
 import { CHAT_MODEL, CHAT_TIMEOUT_MS, GeminiError, generateContent, hedge, visibleText, type GeminiContent, type GeminiPart } from './gemini';
 import { systemPrompt } from './prompt';
-import { replyFromResearch, replyFromToolResults } from './replies';
+import { findLifestyleMenu, type MenuDeps } from '@/lib/lifestyle/research';
+import type { LifestyleMenu } from '@/lib/lifestyle/types';
+import { quickPlanReply, replyFromResearch, replyFromToolResults } from './replies';
 import { researchForModel, runResearch, type ResearchDeps } from './research';
 import { decodeState, encodeState, type ModelState, type PendingCall } from './state';
 import { functionDeclarations } from './tools';
 import {
-  AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, CONFIRM_TOOLS, MAX_LOOP_STEPS, ResearchArgsSchema,
-  type Card, type ChatMessage, type ChatRequest, type ChatResponse, type ClientToolCall, type ClientToolName, type ResearchResult,
+  AskUserArgsSchema, CLIENT_TOOL_SCHEMAS, CONFIRM_TOOLS, MAX_LOOP_STEPS, QuickPlanArgsSchema, ResearchArgsSchema,
+  RESEARCH_LABEL, SAMPLE_LABEL, type Card, type ChatMessage, type ChatRequest, type ChatResponse, type ClientToolCall, type ClientToolName, type ResearchResult,
 } from './types';
 
 export type StatusFn = (s: { phase: 'thinking' | 'researching'; label: string; step: number }) => void;
@@ -32,6 +34,8 @@ export interface LoopDeps {
   hedgeAfterMs?: number;
   /** Build replies from tool results without another model call when possible (default true). */
   directReplies?: boolean;
+  /** quick_plan's food-price and savings research (default findLifestyleMenu). */
+  lifestyleMenu?: typeof findLifestyleMenu;
 }
 
 /**
@@ -92,6 +96,19 @@ function friendlyModelError(e: unknown): string {
   if (e instanceof GeminiError && e.timeout) return 'Sorry, that took too long. Please try again.';
   if (e instanceof GeminiError && e.status === 429) return 'I\'m a bit busy right now. Please try again in a moment.';
   return 'Sorry, I couldn\'t reach the assistant just now. Your plan is safe; please try again.';
+}
+
+/** The food prices quick_plan used, shown as a cited research card. */
+function foodDealsResult(menu: LifestyleMenu, nowMs: number): ResearchResult {
+  const items = [...menu.deals].sort((a, b) => Number(b.kind === 'meal_deal') - Number(a.kind === 'meal_deal') || a.pricePence - b.pricePence).slice(0, 6);
+  return {
+    topic: 'cheap_food', query: 'cheapest meal deals and food prices',
+    items: items.map((d) => ({
+      ref: d.id, provider: d.merchant, product: d.name, headline: `£${(d.pricePence / 100).toFixed(2)}${d.condition ? ` (${d.condition})` : ''}`,
+      conditions: d.origin === 'catalogue' ? ['Estimated price; check in store'] : [], sourceUrl: d.url, sourceTitle: d.sourceTitle ?? d.domain ?? d.merchant,
+    })),
+    retrievedAt: new Date(nowMs).toISOString(), sample: !menu.live, label: menu.live ? RESEARCH_LABEL : SAMPLE_LABEL,
+  };
 }
 
 export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatResponse> {
@@ -182,6 +199,8 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
         return { kind: 'reply', text, cards, phase: 'done' };
       }
       // The client already applied its tools successfully: don't turn a slow summary into an error.
+      const quick = continuedAfterClientSuccess && step === firstStep ? req.toolResults!.find((r) => r.name === 'quick_plan') : undefined;
+      if (quick) return { kind: 'reply', text: quickPlanReply(quick.result), cards, phase: 'done' };
       if (continuedAfterClientSuccess && step === firstStep) {
         const previewsOnly = req.toolResults!.every((r) => CONFIRM_TOOLS.includes(r.name));
         const text = previewsOnly
@@ -205,7 +224,22 @@ export async function runChat(req: ChatRequest, deps: LoopDeps): Promise<ChatRes
       const id = call.id || `c${step}-${index}`;
       const name = call.name;
       const args = call.args ?? {};
-      if (name in CLIENT_TOOL_SCHEMAS) {
+      if (name === 'quick_plan') {
+        const parsed = QuickPlanArgsSchema.safeParse(args);
+        if (!parsed.success) {
+          pending.push({ index, id, name, response: fnResponse(name, call.id, { ok: false, error: `Invalid arguments: ${issuesText(parsed.error)}. Ask the user for the missing or correct detail.` }) });
+          continue;
+        }
+        deps.onStatus?.({ phase: 'researching', label: parsed.data.lifestyle === 'brokie' ? 'Hunting down the cheapest meal deals…' : 'Pricing up your lifestyle…', step });
+        const menuDeps: MenuDeps = { apiKey, fetchImpl: deps.fetchImpl, today, ...(deps.research ? { research: deps.research } : {}) };
+        const { menu, savingsResearch } = await (deps.lifestyleMenu ?? findLifestyleMenu)(parsed.data.lifestyle, menuDeps);
+        cards.push({ id: cardId('research'), type: 'research_results', actions: [], ...foodDealsResult(menu, now()) });
+        if (savingsResearch && !savingsResearch.sample && savingsResearch.items.length) {
+          cards.push({ id: cardId('research'), type: 'research_results', actions: [{ kind: 'use_rate_in_projections' }], ...savingsResearch });
+        }
+        pending.push({ index, id, name, client: 'quick_plan' });
+        clientArgs.set(id, { ...parsed.data, menu });
+      } else if (name in CLIENT_TOOL_SCHEMAS) {
         const tool = name as ClientToolName;
         const parsed = CLIENT_TOOL_SCHEMAS[tool].safeParse(args);
         if (!parsed.success) {
