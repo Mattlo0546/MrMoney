@@ -6,6 +6,7 @@ Usage (run with `python3 -I`):
       -> writes sketches/raw/<slug>-a<N>.png (+ .prompt.txt)
   gen_sketches.py process <slug> <raw-png>
       -> writes sketches/<slug>.png (1280x960, transparent) and <slug>.webp
+  (add `--style v1` to any command for the original pencil set in sketches/v1-pencil; default is v2 Cleo-inspired)
   gen_sketches.py contact
       -> writes sketches/contact-sheet.png
 
@@ -25,13 +26,36 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 HERE = os.path.dirname(os.path.abspath(__file__))
 DESIGN = os.path.dirname(HERE)
 ROOT = os.path.dirname(os.path.dirname(DESIGN))
-OUT = os.path.join(DESIGN, "sketches")
+VARIANT = "v1" if "--style" in sys.argv and sys.argv[sys.argv.index("--style") + 1] == "v1" else "v2"
+if "--style" in sys.argv:  # strip so positional parsing is unaffected
+    _i = sys.argv.index("--style")
+    del sys.argv[_i:_i + 2]
+OUT = os.path.join(DESIGN, "sketches", "v1-pencil") if VARIANT == "v1" else os.path.join(DESIGN, "sketches")
 RAW = os.path.join(OUT, "raw")
 MODEL = "gemini-nano-banana-2.1"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 ACCENT = (0xE9, 0xB8, 0x72)  # design.md pale ochre wash
 
-STYLE = (
+# ---- v2 (D15): Cleo-inspired bold playful style. Default. Use `--style v1` for the pencil set.
+PALETTE = {"navy": "#1B1F5E", "deep": "#12144A", "blue": "#3D5AFE", "coral": "#FF5A5F", "lime": "#C8F53C", "white": "#FFFFFF"}
+KEY = (255, 0, 255)  # magenta chroma background
+
+STYLE_V2 = (
+    "A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, "
+    "soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look "
+    "tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. "
+    "STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker "
+    "#12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. "
+    "Use coral and lime sparingly for the focal object and one small detail. "
+    "Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous "
+    "margins on all sides, one cluster of 2 to 3 objects at the same scale. "
+    "Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow "
+    "on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. "
+    "Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. "
+    "No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape."
+)
+
+STYLE_V1 = (
     "A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. "
     "Loose but confident sketch lines with visible pencil texture and slightly varied line weight, "
     "light diagonal cross-hatching for shading, a few construction lines left in. "
@@ -46,6 +70,7 @@ STYLE = (
     "anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. "
     "No people's faces. 4:3 landscape."
 )
+STYLE = STYLE_V1 if VARIANT == "v1" else STYLE_V2
 
 # slug -> (subject, focal object for the ochre accent)
 STEPS = {
@@ -101,6 +126,22 @@ STEPS = {
 }
 ORDER = list(STEPS)
 
+# v2 subjects, same step mapping; focal object takes the coral/lime accent.
+STEPS_V2 = {
+    "welcome": ("A chunky mug of tea with soft steam, a small round potted plant, and a folded map with a tiny paper plane resting on it.", "the paper plane (coral) and the plant leaves (lime)"),
+    "funds": ("A fat glass jar half full of chunky coins next to a blank envelope.", "the coins (lime) with a coral envelope flap"),
+    "last-until": ("A chunky wall calendar page with a blank grid of empty rounded squares (no numbers), one square circled in coral, and a small suitcase standing in front.", "the coral circle on the calendar and the suitcase (lime)"),
+    "job": ("A café apron hanging on a small counter with a coffee cup beside a blank clipboard.", "the apron (coral) and the cup (lime)"),
+    "other-income": ("A small opened parcel box with tissue paper peeking out and a blank greeting card leaning on it.", "the tissue paper (coral) and the card (lime)"),
+    "rent": ("A chunky front door of a terraced house with a big key hanging on a hook beside it and a doormat.", "the key (lime) and the door (coral)"),
+    "reserve": ("A closed folded umbrella leaning on a small locked tin box with a padlock.", "the umbrella (coral) and the padlock (lime)"),
+    "savings": ("A small seedling with two big leaves growing out of a mug of soil.", "the leaves (lime) and a coral mug band"),
+    "food-transport": ("A canvas tote bag full of groceries (baguette, leafy greens, apples), a blank travel pass card and a small bicycle bell.", "the apples (coral) and the greens (lime)"),
+    "priorities": ("Three chunky notebooks stacked and slightly offset with a ribbon bookmark poking out and a pencil across the stack.", "the ribbon bookmark (coral) and the pencil (lime)"),
+}
+if VARIANT == "v2":
+    STEPS = STEPS_V2
+
 
 def api_key():
     k = os.environ.get("GEMINI_API_KEY")
@@ -117,6 +158,12 @@ def api_key():
 
 def build_prompt(slug, note=None, with_ref=False):
     subject, focal = STEPS[slug]
+    if VARIANT == "v2":
+        p = f"{STYLE}\n\nSubject: {subject}\nAccent colours go on: {focal}."
+        if with_ref:
+            p = ("Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, "
+                 "same camera angle, same scale and same flat magenta background. Do NOT copy its subject.\n\n" + p)
+        return p + ("\n" + note if note else "")
     p = f"{STYLE}\n\nSubject: {subject}\nOchre accent only on: {focal}."
     if with_ref:
         p = (
@@ -170,7 +217,40 @@ def generate(slug, ref=None, note=None):
     print(out)
 
 
+def process_v2(slug, raw):
+    import numpy as np
+    from PIL import ImageFilter
+    im = Image.open(raw).convert("RGB")
+    im = ImageOps.pad(im, (1280, 960), color=KEY)
+    a = np.asarray(im).astype(np.float32)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    m = np.minimum(r, b) - g  # magenta-ness
+    alpha = 1.0 - np.clip((m - 70) / 110.0, 0, 1)
+    al = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8))
+    alpha = np.asarray(al).astype(np.float32) / 255.0
+    edge = alpha < 0.999
+    lim = g + 60
+    r2 = np.where(edge, np.minimum(r, lim), r)
+    b2 = np.where(edge, np.minimum(b, lim), b)
+    rgb = np.stack([r2, g, b2], -1)
+    out = Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    dst = os.path.join(OUT, slug + ".png")
+    out.save(dst, optimize=True)
+    print(dst, os.path.getsize(dst))
+    webp = os.path.join(OUT, slug + ".webp")
+    tmp = os.path.join(OUT, "raw", "_t.png")
+    out.save(tmp)
+    for q, aq in ((90, 90), (85, 90), (80, 90), (75, 90), (70, 90), (65, 90), (60, 90), (50, 80), (40, 60), (30, 40), (20, 30)):
+        subprocess.run(["cwebp", "-quiet", "-q", str(q), "-alpha_q", str(aq), "-m", "6", tmp, "-o", webp], check=True)
+        if os.path.getsize(webp) <= 40 * 1024:
+            break
+    os.remove(tmp)
+    print(webp, os.path.getsize(webp), f"q={q}")
+
+
 def process(slug, raw):
+    if VARIANT == "v2":
+        return process_v2(slug, raw)
     im = Image.open(raw).convert("RGB")
     # Fit into 4:3 at 1280x960 on white, keeping the whole drawing.
     im = ImageOps.pad(im, (1280, 960), color=(255, 255, 255))
@@ -228,7 +308,32 @@ def encode_webp(slug, rgba):
     print(webp, os.path.getsize(webp), f"levels={levels} q={q}")
 
 
+def contact_v2():
+    cols, tw, th, pad, lab = 5, 360, 270, 20, 30
+    slugs = [s for s in ORDER if os.path.exists(os.path.join(OUT, s + ".png"))]
+    rows = 2 * ((len(slugs) + cols - 1) // cols)
+    W = cols * (tw + pad) + pad
+    H = rows * (th + lab + pad) + pad
+    sheet = Image.new("RGB", (W, H), (0x80, 0x80, 0x80))
+    d = ImageDraw.Draw(sheet)
+    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 20)
+    for i, s in enumerate(slugs):
+        im = Image.open(os.path.join(OUT, s + ".png")).resize((tw, th), Image.LANCZOS)
+        for k, bg in enumerate(((0x0F, 0x10, 0x24), (0xF5, 0xF5, 0xFA))):
+            x = pad + (i % cols) * (tw + pad)
+            y = pad + ((i // cols) * 2 + k) * (th + lab + pad)
+            tile = Image.new("RGB", (tw, th), bg)
+            tile.paste(im, (0, 0), im)
+            sheet.paste(tile, (x, y))
+            d.text((x, y + th + 4), f"{i + 1}. {s} ({'dark' if k == 0 else 'light'})", fill=(255, 255, 255), font=font)
+    dst = os.path.join(OUT, "contact-sheet.png")
+    sheet.save(dst)
+    print(dst)
+
+
 def contact():
+    if VARIANT == "v2":
+        return contact_v2()
     cols, tw, th, pad, lab = 4, 480, 360, 24, 36
     slugs = [s for s in ORDER if os.path.exists(os.path.join(OUT, s + ".png"))]
     rows = (len(slugs) + cols - 1) // cols

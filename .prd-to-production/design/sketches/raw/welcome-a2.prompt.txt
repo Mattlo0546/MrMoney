@@ -1,0 +1,8 @@
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
+
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
+
+Subject: A chunky mug of tea with soft steam, a small round potted plant, and a folded map with a tiny paper plane resting on it.
+Accent colours go on: the paper plane (coral) and the plant leaves (lime).
+Centre the whole group in the frame. Tea must be navy/blue only, no brown. Steam as simple white or blue swirls.
+[style reference: savings-a1.png]

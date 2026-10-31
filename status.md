@@ -8,11 +8,12 @@ _Updated by the orchestrator at every step. Newest entry first._
   - Brief: ✅ approved (v2).
   - Design: 🔁 redo. Mockups v1 rejected; new Cleo-inspired direction (D15).
   - Build: 🔒 locked.
-- **Branch:** `prd/studentplan`. Nothing committed yet.
+- **Branch:** `prd/studentplan`. Last commit `071acf5` (local; engine excluded, still in progress).
 
 ## Agents
 | Agent | Role | Task | State |
 |---|---|---|---|
+| illustrator-v2 (Sonnet) | Creative | Regenerate the 10 onboarding illustrations in the bold, playful Cleo-inspired style (v1 kept in `sketches/v1-pencil/`) | ✅ done: palette navy #1B1F5E, blue #3D5AFE, coral #FF5A5F, lime #C8F53C |
 | research ×5 (other session) | Research | Integrations: MCP vs API vs scrape | ✅ done → `.prd-to-production/research/integrations.md` |
 | prd-reviewer | Review | Independent loss/invention audit of brief v2 against sources | ✅ done: 30 findings, all applied |
 | architect | Planning / architecture | Draft `architecture.md` | ✅ done (12 invariants I1–I12, module seams, pipeline diagram) |
@@ -23,6 +24,8 @@ _Updated by the orchestrator at every step. Newest entry first._
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: v2 illustrations done (bold, playful). Weak contrast for navy bodies on dark backgrounds; the v2 mockups should put them on a lighter card or use a lighter dark background.
+- 2026-10-31: Committed `071acf5` (PRD, docs, sketches v1, mockups v1, scaffold). Illustrations being regenerated in the new style.
 - 2026-10-31: User rejected mockups v1 as too plain. New direction: Cleo-inspired, sleek and playful (D15). Open: keep or drop the pencil sketches; three numeric questions (dinner from groceries, overspend source, repeated chips) still unanswered.
 - 2026-10-31: Scaffold done (Next 16.4.3, Tailwind 4.3, Vitest 5, Playwright 1.64 reusing the local Chromium). `skills/` excluded from lint/typecheck.
 - 2026-10-31: Mockups done (47 images, spec.md §7 worked numbers). Engine agent told to reconcile with spec §7.

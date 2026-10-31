@@ -1,139 +1,140 @@
-# Onboarding sketches
+# Onboarding illustrations v2 (D15, Cleo-inspired, bold and playful)
 
-Generated with `gemini-nano-banana-2.1` by `../tools/gen_sketches.py`. Every step after `savings` was generated with `raw/savings-a1.png` as a style reference. Outputs are transparent PNG (1280×960) and WebP (≤40KB) in this folder. Raw generations and their exact prompts are in `raw/`. `contact-sheet.png` shows them all.
+Palette (hex): navy `#1B1F5E` (object body), deep `#12144A` (shadow side), electric blue `#3D5AFE`, hot coral `#FF5A5F`, lime `#C8F53C`, white `#FFFFFF` highlights. Generated on flat magenta `#FF00FF`, keyed to transparent. Works on `#0F1024` and `#F5F5FA` (see `contact-sheet.png`).
 
-| # | Step slug | Files | Attempts | Chosen raw | PNG / WebP bytes |
+Generated with `gemini-nano-banana-2.1` by `../tools/gen_sketches.py` (default style v2; `--style v1` reproduces the pencil set in `v1-pencil/`). `raw/savings-a1.png` was the style reference for every other slug. Outputs: transparent PNG 1280x960 and WebP (<=40KB).
+
+| # | Slug | Files | Attempts | Chosen raw | PNG / WebP bytes |
 |---|---|---|---|---|---|
-| 1 | `welcome` | `welcome.png`, `welcome.webp` | 1 | `raw/welcome-a1.png` | 353310 / 39266 |
-| 2 | `funds` | `funds.png`, `funds.webp` | 1 | `raw/funds-a1.png` | 271209 / 35816 |
-| 3 | `last-until` | `last-until.png`, `last-until.webp` | 1 | `raw/last-until-a1.png` | 259272 / 28596 |
-| 4 | `job` | `job.png`, `job.webp` | 2 | `raw/job-a2.png` | 300431 / 40470 |
-| 5 | `other-income` | `other-income.png`, `other-income.webp` | 1 | `raw/other-income-a1.png` | 257614 / 35594 |
-| 6 | `rent` | `rent.png`, `rent.webp` | 2 | `raw/rent-a2.png` | 209328 / 33046 |
-| 7 | `reserve` | `reserve.png`, `reserve.webp` | 1 | `raw/reserve-a1.png` | 322051 / 38990 |
-| 8 | `savings` | `savings.png`, `savings.webp` | 1 | `raw/savings-a1.png` | 202184 / 31794 |
-| 9 | `food-transport` | `food-transport.png`, `food-transport.webp` | 1 | `raw/food-transport-a1.png` | 386449 / 40740 |
-| 10 | `priorities` | `priorities.png`, `priorities.webp` | 1 | `raw/priorities-a1.png` | 265115 / 39620 |
-
-`welcome` and `other-income` are additions to design.md §6's eight subjects, so that every R-onboard step has a sketch.
+| 1 | `welcome` | `welcome.png`, `welcome.webp` | 2 | `raw/welcome-a2.png` | 808827 / 31516 |
+| 2 | `funds` | `funds.png`, `funds.webp` | 1 | `raw/funds-a1.png` | 781142 / 40684 |
+| 3 | `last-until` | `last-until.png`, `last-until.webp` | 2 | `raw/last-until-a2.png` | 715088 / 38450 |
+| 4 | `job` | `job.png`, `job.webp` | 1 | `raw/job-a1.png` | 713478 / 34806 |
+| 5 | `other-income` | `other-income.png`, `other-income.webp` | 1 | `raw/other-income-a1.png` | 743696 / 37380 |
+| 6 | `rent` | `rent.png`, `rent.webp` | 1 | `raw/rent-a1.png` | 768267 / 40282 |
+| 7 | `reserve` | `reserve.png`, `reserve.webp` | 1 | `raw/reserve-a1.png` | 699530 / 40602 |
+| 8 | `savings` | `savings.png`, `savings.webp` | 1 | `raw/savings-a1.png` | 754955 / 40918 |
+| 9 | `food-transport` | `food-transport.png`, `food-transport.webp` | 2 | `raw/food-transport-a2.png` | 729143 / 38350 |
+| 10 | `priorities` | `priorities.png`, `priorities.webp` | 1 | `raw/priorities-a1.png` | 853809 / 37236 |
 
 ## Final prompts
 
 ### welcome
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A cozy student desk-corner still life: a steaming mug of tea, a small potted plant, and a folded paper map of a city with a tiny paper plane resting on it.
-Ochre accent only on: the mug of tea.
+Subject: A chunky mug of tea with soft steam, a small round potted plant, and a folded map with a tiny paper plane resting on it.
+Accent colours go on: the paper plane (coral) and the plant leaves (lime).
+Centre the whole group in the frame. Tea must be navy/blue only, no brown. Steam as simple white or blue swirls.
 [style reference: savings-a1.png]
 ```
 
 ### funds
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A glass jar half full of coins next to an envelope; a small blank tear-off calendar page is clipped to the front of the envelope.
-Ochre accent only on: the coins inside the jar.
+Subject: A fat glass jar half full of chunky coins next to a blank envelope.
+Accent colours go on: the coins (lime) with a coral envelope flap.
 [style reference: savings-a1.png]
 ```
 
 ### last-until
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A wall calendar page with a blank grid of empty squares (no numbers) where one square is circled by hand, and a small vintage suitcase standing on the ground below it.
-Ochre accent only on: the suitcase.
+Subject: A chunky wall calendar page with a blank grid of empty rounded squares (no numbers), one square circled in coral, and a small suitcase standing in front.
+Accent colours go on: the coral circle on the calendar and the suitcase (lime).
+Make the calendar smaller so the whole group sits well inside the frame with big margins. Suitcase has plain round clasps, no exclamation-mark or letter-like shapes.
 [style reference: savings-a1.png]
 ```
 
 ### job
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A café apron hanging on the corner of a small café counter, with a clipboard holding a blank timesheet (only abstract ruled lines) lying on the counter beside a coffee cup.
-Ochre accent only on: the apron.
-Make it feel like a cozy independent café: a short wooden counter seen from the front with a small cake stand under a glass dome and a little milk jug; the apron hangs from a hook on the counter's side. The clipboard paper shows only straight ruled lines and empty boxes, no handwriting or scribbles at all. Keep the ochre wash light and translucent.
+Subject: A café apron hanging on a small counter with a coffee cup beside a blank clipboard.
+Accent colours go on: the apron (coral) and the cup (lime).
 [style reference: savings-a1.png]
 ```
 
 ### other-income
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A small opened parcel with tissue paper peeking out and a handwritten-looking blank greeting card propped against it, like a care package from home.
-Ochre accent only on: the tissue paper in the parcel.
+Subject: A small opened parcel box with tissue paper peeking out and a blank greeting card leaning on it.
+Accent colours go on: the tissue paper (coral) and the card (lime).
 [style reference: savings-a1.png]
 ```
 
 ### rent
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A front door of a UK terraced house, seen straight on, with a single key hanging on a small hook beside it and a doormat below.
-Ochre accent only on: the key on the hook.
-The doormat is a plain bristle mat with no pattern, lettering or marks. Add a small potted plant beside the door step for warmth.
+Subject: A chunky front door of a terraced house with a big key hanging on a hook beside it and a doormat.
+Accent colours go on: the key (lime) and the door (coral).
 [style reference: savings-a1.png]
 ```
 
 ### reserve
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A closed folded umbrella leaning against a small locked metal tin with a little padlock.
-Ochre accent only on: the umbrella.
+Subject: A closed folded umbrella leaning on a small locked tin box with a padlock.
+Accent colours go on: the umbrella (coral) and the padlock (lime).
 [style reference: savings-a1.png]
 ```
 
 ### savings
 
 ```
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A small seedling with two leaves growing out of a mug of soil, sitting on a windowsill with a suggestion of a window frame behind it.
-Ochre accent only on: the seedling's leaves.
+Subject: A small seedling with two big leaves growing out of a mug of soil.
+Accent colours go on: the leaves (lime) and a coral mug band.
 ```
 
 ### food-transport
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: A canvas tote bag full of groceries (a baguette, leafy greens, apples) beside a blank travel pass card and a small bicycle bell.
-Ochre accent only on: the tote bag.
+Subject: A canvas tote bag full of groceries (baguette, leafy greens, apples), a blank travel pass card and a small bicycle bell.
+Accent colours go on: the apples (coral) and the greens (lime).
+The tote bag handles must be a wide soft loop arching over the top of the bag, never a narrow vertical oval or anything resembling the digit 0 or a letter.
 [style reference: savings-a1.png]
 ```
 
 ### priorities
 
 ```
-Match the drawing style of the attached reference sketch exactly: same pencil, same line weight, same hatching, same white background, same ochre wash treatment and same framing. Do NOT copy its subject; draw the new subject below.
+Match the illustration style of the attached reference exactly: same chunky clay-like shapes, same palette, same camera angle, same scale and same flat magenta background. Do NOT copy its subject.
 
-A single hand-drawn illustration in HB and 2B graphite pencil on plain white paper. Loose but confident sketch lines with visible pencil texture and slightly varied line weight, light diagonal cross-hatching for shading, a few construction lines left in. Cozy, warm, hopeful still-life feeling, like a page from a student's sketchbook in a small UK flat. Exactly ONE warm accent: a pale ochre watercolour wash (hex #E9B872) applied only to the single focal object named below; everything else is pure grey graphite with no other colour. Composition: the subject group is centred and occupies roughly the middle 60% of the frame, with generous empty white margins on all sides. Pure white background: no table edge, no floor, no wall, no scenery, no border, no frame, no vignette, no paper texture or shadow outside the subject, only a faint soft contact shadow directly under the objects. Absolutely no text, letters, words, numbers, digits, currency symbols, logos, labels or brand names anywhere in the image; any paper, card or label must be blank or carry only abstract scribble lines. No people's faces. 4:3 landscape.
+A single bold, friendly, modern 3D-ish illustration of chunky simple rounded shapes with smooth flat colour, soft subtle gradient shading and white highlights, slightly exaggerated playful proportions. Objects look tactile and toy-like, like soft glossy clay or vinyl. Confident and fun, never childish. STRICT limited palette, nothing else: deep navy #1B1F5E as the main body colour of objects (with darker #12144A for shadow sides), electric blue #3D5AFE, hot coral #FF5A5F and zesty lime #C8F53C as accents, and white highlights. Use coral and lime sparingly for the focal object and one small detail. Camera: consistent slight 3/4 top-down view, subject centred, occupying the middle 60% of the frame with generous margins on all sides, one cluster of 2 to 3 objects at the same scale. Background: a perfectly flat solid pure magenta #FF00FF fill edge to edge, no gradient, no floor, no cast shadow on the background, no ground plane, no border, no vignette; no magenta or pink on the objects themselves. Absolutely no text, letters, numbers, digits, currency symbols, logos, brand marks, labels or mascots. No faces or characters at all; no eyes on objects. Any paper or card is blank. 4:3 landscape.
 
-Subject: Three notebooks stacked neatly, slightly offset, with a ribbon bookmark poking out of the top one and a pencil resting across the stack.
-Ochre accent only on: the ribbon bookmark.
+Subject: Three chunky notebooks stacked and slightly offset with a ribbon bookmark poking out and a pencil across the stack.
+Accent colours go on: the ribbon bookmark (coral) and the pencil (lime).
 [style reference: savings-a1.png]
 ```
