@@ -233,7 +233,7 @@ export interface RemovePlannedPurchaseIntent extends IntentBase {
 }
 export interface SettingsEditIntent extends IntentBase {
   kind: 'settingsEdit';
-  patch: Partial<Pick<Profile, 'minimumReserve' | 'savingsGoal' | 'horizonEnd' | 'categories'>>;
+  patch: Partial<Pick<Profile, 'minimumReserve' | 'savingsGoal' | 'horizonEnd' | 'categories' | 'funds' | 'fundsType'>>;
 }
 
 export type Intent =

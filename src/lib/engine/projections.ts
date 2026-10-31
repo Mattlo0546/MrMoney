@@ -32,7 +32,7 @@ export interface ProjectionPoint {
   total: Money;
   contributed: Money;
   /** total − contributed: interest and returns earned so far. */
-  growth?: Money;
+  growth: Money;
   cumulativeIncome: Money;
 }
 

@@ -3,7 +3,7 @@
 _Updated by the orchestrator at every step. Newest entry first._
 
 ## Now
-- **Phase:** 3, the BUILD (user go-ahead, D18). Dev server at **http://localhost:3210** (port 3000 belongs to northstar).
+- **Phase:** 3b, CHAT-FIRST pivot (D20–D22). A Gemini 4 Argon agent replaces the form and sentence box, with live rates and deals via search grounding.
 - **Gates:**
   - Brief: ✅ approved.
   - Design: ✅ approved (D18; v2 mockups complete, recorded in the workflow).
@@ -14,6 +14,14 @@ _Updated by the orchestrator at every step. Newest entry first._
 ## Agents
 | Agent | Role | Task | State |
 |---|---|---|---|
+| agent-backend (Opus) | Execution | /api/chat with gemini-4-argon function calling + research tool (Google Search grounding) → `src/lib/agent/` | 🔄 running |
+| chat-ui (Opus) | Execution | Chat-first UI: setup interview, chat panel with cards, mobile Chat/Calendar toggle → `src/components/chat/` | 🔄 running |
+| fix-calendar (Sonnet) | Execution | QA Q1, Q3, Q4, Q7, Q8, Q10–Q12, Q16, Q17: hero, full month, income chip, preview on calendar | 🔄 running |
+| fix-composer (Sonnet) | Execution | QA Q5, Q6, Q13 + fidelity: sticky Apply/Undo, clarify, Undo after income, offers city | 🔄 running |
+| fix-shell (Sonnet) | Execution | QA Q2, Q9, Q14, Q20 + G1/G2 | ✅ done: no horizontal scroll at 390 on all pages; reset → onboarding; ReUI repeats dropdown |
+| deliverables (Sonnet) | Execution | e2e Playwright suite, README, demo script, limitations | ✅ done: README and limitations final; demo script and journey e2e are DRAFTS pending chat |
+| qa-1 (Sonnet) | QA | Independent browser QA | ✅ done: 20 defects → `.prd-to-production/qa/qa-1.md` |
+| engine-fix (Opus) | Execution | D16 + review fixes | ✅ done: 162 tests; committed `a54ae3e` |
 | shell-ui (Sonnet) | Execution | Tokens, fonts, nav, UI primitives, illustrations, ReUI dropdowns | ✅ done: typecheck, lint and build pass; ReUI -1/-5/-8 installed; -8 used for the app menu |
 | onboarding-ui (Sonnet) | Execution | 10-step onboarding with illustrations + demo shortcut | ✅ done: full run on 390 and 1440 → /plan |
 | calendar-ui (Sonnet) | Execution | /plan: summary, calendar/agenda, day detail, bubble, panels | ✅ code done (not browser-verified; it tested the wrong port) → QA |
@@ -36,6 +44,9 @@ _Updated by the orchestrator at every step. Newest entry first._
 | designer | Design | Draft `design.md` (direction, tokens, bubble motion, sketch brief) | ✅ done: "Pencil for plans, ink for what happened" |
 
 ## Log
+- 2026-10-31: Shell, settings and projections fixes plus deliverables committed. The e2e journey is to be rewritten for chat.
+- 2026-10-31: User pivot: talk to the app. PRD amended to v3 (R-chat, R-research, R-chat-ux) and approved. Measured Argon function calling ~10s, search grounding ~28s. Contract: `.prd-to-production/chat-contract.md`. Running fix agents told to skip or adapt onboarding and composer work.
+- 2026-10-31: Engine fixes committed (162 tests). QA round 1: 20 defects. 4 fix and deliverable agents launched.
 - 2026-10-31: All 5 UI agents done; repo typecheck and lint clean. UI committed (engine excluded while engine-fix runs). QA agent started.
 - 2026-10-31: Projections and settings done. Playwright now targets localhost:3210 (127.0.0.1 doesn't hydrate under Next dev's origin check).
 - 2026-10-31: Composer done. Engine oddities (today's allowance after £35, concert figures, Undo after income) sent to engine-fix.

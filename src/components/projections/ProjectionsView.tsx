@@ -34,7 +34,24 @@ function load(): Inputs {
     const raw = localStorage.getItem(KEY);
     if (raw) return { ...EMPTY, ...(JSON.parse(raw) as Partial<Inputs>) };
   } catch { /* storage unavailable: keep defaults */ }
-  return EMPTY;
+  return { ...EMPTY, ...prefill() };
+}
+
+/** Pence (number or {pence}) -> pounds text; empty when missing or zero. */
+function poundsText(v: unknown): string {
+  const pence = typeof v === 'number' ? v : (v as { pence?: unknown } | null)?.pence;
+  if (typeof pence !== 'number' || !Number.isFinite(pence) || pence <= 0) return '';
+  return pence % 100 === 0 ? String(pence / 100) : (pence / 100).toFixed(2);
+}
+
+/** Starting balances from onboarding; rates are never pre-filled. */
+function prefill(): Partial<Inputs> {
+  try {
+    const raw = localStorage.getItem('studentplan.onboardingExtras');
+    if (!raw) return {};
+    const x = JSON.parse(raw) as { currentSavings?: unknown; currentInvestments?: unknown };
+    return { savingsNow: poundsText(x.currentSavings), invNow: poundsText(x.currentInvestments) };
+  } catch { return {}; }
 }
 
 export function ProjectionsView() {
@@ -85,12 +102,12 @@ function Projections() {
   const showTable = result?.status === 'ok';
   const money = (m?: { pence: number }) => (m ? formatMoney(m.pence) : '—');
 
-  const rows: { label: string; get: (p: ProjectionPoint) => { pence: number }; strong?: boolean }[] = [
+  const rows: { label: string; get: (p: ProjectionPoint) => { pence: number } | undefined; strong?: boolean }[] = [
     { label: 'Savings', get: (p) => p.savings },
     { label: 'Investments', get: (p) => p.investments },
     { label: 'Total', get: (p) => p.total, strong: true },
     { label: 'You put in', get: (p) => p.contributed },
-    { label: 'Growth', get: (p) => gbp(p.total.pence - p.contributed.pence) },
+    { label: 'Growth', get: (p) => p.growth },
     { label: 'Income received', get: (p) => p.cumulativeIncome },
   ];
 
@@ -134,9 +151,6 @@ function Projections() {
           <>
             <p className="text-sm font-semibold text-[var(--p-muted)]">Base total after {v.months} months</p>
             <p data-testid="empty" className="text-3xl font-extrabold">Enter rates to see this</p>
-            <p className="mt-2 text-sm text-[var(--p-muted)]">
-              Add your savings or investments below, then your own low, base and high rates. Nothing is pre-filled.
-            </p>
           </>
         )}
         {showTable && (

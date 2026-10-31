@@ -17,12 +17,12 @@ export const TOKENS = {
 
 export function PageFrame({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main style={TOKENS} className="min-h-dvh bg-[var(--p-bg)] text-[var(--p-text)]">
+    <div style={TOKENS} className="min-h-dvh bg-[var(--p-bg)] text-[var(--p-text)]">
       <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
         <h1 className="mb-6 font-[family-name:var(--font-display,inherit)] text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h1>
         <div className="flex flex-col gap-4">{children}</div>
       </div>
-    </main>
+    </div>
   );
 }
 

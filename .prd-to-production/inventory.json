@@ -1,5 +1,5 @@
 {
-  "brief_revision": "v2",
+  "brief_revision": "v3",
   "requirement_ids": [
     "R-onboard",
     "R-sketches",
@@ -20,7 +20,10 @@
     "R-persist",
     "R-data",
     "R-ux",
-    "R-deliver"
+    "R-deliver",
+    "R-chat",
+    "R-research",
+    "R-chat-ux"
   ],
   "screens": [
     {
@@ -35,7 +38,9 @@
         "R-sketches",
         "R-demo",
         "R-ux",
-        "R-persist"
+        "R-persist",
+        "R-chat",
+        "R-chat-ux"
       ]
     },
     {
@@ -53,7 +58,9 @@
         "R-demo",
         "R-protect",
         "R-ux",
-        "R-persist"
+        "R-persist",
+        "R-chat",
+        "R-chat-ux"
       ]
     },
     {
@@ -89,7 +96,9 @@
         "R-tradeoff",
         "R-protect",
         "R-ux",
-        "R-persist"
+        "R-persist",
+        "R-chat",
+        "R-chat-ux"
       ]
     },
     {
@@ -102,7 +111,8 @@
       "requirements": [
         "R-offers",
         "R-ux",
-        "R-persist"
+        "R-persist",
+        "R-research"
       ]
     },
     {
@@ -116,7 +126,8 @@
         "R-projections",
         "R-ux",
         "R-persist",
-        "R-engine"
+        "R-engine",
+        "R-research"
       ]
     },
     {

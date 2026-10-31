@@ -2,7 +2,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { formatMoney, formatShortDate, gbp } from '@/lib/engine';
+import { ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/reui/dropdown-menu';
+import { formatShortDate, gbp } from '@/lib/engine';
 import type { Category, EngineState, Intent } from '@/lib/engine';
 import { useAppStore } from '@/lib/store';
 import { applyTheme, readTheme } from '@/components/shell/theme';
@@ -11,7 +13,7 @@ import { Btn, Card, Field, PageFrame, parsePounds, penceToInput } from './kit';
 type Errors = Record<string, string>;
 interface CatDraft { id: string; name: string; weight: string; priority: string; essential: boolean }
 interface Draft {
-  horizonEnd: string; reserve: string; goal: string;
+  horizonEnd: string; reserve: string; goal: string; funds: string; fundsType: 'lump' | 'monthly';
   cats: CatDraft[];
   incomes: Record<string, { amount: string; date: string; confirmed: boolean }>;
   commits: Record<string, string>;
@@ -24,6 +26,8 @@ const key = (k: string): string => `settings-${k}-${Date.now()}-${keySeq++}`;
 function toDraft(s: EngineState): Draft {
   return {
     horizonEnd: s.profile.horizonEnd,
+    funds: penceToInput(s.profile.funds.pence),
+    fundsType: s.profile.fundsType,
     reserve: penceToInput(s.profile.minimumReserve.pence),
     goal: penceToInput(s.profile.savingsGoal.pence),
     cats: s.profile.categories.map((c) => ({ id: c.id, name: c.name, weight: String(c.weight), priority: String(c.priority), essential: c.essential })),
@@ -78,6 +82,8 @@ export function SettingsView() {
     const e: Errors = {};
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.horizonEnd)) e.horizonEnd = 'Enter a valid end date.';
     else if (d.horizonEnd < snapshot.today) e.horizonEnd = 'The end date must be today or later.';
+    const fp = parsePounds(d.funds, false);
+    if (fp === null || fp === 0) e.funds = 'Enter the amount in pounds, e.g. 3900';
     if (parsePounds(d.reserve, false) === null) e.reserve = 'Enter a reserve of 0 or more, e.g. 150';
     if (parsePounds(d.goal, false) === null) e.goal = 'Enter a savings goal of 0 or more, e.g. 200';
     d.cats.forEach((c, i) => {
@@ -110,14 +116,17 @@ export function SettingsView() {
     }));
     const reserve = parsePounds(d.reserve) ?? 0;
     const goal = parsePounds(d.goal) ?? 0;
+    const funds = parsePounds(d.funds) ?? 0;
     const changed =
+      funds !== s.profile.funds.pence || d.fundsType !== s.profile.fundsType ||
       d.horizonEnd !== s.profile.horizonEnd || reserve !== s.profile.minimumReserve.pence || goal !== s.profile.savingsGoal.pence ||
       JSON.stringify(cats) !== JSON.stringify(s.profile.categories);
     if (changed) {
-      const intent: Intent = {
+      // types.ts SettingsEdit patch still omits funds/fundsType, which the engine accepts (README #5).
+      const intent = {
         kind: 'settingsEdit', idempotencyKey: key('profile'),
-        patch: { horizonEnd: d.horizonEnd, minimumReserve: gbp(reserve), savingsGoal: gbp(goal), categories: cats },
-      };
+        patch: { horizonEnd: d.horizonEnd, funds: gbp(funds), fundsType: d.fundsType, minimumReserve: gbp(reserve), savingsGoal: gbp(goal), categories: cats },
+      } as unknown as Intent;
       const r = store.apply(intent);
       if (!r.ok) return fail(r.error?.message ?? 'Could not save those settings.');
     }
@@ -178,7 +187,6 @@ export function SettingsView() {
     setSaved(true);
   }
 
-  const p = state.profile;
   const setCat = (i: number, c: Partial<CatDraft>) => patch({ cats: d.cats.map((x, j) => (j === i ? { ...x, ...c } : x)) });
   const live = state.commitments.filter((c) => !(c.amountChanges?.some((a) => a.amount.pence === 0) && c.amountChanges.at(-1)?.amount.pence === 0));
 
@@ -186,17 +194,16 @@ export function SettingsView() {
     <PageFrame title="Settings">
       {errors._ && <p role="alert" className="rounded-[16px] border border-[var(--p-coral)] p-4 font-semibold text-[var(--p-coral)]">{errors._}</p>}
 
-      <Card title="Money" hint="Funds are set during setup and can't be edited here yet.">
-        <dl className="grid grid-cols-2 gap-4">
-          <div>
-            <dt className="text-sm font-semibold text-[var(--p-muted)]">{p.fundsType === 'lump' ? 'Lump sum' : 'Monthly allowance'}</dt>
-            <dd className="text-3xl font-extrabold tabular-nums">{formatMoney(p.funds)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-semibold text-[var(--p-muted)]">Type</dt>
-            <dd className="text-lg font-bold">{p.fundsType === 'lump' ? 'Lump sum' : 'Monthly'}</dd>
-          </div>
-        </dl>
+      <Card title="Money">
+        <div role="radiogroup" aria-label="Funds type" className="mb-4 grid grid-cols-2 gap-2">
+          {([['lump', 'Lump sum'], ['monthly', 'Monthly allowance']] as const).map(([k, label]) => (
+            <button key={k} type="button" role="radio" aria-checked={d.fundsType === k} onClick={() => patch({ fundsType: k })}
+              className={`min-h-12 rounded-full font-bold ${d.fundsType === k ? 'bg-[var(--p-accent)] text-[var(--p-accent-ink)]' : 'border border-[var(--p-line)] bg-[var(--p-surface2)]'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <Field id="funds" label={d.fundsType === 'lump' ? 'Lump sum' : 'Monthly allowance'} prefix="£" inputMode="decimal" value={d.funds} onChange={(e) => patch({ funds: e.target.value })} error={errors.funds} />
         <div className="mt-5">
           <Field id="horizonEnd" label="Money needs to last until" type="date" value={d.horizonEnd} onChange={(e) => patch({ horizonEnd: e.target.value })} error={errors.horizonEnd} />
         </div>
@@ -233,12 +240,22 @@ export function SettingsView() {
             <Field id="billName" label="Name" value={bill.name} onChange={(e) => setBill({ ...bill, name: e.target.value })} error={errors.billName} />
             <Field id="billAmount" label="Amount" prefix="£" inputMode="decimal" value={bill.amount} onChange={(e) => setBill({ ...bill, amount: e.target.value })} error={errors.billAmount} />
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="billKind" className="text-sm font-semibold text-[var(--p-muted)]">Repeats</label>
-              {/* TODO(reui): replace native select with the ReUI dropdown composition */}
-              <select id="billKind" value={bill.kind} onChange={(e) => setBill({ ...bill, kind: e.target.value as 'monthly' | 'once' })} className="min-h-12 rounded-[16px] border border-[var(--p-line)] bg-[var(--p-surface2)] px-4">
-                <option value="monthly">Every month</option>
-                <option value="once">Once</option>
-              </select>
+              <span id="billKind-l" className="text-sm font-semibold text-[var(--p-muted)]">Repeats</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button id="billKind" type="button" aria-labelledby="billKind-l billKind"
+                    className="flex min-h-12 w-full items-center justify-between gap-2 rounded-[16px] border border-[var(--p-line)] bg-[var(--p-surface2)] px-4 text-left text-base">
+                    {bill.kind === 'monthly' ? 'Every month' : 'Once'}
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-[var(--radix-dropdown-menu-trigger-width)]">
+                  <DropdownMenuRadioGroup value={bill.kind} onValueChange={(v) => setBill({ ...bill, kind: v === 'once' ? 'once' : 'monthly' })}>
+                    <DropdownMenuRadioItem value="monthly" className="min-h-11">Every month</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="once" className="min-h-11">Once</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             {bill.kind === 'monthly'
               ? <Field id="billDay" label="Due day of month" inputMode="numeric" placeholder="1 to 31" value={bill.day} onChange={(e) => setBill({ ...bill, day: e.target.value })} error={errors.billDay} />
@@ -261,8 +278,8 @@ export function SettingsView() {
                   <Field id={`inc-a-${inc.id}`} label="Amount" prefix="£" inputMode="decimal" value={x.amount} onChange={(e) => set({ amount: e.target.value })} error={errors[`inc.${inc.id}.amount`]} />
                   <Field id={`inc-d-${inc.id}`} label="Date" type="date" value={x.date} onChange={(e) => set({ date: e.target.value })} error={errors[`inc.${inc.id}.date`]} />
                 </div>
-                <label className="mt-3 flex min-h-11 items-center gap-3 font-semibold">
-                  <input type="checkbox" className="size-6 accent-[var(--p-accent)]" checked={x.confirmed} onChange={(e) => set({ confirmed: e.target.checked })} />
+                <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
+                  <input type="checkbox" className="size-6 accent-[var(--p-accent)] before:absolute before:inset-0 before:content-['']" checked={x.confirmed} onChange={(e) => set({ confirmed: e.target.checked })} />
                   Confirmed
                 </label>
               </li>
@@ -284,8 +301,8 @@ export function SettingsView() {
                 <Field id={`cat-w-${i}`} label="Weight" inputMode="decimal" value={c.weight} onChange={(e) => setCat(i, { weight: e.target.value })} error={errors[`cat.${i}.weight`]} />
                 <Field id={`cat-p-${i}`} label="Priority" inputMode="numeric" value={c.priority} onChange={(e) => setCat(i, { priority: e.target.value })} error={errors[`cat.${i}.priority`]} />
               </div>
-              <label className="mt-3 flex min-h-11 items-center gap-3 font-semibold">
-                <input type="checkbox" className="size-6 accent-[var(--p-accent)]" checked={c.essential} onChange={(e) => setCat(i, { essential: e.target.checked })} />
+              <label className="relative mt-3 flex min-h-11 items-center gap-3 font-semibold">
+                <input type="checkbox" className="size-6 accent-[var(--p-accent)] before:absolute before:inset-0 before:content-['']" checked={c.essential} onChange={(e) => setCat(i, { essential: e.target.checked })} />
                 Essential
               </label>
             </li>

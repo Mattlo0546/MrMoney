@@ -130,3 +130,25 @@ Spending, emergency, savings and investments are planning buckets. Invariants ar
 6. **Projection scenarios:** low, base and high from user-entered rates; monthly compounding.
 7. **Offers:** curated seed data per `research/integrations.md`. Maps grounding would be a stretch goal, but it **conflicts with the "live integrations" non-goal**, so adopting it means amending that non-goal. No scraping.
 8. **Skill gap:** `software-design-patterns` is missing.
+
+## Amendment v3 — chat-first agent (user, 2026-10-31; supersedes conflicting clauses above)
+
+**R-chat** — The primary input is a chat with a Gemini **`gemini-4-argon`** agent; the onboarding form is replaced.
+- The agent interviews the user conversationally (funds, end date, income/job, rent and bills, reserve, goals, food and transport, area), then sets up the plan through engine tools. The calendar appears and fills in as it works.
+- Every later change ("I spent…", "can I…", "I got paid…") goes through the same chat.
+- Results show as chat cards: applied with Undo, preview with Apply/Discard, trade-offs, and clarifications. Each change visibly updates the calendar with the bubble effect.
+- The AI decides *what* to do; the deterministic engine does *all* the arithmetic (R-engine is unchanged).
+- "Try a demo student" stays available.
+
+**R-research** — The agent can look up **live** UK savings and current-account rates, student bank perks, and student discounts and deals, using Gemini Google Search grounding.
+- Results are cards showing provider, product, rate/offer, key conditions, source link and retrieval time. They are labelled "Live search result. Check with the provider before acting." The agent must cite a source for every figure.
+- **Save money:** the agent can apply a found deal to a planned purchase (a lower planned amount), and the saving then counts per R-offers.
+- **Grow money:** the agent can suggest where to keep emergency and savings money (e.g. a top easy-access account or cash ISA from search). With the user's consent, those rates feed **projections**.
+- Investments are discussed only as general categories (e.g. stocks & shares ISA / global index fund) with assumption-based projections. There are no specific stock picks, and nothing is presented as guaranteed. This revises the earlier non-goal "no live offer/retailer data": live *search* is allowed, but *integrations* (bank connections, transfers, trading) remain out of scope.
+
+**R-chat-ux** — The chat is simple and direct, with short replies.
+- Desktop: calendar left, chat right.
+- Mobile: chat first, with the calendar a tap away, plus a compact "what changed" strip.
+- Visible states: "thinking…" and "searching the web…" (with the step shown).
+- Latency budget: chat turn ≤10s, research ≤30s with progress.
+- Errors never lose state. Without a key or network, the deterministic parser and curated samples are the fallback, and the app says so.
